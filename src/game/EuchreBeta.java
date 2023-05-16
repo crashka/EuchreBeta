@@ -1743,6 +1743,7 @@ public class EuchreBeta {
     		lone = -1; // reset value of 'lone'
     		round = 0; // reset value of 'round'
     		declarer = -1; // reset value of 'declarer'
+                docallh = 0; // reset value of 'docallh'
     		dealer = dealer%4;
     		final int aa = (dealer+1)%4; // position after dealer
     		final int bb = (dealer+2)%4; // position of dealer's partner
@@ -2473,7 +2474,7 @@ public class EuchreBeta {
     						
     						// 1st bidder
     						int humanbid = 0;
-    						if (aa == 0) { // human to bid
+    						if (aa == 0 && false) { // human to bid
     							contentPane.add(pick);
     							contentPane.add(alone);
     							contentPane.add(bidS);
@@ -2509,7 +2510,7 @@ public class EuchreBeta {
     						if (!bidyes.isVisible()) { // only proceed if 1st bidder passed
     							Thread.sleep(800);
     							contentPane.remove(bid[aa]);
-    							if (bb == 0) { // human to bid
+    							if (bb == 0 && false) { // human to bid
     								contentPane.add(pick);
     								contentPane.add(alone);
     								contentPane.add(bidS);
@@ -2546,7 +2547,7 @@ public class EuchreBeta {
     						if (!bidyes.isVisible()) { // only proceed if 2nd bidder passed
     							Thread.sleep(800);
     							contentPane.remove(bid[bb]);
-    							if (cc == 0) { // human to bid
+    							if (cc == 0 && false) { // human to bid
     								contentPane.add(pick);
     								contentPane.add(alone);
     								contentPane.add(bidS);
@@ -2583,7 +2584,7 @@ public class EuchreBeta {
     						if (!bidyes.isVisible()) { // only proceed if 3rd bidder passed
     							Thread.sleep(800);
     							contentPane.remove(bid[cc]);
-    							if (dd == 0) { // human to bid
+    							if (dd == 0 && false) { // human to bid
     								contentPane.add(pick);
     								contentPane.add(alone);
     								contentPane.add(bidS);
@@ -2641,7 +2642,7 @@ public class EuchreBeta {
     						int humanbid = 0;
     						if (!bidyes.isVisible()) { // only proceed all preceding bidders passed
     							Thread.sleep(800);
-    							if (aa == 0) { // human to bid
+    							if (aa == 0 && false) { // human to bid
     								contentPane.add(pick);
     								contentPane.add(alone);
     								contentPane.add(bidS2);
@@ -2694,7 +2695,7 @@ public class EuchreBeta {
     						// 2nd bidder, round 2
     						if (!bidyes.isVisible()) { // only proceed if all preceding bidders passed
     							Thread.sleep(800);
-    							if (bb == 0) { // human to bid
+    							if (bb == 0 && false) { // human to bid
     								contentPane.add(pick);
     								contentPane.add(alone);
     								contentPane.add(bidS2);
@@ -2747,7 +2748,7 @@ public class EuchreBeta {
     						// 3rd bidder, round 2
     						if (!bidyes.isVisible()) { // only proceed all preceding bidders passed
     							Thread.sleep(800);
-    							if (cc == 0) { // human to bid
+    							if (cc == 0 && false) { // human to bid
     								contentPane.add(pick);
     								contentPane.add(alone);
     								contentPane.add(bidS2);
@@ -2800,7 +2801,7 @@ public class EuchreBeta {
     						// 4th bidder, round 2
     						if (!bidyes.isVisible()) { // only proceed all preceding bidders passed
     							Thread.sleep(800);
-    							if (dd == 0) { // human to bid
+    							if (dd == 0 && false) { // human to bid
     								contentPane.add(pick);
     								contentPane.add(alone);
     								contentPane.add(bidS2);
@@ -3246,7 +3247,7 @@ public class EuchreBeta {
     				right[aa][upst], left[aa][upst], acet[aa][upst], aces[aa][upst], uprk, upst, bidscore[aa][upst], 
     				bidscore[aa][3-upst], summins[aa][upst], vd[aa], bestc[aa], points[aa], game);
     		
-    		if (aa == 0) { // human player
+    		if (aa == 0 && false) { // human player
     			docallh = docall;
 
     		} else { // computer player
@@ -3278,7 +3279,7 @@ public class EuchreBeta {
     			fintp = bidx[2];
     		}
 
-    		if (top == 0) {
+    		if (top == 0 && false) {
     			deal.addActionListener(new ActionListener() {
     				public void actionPerformed (ActionEvent e) {
     					t1a.start();
@@ -3342,7 +3343,7 @@ public class EuchreBeta {
     					left[bb][upst], acet[bb][upst], kingt[bb][upst], uprk, upst, bidscore[bb][upst], 
     					summins[bb][upst], vd[bb], points[bb], game);
     			
-    			if (bb == 0) { // human player
+    			if (bb == 0 && false) { // human player
     				docallh = docall;
     				System.out.println("docallh: " + docallh);
 
@@ -3415,7 +3416,7 @@ public class EuchreBeta {
     			docall = bidder13(playersuit[cc][upst][upst], playersuit[cc][upst][3-upst], right[cc][upst], left[cc][upst], 
     					acet[cc][upst], uprk, upst, bidscore[cc][upst], summins[cc][upst], vd[cc], points[cc], game);
     			
-    			if (cc == 0) { // human player
+    			if (cc == 0 && false) { // human player
     				docallh = docall;
 
     			} else { // computer player
@@ -3488,7 +3489,7 @@ public class EuchreBeta {
     					acet[dd][upst], aces[dd][upst], kingt[dd][upst], uprk, upst, bidscore[dd][upst], summins[dd][upst], 
     					vd[dd], points[dd], game);
     			
-    			if (dd == 0) { // human player
+    			if (dd == 0 && false) { // human player
     				docallh = docall;
 
     			} else { // computer player
@@ -3572,9 +3573,9 @@ public class EuchreBeta {
 
     			// Re-calculate of best card to discard
     			seat = ((declarer-dealer+4)%4)*2 + 1 - (lone+6)/6; // see spreadsheet for meaning
-    			cswap = swapcard(cards, seat, dealer); // determines # of card swapped by dealer for turn card  
+			cswap = swapcard(cards, seat, dealer); // determines # of card swapped by dealer for turn card
 
-    			if (dealer == 0) { // human player is dealer
+    			if (dealer == 0  && false) { // human player is dealer
     				t4.start();
     				while (!swap0.isVisible() && !swap1.isVisible() && !swap2.isVisible() &&
     						!swap3.isVisible() && !swap4.isVisible()) {
@@ -3588,6 +3589,7 @@ public class EuchreBeta {
     				int temp = cards[cswap]; // dealer swaps cards
     				cards[cswap] = cards[20]; 
     				cards[20] = temp;
+                                System.out.println("dealer discards the " + cardname[cards[20]%4][cards[20]/4]);
     			}
 
     			// check if computer would have discarded the same card
@@ -3612,7 +3614,7 @@ public class EuchreBeta {
     					kingt[aa][bests[aa]], upst, bidscore[aa][bests[aa]], summins[aa][bests[aa]], bests[(dealer+1)%4], 
     					points[aa], game);
 
-    			if (aa == 0) { // human player
+    			if (aa == 0 && false) { // human player
     				docallh = docall;
     				t3.start();
 
@@ -3745,7 +3747,7 @@ public class EuchreBeta {
     					kingt[bb][bests[bb]], upst, uprk,bidscore[bb][bests[bb]], summins[bb][bests[bb]], 
     					bests[(dealer+1)%4], points[bb], game);
 
-    			if (bb == 0) { // human player
+    			if (bb == 0 && false) { // human player
     				docallh = docall;
     				t3.start();
 
@@ -3876,7 +3878,7 @@ public class EuchreBeta {
     					acet[cc][bests[cc]], aces[cc][bests[cc]], kingt[cc][bests[cc]], upst, uprk,
     					bidscore[cc][bests[cc]], summins[cc][bests[cc]], bests[(dealer+1)%4], points[cc], game);
 
-    			if (cc == 0) { // human player
+    			if (cc == 0 && false) { // human player
     				docallh = docall;
     				t3.start();
 
@@ -4007,7 +4009,7 @@ public class EuchreBeta {
     					right[dd][bests[dd]], left[dd][bests[dd]], acet[dd][bests[dd]], upst, uprk,
     					bidscore[dd][bests[dd]], summins[dd][bests[dd]], bests[(dealer+1)%4], points[dd], game);
 
-    			if (dd == 0) { // human player
+    			if (dd == 0 && false) { // human player
     				docallh = docall;
     				t3.start();
 
@@ -4556,7 +4558,7 @@ public class EuchreBeta {
     				}
     			});
 
-    			while (play.isEnabled()) { // wait for human to press 'play' button
+    			while (play.isEnabled() && false) { // wait for human to press 'play' button
     				try {
     					Thread.sleep(200);
     				}
@@ -4739,7 +4741,7 @@ public class EuchreBeta {
     				m11 = cardplay%10;
     				n11 = (cardplay/10)%10;
 
-    				if (aa == 0) {
+    				if (aa == 0 && false) {
     					result = cardplay/100;
     					p1.start();
     					while (!pcdone1.isVisible()) { // wait for human to select card to play
@@ -4919,7 +4921,7 @@ public class EuchreBeta {
     				m12 = cardplay%10;
     				n12 = (cardplay/10)%10;
 
-    				if (bb == 0) {
+    				if (bb == 0 && false) {
     					result = cardplay/100;
     					if (playst[bb][suit[0][0]] > 0 && (flone != 1 || dealer != 2)) { // human not leading, so need to check play
     						for (int i=0; i<5; i++) {
@@ -5104,7 +5106,7 @@ public class EuchreBeta {
     				m13 = cardplay%10;
     				n13 = (cardplay/10)%10;
 
-    				if (cc == 0) {
+    				if (cc == 0 && false) {
     					result = cardplay/100;
     					if (playst[cc][suit[0][0]] > 0 && (flone != 1 || dealer != 2)) { // human not leading, so need to check play
     						for (int i=0; i<5; i++) {
@@ -5292,7 +5294,7 @@ public class EuchreBeta {
     				m14 = cardplay%10;
     				n14 = (cardplay/10)%10;
 
-    				if (dd == 0) {
+    				if (dd == 0 && false) {
     					result = cardplay/100;
     					if (playst[dd][suit[0][0]] > 0 && (flone != 1 || dealer != 2)) { // human not leading, so need to check play
     						for (int i=0; i<5; i++) {
@@ -5617,7 +5619,7 @@ public class EuchreBeta {
     					continu.removeActionListener(this);
     				}
     			});
-    			while (continu.isEnabled()) { // wait for human to press 'continue' button
+    			while (continu.isEnabled() && false) { // wait for human to press 'continue' button
     				try {
     					Thread.sleep(200);
     				}
@@ -5818,7 +5820,7 @@ public class EuchreBeta {
     			m21 = cardplay%10;
     			n21 = (cardplay/10)%10;
 
-    			if (aa2 == 0) {
+    			if (aa2 == 0 && false) {
     				result = cardplay/100;
     				p2.start();
     				while (!pcdone2.isVisible()) { // wait for human to select card to play
@@ -5964,7 +5966,7 @@ public class EuchreBeta {
     				m22 = cardplay%10;
     				n22 = (cardplay/10)%10;
 
-    				if (bb2 == 0) {
+    				if (bb2 == 0 && false) {
     					result = cardplay/100;
     					if (playst[bb2][suit[1][0]] > 0 && (flone != 1 || dealer != 2)) { // human not leading, so need to check play
     						for (int i=0; i<4; i++) {
@@ -6154,7 +6156,7 @@ public class EuchreBeta {
     				m23 = cardplay%10;
     				n23 = (cardplay/10)%10;
 
-    				if (cc2 == 0) {
+    				if (cc2 == 0 && false) {
     					result = cardplay/100;
     					if (playst[cc2][suit[1][0]] > 0 && (flone != 1 || dealer != 2)) { // human not leading, so need to check play
     						for (int i=0; i<4; i++) {
@@ -6302,7 +6304,7 @@ public class EuchreBeta {
     				m24 = cardplay%10;
     				n24 = (cardplay/10)%10;
 
-    				if (dd2 == 0) {
+    				if (dd2 == 0 && false) {
     					result = cardplay/100;
     					if (playst[dd2][suit[1][0]] > 0 && (flone != 1 || dealer != 2)) { // human not leading, so need to check play
     						for (int i=0; i<4; i++) {
@@ -6593,7 +6595,7 @@ public class EuchreBeta {
     				}
     			});
 
-    			while (continu2.isEnabled()) { // wait for human to press 'continue' button
+    			while (continu2.isEnabled() && false) { // wait for human to press 'continue' button
     				try {
     					Thread.sleep(200);
     				}
@@ -6724,7 +6726,7 @@ public class EuchreBeta {
     			m31 = cardplay%10;
     			n31 = (cardplay/10)%10;
 
-    			if (aa3 == 0) {
+    			if (aa3 == 0 && false) {
     				result = cardplay/100;
     				p3.start();
     				while (!pcdone3.isVisible()) { // wait for human to select card to play
@@ -6872,7 +6874,7 @@ public class EuchreBeta {
     				m32 = cardplay%10;
     				n32 = (cardplay/10)%10;
 
-    				if (bb3 == 0) {
+    				if (bb3 == 0 && false) {
     					result = cardplay/100;
     					if (playst[bb3][suit[2][0]] > 0 && (flone != 1 || dealer != 2)) { // human not leading, so need to check play
     						for (int i=0; i<3; i++) {
@@ -7037,7 +7039,7 @@ public class EuchreBeta {
     				m33 = cardplay%10;
     				n33 = (cardplay/10)%10;
 
-    				if (cc3 == 0) {
+    				if (cc3 == 0 && false) {
     					result = cardplay/100;
     					if (playst[cc3][suit[2][0]] > 0 && (flone != 1 || dealer != 2)) { // human not leading, so need to check play
     						for (int i=0; i<3; i++) {
@@ -7186,7 +7188,7 @@ public class EuchreBeta {
     				m34 = cardplay%10;
     				n34 = (cardplay/10)%10;
 
-    				if (dd3 == 0) {
+    				if (dd3 == 0 && false) {
     					result = cardplay/100;
     					if (playst[dd3][suit[2][0]] > 0 && (flone != 1 || dealer != 2)) { // human not leading, so need to check play
     						for (int i=0; i<3; i++) {
@@ -7428,7 +7430,7 @@ public class EuchreBeta {
     				}
     			});
 
-    			while (continu3.isEnabled()) { // wait for human to press 'continue' button
+    			while (continu3.isEnabled() && false) { // wait for human to press 'continue' button
     				try {
     					Thread.sleep(200);
     				}
@@ -7567,7 +7569,7 @@ public class EuchreBeta {
     			m41 = cardplay%10;
     			n41 = (cardplay/10)%10;
     			
-    			if (aa4 == 0) {
+    			if (aa4 == 0 && false) {
     				result = cardplay/100;
     				p4.start();
     				while (!pcdone4.isVisible()) { // wait for human to select card to play
@@ -7695,7 +7697,7 @@ public class EuchreBeta {
     				m42 = cardplay%10;
     				n42 = (cardplay/10)%10; 
 
-    				if (bb4 == 0) {
+    				if (bb4 == 0 && false) {
     					result = cardplay/100;
     					if (playst[bb4][suit[3][0]] > 0 && (flone != 1 || dealer != 2)) { // human not leading, so need to check play
     						for (int i=0; i<2; i++) {
@@ -7839,7 +7841,7 @@ public class EuchreBeta {
     				m43 = cardplay%10;
     				n43 = (cardplay/10)%10;
 
-    				if (cc4 == 0) {
+    				if (cc4 == 0 && false) {
     					result = cardplay/100;
     					if (playst[cc4][suit[3][0]] > 0 && (flone != 1 || dealer != 2)) { // human not leading, so need to check play
     						for (int i=0; i<2; i++) {
@@ -7975,7 +7977,7 @@ public class EuchreBeta {
     				m44 = cardplay%10;
     				n44 = (cardplay/10)%10;
 
-    				if (dd4 == 0) {
+    				if (dd4 == 0  && false) {
     					result = cardplay/100;
     					if (playst[dd4][suit[3][0]] > 0 && (flone != 1 || dealer != 2)) { // human not leading, so need to check play
     						for (int i=0; i<2; i++) {
@@ -8074,7 +8076,7 @@ public class EuchreBeta {
     				}
     			});
 
-    			while (continu4.isEnabled()) { // wait for human to press 'continue' button
+    			while (continu4.isEnabled() && false) { // wait for human to press 'continue' button
     				try {
     					Thread.sleep(200);
     				}
@@ -8100,7 +8102,7 @@ public class EuchreBeta {
 
     			fifth[aa5].setIcon(cardimg2[m51][n51]);
     			contentPane.add(fifth[aa5]);
-    			if (aa5 == 0) {
+    			if (aa5 == 0 && false) {
     				contentPane.remove(c5);
     			}
     			SwingUtilities.updateComponentTreeUI(frame);
@@ -8139,7 +8141,7 @@ public class EuchreBeta {
     				
     				fifth[bb5].setIcon(cardimg2[m52][n52]);
         			contentPane.add(fifth[bb5]);
-        			if (bb5 == 0) {
+        			if (bb5 == 0 && false) {
         				contentPane.remove(c5);
         			}
         			SwingUtilities.updateComponentTreeUI(frame);
@@ -8184,7 +8186,7 @@ public class EuchreBeta {
     				
     				fifth[cc5].setIcon(cardimg2[m53][n53]);
         			contentPane.add(fifth[cc5]);
-        			if (cc5 == 0) {
+        			if (cc5 == 0 && false) {
         				contentPane.remove(c5);
         			}
         			SwingUtilities.updateComponentTreeUI(frame);
@@ -8229,7 +8231,7 @@ public class EuchreBeta {
     				
     				fifth[dd5].setIcon(cardimg2[m54][n54]);
         			contentPane.add(fifth[dd5]);
-        			if (dd5 == 0) {
+        			if (dd5 == 0 && false) {
         				contentPane.remove(c5);
         			}
         			SwingUtilities.updateComponentTreeUI(frame);
@@ -8374,7 +8376,7 @@ public class EuchreBeta {
     				}
     			});	
 
-    			while (continu5.isEnabled()) { // wait for human to press 'continue' button
+    			while (continu5.isEnabled() && false) { // wait for human to press 'continue' button
     				try {
     					Thread.sleep(200);
     				}
@@ -8392,7 +8394,7 @@ public class EuchreBeta {
     				}
     			});	
     			
-    			while (dealn.isEnabled()) { // wait for human to press 'deal new game' button
+    			while (dealn.isEnabled() && false) { // wait for human to press 'deal new game' button
     				try {
     					Thread.sleep(200);
     				}
