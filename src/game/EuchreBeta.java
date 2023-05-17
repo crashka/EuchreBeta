@@ -4,10 +4,6 @@ import java.lang.Math;
 import java.util.*;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
-import javax.swing.event.ChangeListener;
-
-import javax.swing.event.ChangeEvent;
 
 public class EuchreBeta {
 
@@ -26,8 +22,6 @@ public class EuchreBeta {
 
     // define a few more global variables
     public static int game = 10; // points needed to win a game (can modify this to extend play)
-    public static int ct1 = 0; // detects if South has chosen a trump suit, 2nd round bidding
-    public static int awp = 0; // indicator of whether South bidding with partner (0) or alone (1)
 
     // *** Method "buildFrame" for creating frame ***
     public static JFrame buildFrame() {
@@ -55,11 +49,6 @@ public class EuchreBeta {
             int temp = cards[i];
             cards[i] = cards[randomPosition];
             cards[randomPosition] = temp;
-        }
-        try {
-            Thread.sleep(100);
-        }
-        catch(InterruptedException e9) {
         }
         for (int i=0; i<24; i++) {
             int randomPosition = rgen.nextInt(24);
@@ -1718,7 +1707,6 @@ public class EuchreBeta {
         int declarer = 0;  //  marker denoting which player is declarer (0 = South, 1 = West, 2 = North, 3 = East)
         int dealer = 0;  // which player is dealer for current hand (0 = South, etc.)
         int docall = 0; // how computer player bids
-        int docallh = 0; // how computer would have bid in human player's stead
         int top = 0; // points of currently winning team
         int round = 0; // bid 1st round (0) or 2nd round (1)
         int lone = -1; // will get value if a player goes lone (0 = South, etc.)
@@ -1727,12 +1715,11 @@ public class EuchreBeta {
         int result = -1; // records card played by human player each trick
         int seat = -1; // see notes (pertains to bidding situation)
         int fintp = 4;  //  marker denoting the suit which is declared trump (spades = 0, hearts = 1, diamonds = 2,
-        // clubs = 3, 4 = trump not declared)
+                        // clubs = 3, 4 = trump not declared)
 
         // Assign random seat as first dealer
         int randomDealer = rgen.nextInt(4);
         dealer = randomDealer;
-        //              dealer = 0;
 
         // these variables don't reset when new hand is played (same game)
         int pns = 0; // N/S game pts
@@ -1744,7 +1731,6 @@ public class EuchreBeta {
             lone = -1; // reset value of 'lone'
             round = 0; // reset value of 'round'
             declarer = -1; // reset value of 'declarer'
-            docallh = 0; // reset value of 'docallh'
             dealer = dealer%4;
             final int aa = (dealer+1)%4; // position after dealer
             final int bb = (dealer+2)%4; // position of dealer's partner
@@ -1764,50 +1750,6 @@ public class EuchreBeta {
             // invoke method for shuffling cards
             cards = shuffle(cards);
 
-            // Create array for pre-selected hand (for testing purposes)
-            int[] cd = new int[24];
-            for (int i=0; i<24; i++) {
-                cd[i] = -1;
-            }
-            /*
-              cd[0] = 8;
-              cd[1] = 13;
-              cd[2] = 10;
-              cd[3] = 0;
-              cd[4] = 20;
-
-              cd[5] = 21;
-              cd[6] = 9;
-              cd[7] = 7;
-              cd[8] = 4;
-              cd[9] = 1;
-
-              cd[10] = 15;
-              cd[11] = 11;
-              cd[12] = 16;
-              cd[13] = 5;
-              cd[14] = 2;
-
-              cd[15] = 22;
-              cd[16] = 6;
-              cd[17] = 18;
-              cd[18] = 14;
-              cd[19] = 17;
-
-              cd[20] = 23;
-            */
-            // exchange these cards in the shuffled deck
-            for (int i=0; i<24; i++) {
-                if (cd[i] >= 0) {
-                    for (int j=0; j<24; j++) {
-                        if (cards[j] == cd[i]) {
-                            int temp = cards[i];
-                            cards[i] = cards[j];
-                            cards[j] = temp;
-                        }
-                    }
-                }
-            }
             // print out shuffled deck for diagnostic purposes
             for (int i=0; i<24; i++) {
                 System.out.println(cards[i]);
@@ -2427,21 +2369,6 @@ public class EuchreBeta {
             rscore.setBounds(270,140,100,110);
             playc.setBounds(240,570,150,60);
 
-            // *****************************************************
-            // *****************************************************
-
-            // check if South bids alone or w/ partner (if bids)
-            alone.setValue(0);
-            awp = alone.getValue();
-            alone.addChangeListener(new ChangeListener() {
-                    public void stateChanged(ChangeEvent event) {
-                        awp = alone.getValue();
-                    }
-                });
-
-            // reset suit of 2nd round bid
-            ct1 = 0;
-
             // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
             //              System.out.println("Let's play Euchre!" + "\n");
@@ -2454,13 +2381,180 @@ public class EuchreBeta {
                               right[aa][upst], left[aa][upst], acet[aa][upst], aces[aa][upst], uprk, upst, bidscore[aa][upst],
                               bidscore[aa][3-upst], summins[aa][upst], vd[aa], bestc[aa], points[aa], game);
 
-            if (aa == 0 && false) { // human player
-                docallh = docall;
+            bidx = bid(docall, aa, cardname[cards[20]%4][cards[20]/4], upst);
 
-            } else { // computer player
-                bidx = bid(docall, aa, cardname[cards[20]%4][cards[20]/4], upst);
+            potbid[0][aa] = bidx[3];
+            if (bidx[3] == 1) {
+                bidwp[aa].setVisible(true);
+                bidyes.setVisible(true);
+            }
+            if (bidx[3] == 2) {
+                bidalone[aa].setVisible(true);
+                wpalone.setVisible(true);
+            }
+            if (bidx[3] > 0) { // some bid made
+                if (aa == 3) {
+                    bidder1.setVisible(true); // East bids
+                } else if (aa == 2) {
+                    bidder2.setVisible(true); // North bids
+                }
+            }
+            if (bidx[2] < 1) {
+                bidsuit1.setVisible(true); // diamonds or clubs bid
+            }
+            if (bidx[2] == 1 || bidx[2] == 3) {
+                bidsuit2.setVisible(true); // hearts or clubs bid
+            }
 
-                potbid[0][aa] = bidx[3];
+            lone = bidx[0];
+            declarer = bidx[1];
+            fintp = bidx[2];
+            firstbid1.setVisible(true); // signal of having reached this point
+
+            // second bidder
+            // only need to proceed if previous players passed
+            if (!bidyes.isVisible()) {
+                docall = bidder12(playersuit[bb][upst][upst], playersuit[bb][upst][3-upst], right[bb][upst],
+                                  left[bb][upst], acet[bb][upst], kingt[bb][upst], uprk, upst, bidscore[bb][upst],
+                                  summins[bb][upst], vd[bb], points[bb], game);
+
+                bidx = bid(docall, bb, cardname[cards[20]%4][cards[20]/4], upst);
+
+                potbid[0][bb] = bidx[3];
+                if (bidx[3] == 1) {
+                    bidwp[bb].setVisible(true);
+                    bidyes.setVisible(true);
+                }
+                if (bidx[3] == 2) {
+                    bidalone[bb].setVisible(true);
+                    wpalone.setVisible(true);
+                }
+                if (bidx[3] > 0) { // some bid made
+                    if (bb == 3) {
+                        bidder1.setVisible(true); // East bids
+                    } else if (bb == 2) {
+                        bidder2.setVisible(true); // North bids
+                    }
+                }
+                if (bidx[2] < 1) {
+                    bidsuit1.setVisible(true); // diamonds or clubs bid
+                }
+                if (bidx[2] == 1 || bidx[2] == 3) {
+                    bidsuit2.setVisible(true); // hearts or clubs bid
+                }
+
+                lone = bidx[0];
+                declarer = bidx[1];
+                fintp = bidx[2];
+                secondbid1.setVisible(true); // signal of having reached this point
+            }
+
+            // third bidder
+            // only need to proceed if previous players passed
+            if (!bidyes.isVisible()) {
+                docall = bidder13(playersuit[cc][upst][upst], playersuit[cc][upst][3-upst], right[cc][upst], left[cc][upst],
+                                  acet[cc][upst], uprk, upst, bidscore[cc][upst], summins[cc][upst], vd[cc], points[cc], game);
+
+                bidx = bid(docall, cc, cardname[cards[20]%4][cards[20]/4], upst);
+
+                potbid[0][cc] = bidx[3];
+                if (bidx[3] == 1) {
+                    bidwp[cc].setVisible(true);
+                    bidyes.setVisible(true);
+                }
+                if (bidx[3] == 2) {
+                    bidalone[cc].setVisible(true);
+                    wpalone.setVisible(true);
+                }
+                if (bidx[3] > 0) { // some bid made
+                    if (cc == 3) {
+                        bidder1.setVisible(true); // East bids
+                    } else if (cc == 2) {
+                        bidder2.setVisible(true); // North bids
+                    }
+                }
+                if (bidx[2] < 1) {
+                    bidsuit1.setVisible(true); // diamonds or clubs bid
+                }
+                if (bidx[2] == 1 || bidx[2] == 3) {
+                    bidsuit2.setVisible(true); // hearts or clubs bid
+                }
+
+                lone = bidx[0];
+                declarer = bidx[1];
+                fintp = bidx[2];
+                thirdbid1.setVisible(true); // signal of having reached this point
+            }
+
+            // dealer
+            // only need to proceed if previous players passed
+            if (!bidyes.isVisible()) {
+                docall = bidder14(playersuit[dd][upst][upst], playersuit[dd][upst][3-upst], right[dd][upst], left[dd][upst],
+                                  acet[dd][upst], aces[dd][upst], kingt[dd][upst], uprk, upst, bidscore[dd][upst], summins[dd][upst],
+                                  vd[dd], points[dd], game);
+
+                bidx = bid(docall, dd, cardname[cards[20]%4][cards[20]/4], upst);
+
+                potbid[0][dd] = bidx[3];
+                if (bidx[3] == 1) {
+                    bidwp[dd].setVisible(true);
+                    bidyes.setVisible(true);
+                }
+                if (bidx[3] == 2) {
+                    bidalone[dd].setVisible(true);
+                    wpalone.setVisible(true);
+                }
+                if (bidx[3] > 0) { // some bid made
+                    if (dd == 3) {
+                        bidder1.setVisible(true); // East bids
+                    } else if (dd == 2) {
+                        bidder2.setVisible(true); // North bids
+                    }
+                }
+                if (bidx[2] < 1) {
+                    bidsuit1.setVisible(true); // diamonds or clubs bid
+                }
+                if (bidx[2] == 1 || bidx[2] == 3) {
+                    bidsuit2.setVisible(true); // hearts or clubs bid
+                }
+
+                lone = bidx[0];
+                declarer = bidx[1];
+                fintp = bidx[2];
+                fourthbid1.setVisible(true); // signal of having reached this point
+            }
+
+            //  if all players pass, have second round of bidding
+            if (!bidyes.isVisible()) {
+                System.out.println("No one bids in the first round");
+                round = 1;
+            }
+
+            //  if seat 2 didn't call lone AND some player declared, have dealer swap cards
+            if (lone != bb && declarer != -1) {
+                // Re-calculate of best card to discard
+                seat = ((declarer-dealer+4)%4)*2 + 1 - (lone+6)/6; // see spreadsheet for meaning
+                cswap = swapcard(cards, seat, dealer); // determines # of card swapped by dealer for turn card
+
+                int temp = cards[cswap]; // dealer swaps cards
+                cards[cswap] = cards[20];
+                cards[20] = temp;
+            }
+
+            // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+            //  second round of bidding, if necessary
+
+            // first bidder
+            // only need to proceed if previous players passed
+            if (!bidyes.isVisible()) {
+                docall = bidder21(playersuit[aa][bests[aa]][bests[aa]], playersuit[aa][bests[aa]][3-bests[aa]],
+                                  right[aa][bests[aa]], left[aa][bests[aa]], acet[aa][bests[aa]], aces[aa][bests[aa]],
+                                  kingt[aa][bests[aa]], upst, bidscore[aa][bests[aa]], summins[aa][bests[aa]], bests[(dealer+1)%4],
+                                  points[aa], game);
+
+                bidx = bid(docall, aa, bests[aa]);
+
+                potbid[1][aa] = bidx[3];
                 if (bidx[3] == 1) {
                     bidwp[aa].setVisible(true);
                     bidyes.setVisible(true);
@@ -2476,394 +2570,29 @@ public class EuchreBeta {
                         bidder2.setVisible(true); // North bids
                     }
                 }
-                if (bidx[2] < 1) {
-                    bidsuit1.setVisible(true); // diamonds or clubs bid
-                }
-                if (bidx[2] == 1 || bidx[2] == 3) {
-                    bidsuit2.setVisible(true); // hearts or clubs bid
-                }
 
                 lone = bidx[0];
                 declarer = bidx[1];
                 fintp = bidx[2];
-            }
-            firstbid1.setVisible(true); // signal of having reached this point
-
-            // only need to proceed if previous players passed
-            if (!bidyes.isVisible()) {
-                docall = bidder12(playersuit[bb][upst][upst], playersuit[bb][upst][3-upst], right[bb][upst],
-                                  left[bb][upst], acet[bb][upst], kingt[bb][upst], uprk, upst, bidscore[bb][upst],
-                                  summins[bb][upst], vd[bb], points[bb], game);
-
-                if (bb == 0 && false) { // human player
-                    docallh = docall;
-                    System.out.println("docallh: " + docallh);
-
-                } else { // computer player
-                    bidx = bid(docall, bb, cardname[cards[20]%4][cards[20]/4], upst);
-
-                    potbid[0][bb] = bidx[3];
-                    if (bidx[3] == 1) {
-                        bidwp[bb].setVisible(true);
-                        bidyes.setVisible(true);
-                    }
-                    if (bidx[3] == 2) {
-                        bidalone[bb].setVisible(true);
-                        wpalone.setVisible(true);
-                    }
-                    if (bidx[3] > 0) { // some bid made
-                        if (bb == 3) {
-                            bidder1.setVisible(true); // East bids
-                        } else if (bb == 2) {
-                            bidder2.setVisible(true); // North bids
-                        }
-                    }
-                    if (bidx[2] < 1) {
-                        bidsuit1.setVisible(true); // diamonds or clubs bid
-                    }
-                    if (bidx[2] == 1 || bidx[2] == 3) {
-                        bidsuit2.setVisible(true); // hearts or clubs bid
-                    }
-
-                    lone = bidx[0];
-                    declarer = bidx[1];
-                    fintp = bidx[2];
-                }
-            }
-            secondbid1.setVisible(true); // signal of having reached this point
-
-            //  third bidder
-            if (!bidyes.isVisible() || (bidwp[bb].isVisible() || bidalone[bb].isVisible())) {
-                // display in console how computer would have bid if different from human player's bid
-                if (bb == 0) {
-                    if (!bidyes.isVisible()) {
-                        System.out.println("South passes\n");
-                    } else if (wpalone.isVisible() == false) {
-                        System.out.println("South calls " + cardname[cards[20]%4][cards[20]/4] + " as trump\n");
-                        declarer = bb;
-                        fintp = upst;
-                    } else {
-                        System.out.println("South calls " + cardname[cards[20]%4][cards[20]/4] + " as trump, going alone\n");
-                        declarer = bb;
-                        lone = bb;
-                        fintp = upst;
-                    }
-                    if (docallh == 0 && bidyes.isVisible()) {
-                        System.out.println("computer would have passed");
-                    } else if (docallh == 1 && (!bidyes.isVisible() || wpalone.isVisible())) {
-                        System.out.println("computer would have bid with partner");
-                    } else if (docallh == 2 && (!bidyes.isVisible() || !wpalone.isVisible())) {
-                        System.out.println("computer would have bid alone");
-                    }
-                }
-            }
-            thirdbid1.setVisible(true); // signal of having reached this point
-
-            // only need to proceed if previous players passed
-            if (!bidyes.isVisible()) {
-                docall = bidder13(playersuit[cc][upst][upst], playersuit[cc][upst][3-upst], right[cc][upst], left[cc][upst],
-                                  acet[cc][upst], uprk, upst, bidscore[cc][upst], summins[cc][upst], vd[cc], points[cc], game);
-
-                if (cc == 0 && false) { // human player
-                    docallh = docall;
-
-                } else { // computer player
-                    bidx = bid(docall, cc, cardname[cards[20]%4][cards[20]/4], upst);
-
-                    potbid[0][cc] = bidx[3];
-                    if (bidx[3] == 1) {
-                        bidwp[cc].setVisible(true);
-                        bidyes.setVisible(true);
-                    }
-                    if (bidx[3] == 2) {
-                        bidalone[cc].setVisible(true);
-                        wpalone.setVisible(true);
-                    }
-                    if (bidx[3] > 0) { // some bid made
-                        if (cc == 3) {
-                            bidder1.setVisible(true); // East bids
-                        } else if (cc == 2) {
-                            bidder2.setVisible(true); // North bids
-                        }
-                    }
-                    if (bidx[2] < 1) {
-                        bidsuit1.setVisible(true); // diamonds or clubs bid
-                    }
-                    if (bidx[2] == 1 || bidx[2] == 3) {
-                        bidsuit2.setVisible(true); // hearts or clubs bid
-                    }
-
-                    lone = bidx[0];
-                    declarer = bidx[1];
-                    fintp = bidx[2];
-                }
-            }
-            fourthbid1.setVisible(true); // signal of having reached this point
-
-            //  dealer
-            if (!bidyes.isVisible() || (bidwp[cc].isVisible() || bidalone[cc].isVisible())) {
-                // display in console how computer would have bid if different from human player's bid
-                if (cc == 0) {
-                    if (!bidyes.isVisible()) {
-                        System.out.println("South passes\n");
-                    } else if (!wpalone.isVisible()) {
-                        System.out.println("South calls " + cardname[cards[20]%4][cards[20]/4] + " as trump\n");
-                        declarer = cc;
-                        fintp = upst;
-                    } else {
-                        System.out.println("South calls " + cardname[cards[20]%4][cards[20]/4] + " as trump, going alone\n");
-                        declarer = cc;
-                        lone = cc;
-                        fintp = upst;
-                    }
-                    if (docallh == 0 && bidyes.isVisible()) {
-                        System.out.println("computer would have passed");
-                    } else if (docallh == 1 && (!bidyes.isVisible() || wpalone.isVisible())) {
-                        System.out.println("computer would have bid with partner");
-                    } else if (docallh == 2 && (!bidyes.isVisible() || !wpalone.isVisible())) {
-                        System.out.println("computer would have bid alone");
-                    }
-                }
-            }
-
-            // only need to proceed if previous players passed
-            if (!bidyes.isVisible()) {
-                docall = bidder14(playersuit[dd][upst][upst], playersuit[dd][upst][3-upst], right[dd][upst], left[dd][upst],
-                                  acet[dd][upst], aces[dd][upst], kingt[dd][upst], uprk, upst, bidscore[dd][upst], summins[dd][upst],
-                                  vd[dd], points[dd], game);
-
-                if (dd == 0 && false) { // human player
-                    docallh = docall;
-
-                } else { // computer player
-                    bidx = bid(docall, dd, cardname[cards[20]%4][cards[20]/4], upst);
-
-                    potbid[0][dd] = bidx[3];
-                    if (bidx[3] == 1) {
-                        bidwp[dd].setVisible(true);
-                        bidyes.setVisible(true);
-                    }
-                    if (bidx[3] == 2) {
-                        bidalone[dd].setVisible(true);
-                        wpalone.setVisible(true);
-                    }
-                    if (bidx[3] > 0) { // some bid made
-                        if (dd == 3) {
-                            bidder1.setVisible(true); // East bids
-                        } else if (dd == 2) {
-                            bidder2.setVisible(true); // North bids
-                        }
-                    }
-                    if (bidx[2] < 1) {
-                        bidsuit1.setVisible(true); // diamonds or clubs bid
-                    }
-                    if (bidx[2] == 1 || bidx[2] == 3) {
-                        bidsuit2.setVisible(true); // hearts or clubs bid
-                    }
-
-                    lone = bidx[0];
-                    declarer = bidx[1];
-                    fintp = bidx[2];
-                }
-            }
-
-            if (!bidyes.isVisible() || (bidwp[dd].isVisible() || bidalone[dd].isVisible())) {
-                // display in console how computer would have bid if different from human player's bid
-                if (dd == 0) {
-                    if (!bidyes.isVisible()) {
-                        System.out.println("South passes\n");
-                    } else if (!wpalone.isVisible()) {
-                        System.out.println("South calls " + cardname[cards[20]%4][cards[20]/4] + " as trump\n");
-                        declarer = dd;
-                        fintp = upst;
-                    } else {
-                        System.out.println("South calls " + cardname[cards[20]%4][cards[20]/4] + " as trump, going alone\n");
-                        declarer = dd;
-                        lone = dd;
-                        fintp = upst;
-                    }
-                    if (docallh == 0 && bidyes.isVisible()) {
-                        System.out.println("computer would have passed");
-                    } else if (docallh == 1 && (!bidyes.isVisible() || wpalone.isVisible())) {
-                        System.out.println("computer would have bid with partner");
-                    } else if (docallh == 2 && (!bidyes.isVisible() || !wpalone.isVisible())) {
-                        System.out.println("computer would have bid alone");
-                    }
-                }
-            }
-
-            //  if all players pass, have second round of bidding
-            if (!bidyes.isVisible()) {
-                System.out.println("No one bids in the first round");
-                round = 1;
-            }
-
-            //  if seat 2 didn't call lone AND some player declared, have dealer swap cards
-            if (lone != bb && declarer != -1) {
-
-                // Re-calculate of best card to discard
-                seat = ((declarer-dealer+4)%4)*2 + 1 - (lone+6)/6; // see spreadsheet for meaning
-                cswap = swapcard(cards, seat, dealer); // determines # of card swapped by dealer for turn card
-
-                if (dealer == 0  && false) { // human player is dealer
-                    //t4.start();
-                    while (!swap0.isVisible() && !swap1.isVisible() && !swap2.isVisible() &&
-                           !swap3.isVisible() && !swap4.isVisible()) {
-                        try {
-                            Thread.sleep(200);
-                        }
-                        catch(InterruptedException ee5) {
-                        }
-                    }
+                // now code for which suit was declared
+                if (bidx[2] == 1) { // hearts
+                    bidsuit2.setVisible(true);
+                    dec[aa].setIcon(cardimg[33]);
+                } else if (bidx[2] == 2) { // diamonds
+                    bidsuit1.setVisible(true);
+                    dec[aa].setIcon(cardimg[34]);
+                } else if (bidx[2] == 3) { // clubs
+                    bidsuit2.setVisible(true);
+                    bidsuit1.setVisible(true);
+                    dec[aa].setIcon(cardimg[35]);
                 } else {
-                    int temp = cards[cswap]; // dealer swaps cards
-                    cards[cswap] = cards[20];
-                    cards[20] = temp;
-                    System.out.println("dealer discards the " + cardname[cards[20]%4][cards[20]/4]);
-                }
-
-                // check if computer would have discarded the same card
-                if ((cswap == 0 && !swap0.isVisible()) || (cswap == 1 && !swap1.isVisible()) ||
-                    (cswap == 2 && !swap2.isVisible()) || (cswap == 3 && !swap3.isVisible()) ||
-                    (cswap == 4 && !swap4.isVisible())) {
-                    System.out.println("computer would have discarded the " + cardname[cards[cswap]%4][cards[cswap]/4]);
-                }
-            }
-
-            // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-            //  second round of bidding, if necessary
-
-            // first bidder
-
-            // only need to proceed if previous players passed
-            if (!bidyes.isVisible()) {
-                docall = bidder21(playersuit[aa][bests[aa]][bests[aa]], playersuit[aa][bests[aa]][3-bests[aa]],
-                                  right[aa][bests[aa]], left[aa][bests[aa]], acet[aa][bests[aa]], aces[aa][bests[aa]],
-                                  kingt[aa][bests[aa]], upst, bidscore[aa][bests[aa]], summins[aa][bests[aa]], bests[(dealer+1)%4],
-                                  points[aa], game);
-
-                if (aa == 0 && false) { // human player
-                    docallh = docall;
-                    //t3.start();
-
-                } else { // computer player
-                    bidx = bid(docall, aa, bests[aa]);
-
-                    potbid[1][aa] = bidx[3];
-                    if (bidx[3] == 1) {
-                        bidwp[aa].setVisible(true);
-                        bidyes.setVisible(true);
-                    }
-                    if (bidx[3] == 2) {
-                        bidalone[aa].setVisible(true);
-                        wpalone.setVisible(true);
-                    }
-                    if (bidx[3] > 0) { // some bid made
-                        if (aa == 3) {
-                            bidder1.setVisible(true); // East bids
-                        } else if (aa == 2) {
-                            bidder2.setVisible(true); // North bids
-                        }
-                    }
-
-                    lone = bidx[0];
-                    declarer = bidx[1];
-                    fintp = bidx[2];
-                    // now code for which suit was declared
-                    if (bidx[2] == 1) { // hearts
-                        bidsuit2.setVisible(true);
-                        dec[aa].setIcon(cardimg[33]);
-                    } else if (bidx[2] == 2) { // diamonds
-                        bidsuit1.setVisible(true);
-                        dec[aa].setIcon(cardimg[34]);
-                    } else if (bidx[2] == 3) { // clubs
-                        bidsuit2.setVisible(true);
-                        bidsuit1.setVisible(true);
-                        dec[aa].setIcon(cardimg[35]);
-                    } else {
-                        dec[aa].setIcon(cardimg[32]);
-                    }
+                    dec[aa].setIcon(cardimg[32]);
                 }
                 firstbid2.setVisible(true); // signal of having reached this point
                 bidround.setVisible(true);
             }
 
-            if (!bidyes.isVisible() || ((bidwp[aa].isVisible() || bidalone[aa].isVisible()) &&
-                                        bidround.isVisible())) {
-                // display in console how computer would have bid if different from human player's bid
-                if (aa == 0) {
-                    if (!bidyes.isVisible()) {
-                        System.out.println("South passes\n");
-                    } else if (!wpalone.isVisible()) {
-                        if (!bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                            System.out.println("South calls spades as trump\n");
-                            declarer = aa;
-                            fintp = 0;
-                        } else if (!bidsuit1.isVisible() && bidsuit2.isVisible()) {
-                            System.out.println("South calls hearts as trump\n");
-                            declarer = aa;
-                            fintp = 1;
-                        } else if (bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                            System.out.println("South calls diamonds as trump\n");
-                            declarer = aa;
-                            fintp = 2;
-                        } else {
-                            System.out.println("South calls clubs as trump\n");
-                            declarer = aa;
-                            fintp = 3;
-                        }
-                    } else {
-                        if (!bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                            System.out.println("South calls spades as trump, going alone\n");
-                            declarer = aa;
-                            lone = aa;
-                            fintp = 0;
-                        } else if (!bidsuit1.isVisible() && bidsuit2.isVisible()) {
-                            System.out.println("South calls hearts as trump, going alone\n");
-                            declarer = aa;
-                            lone = aa;
-                            fintp = 1;
-                        } else if (bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                            System.out.println("South calls diamonds as trump, going alone\n");
-                            declarer = aa;
-                            lone = aa;
-                            fintp = 2;
-                        } else {
-                            System.out.println("South calls clubs as trump, going alone\n");
-                            declarer = aa;
-                            lone = aa;
-                            fintp = 3;
-                        }
-
-                    }
-                    if (docallh == 0 && bidyes.isVisible()) {
-                        System.out.println("computer would have passed");
-                    } else if (docallh == 1 && (!bidyes.isVisible() || wpalone.isVisible())) {
-                        if (!bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                            System.out.println("computer would have bid spades with partner");
-                        } else if (!bidsuit1.isVisible() && bidsuit2.isVisible()) {
-                            System.out.println("computer would have bid hearts with partner");
-                        } else if (bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                            System.out.println("computer would have bid hearts with partner");
-                        } else {
-                            System.out.println("computer would have bid clubs with partner");
-                        }
-                    } else if (docallh == 2 && (!bidyes.isVisible() || !wpalone.isVisible())) {
-                        if (!bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                            System.out.println("computer would have bid spades with partner, going alone");
-                        } else if (!bidsuit1.isVisible() && bidsuit2.isVisible()) {
-                            System.out.println("computer would have bid hearts with partner, going alone");
-                        } else if (bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                            System.out.println("computer would have bid hearts with partner, going alone");
-                        } else {
-                            System.out.println("computer would have bid clubs with partner, going alone");
-                        }
-                    }
-                }
-            }
-
-            //  second bidder
-
+            // second bidder
             // only need to proceed if previous players passed
             if (!bidyes.isVisible()) {
                 docall = bidder22(playersuit[bb][bests[bb]][bests[bb]], playersuit[bb][bests[bb]][3-bests[bb]],
@@ -2871,378 +2600,137 @@ public class EuchreBeta {
                                   kingt[bb][bests[bb]], upst, uprk,bidscore[bb][bests[bb]], summins[bb][bests[bb]],
                                   bests[(dealer+1)%4], points[bb], game);
 
-                if (bb == 0 && false) { // human player
-                    docallh = docall;
-                    //t3.start();
+                bidx = bid(docall, bb, bests[bb]);
+                potbid[1][bb] = bidx[3];
+                if (bidx[3] == 1) {
+                    bidwp[bb].setVisible(true);
+                    bidyes.setVisible(true);
+                }
+                if (bidx[3] == 2) {
+                    bidalone[bb].setVisible(true);
+                    wpalone.setVisible(true);
+                }
+                if (bidx[3] > 0) { // some bid made
+                    if (bb == 3) {
+                        bidder1.setVisible(true); // East bids
+                    } else if (bb == 2) {
+                        bidder2.setVisible(true); // North bids
+                    }
+                }
 
-                } else { // computer player
-                    bidx = bid(docall, bb, bests[bb]);
-                    potbid[1][bb] = bidx[3];
-                    if (bidx[3] == 1) {
-                        bidwp[bb].setVisible(true);
-                        bidyes.setVisible(true);
-                    }
-                    if (bidx[3] == 2) {
-                        bidalone[bb].setVisible(true);
-                        wpalone.setVisible(true);
-                    }
-                    if (bidx[3] > 0) { // some bid made
-                        if (bb == 3) {
-                            bidder1.setVisible(true); // East bids
-                        } else if (bb == 2) {
-                            bidder2.setVisible(true); // North bids
-                        }
-                    }
-
-                    lone = bidx[0];
-                    declarer = bidx[1];
-                    fintp = bidx[2];
-                    // now code for which suit was declared
-                    if (bidx[2] == 1) {
-                        bidsuit2.setVisible(true);
-                        dec[bb].setIcon(cardimg[33]);
-                    } else if (bidx[2] == 2) {
-                        bidsuit1.setVisible(true);
-                        dec[bb].setIcon(cardimg[34]);
-                    } else if (bidx[2] == 3) {
-                        bidsuit2.setVisible(true);
-                        bidsuit1.setVisible(true);
-                        dec[bb].setIcon(cardimg[35]);
-                    } else {
-                        dec[bb].setIcon(cardimg[32]);
-                    }
+                lone = bidx[0];
+                declarer = bidx[1];
+                fintp = bidx[2];
+                // now code for which suit was declared
+                if (bidx[2] == 1) {
+                    bidsuit2.setVisible(true);
+                    dec[bb].setIcon(cardimg[33]);
+                } else if (bidx[2] == 2) {
+                    bidsuit1.setVisible(true);
+                    dec[bb].setIcon(cardimg[34]);
+                } else if (bidx[2] == 3) {
+                    bidsuit2.setVisible(true);
+                    bidsuit1.setVisible(true);
+                    dec[bb].setIcon(cardimg[35]);
+                } else {
+                    dec[bb].setIcon(cardimg[32]);
                 }
                 secondbid2.setVisible(true); // signal of having reached this point
                 bidround.setVisible(true);
             }
 
-            if (!bidyes.isVisible() || ((bidwp[bb].isVisible() || bidalone[bb].isVisible()) &&
-                                        bidround.isVisible())) {
-                // display in console how computer would have bid if different from human player's bid
-                if (bb == 0) {
-                    if (!bidyes.isVisible()) {
-                        System.out.println("South passes\n");
-                    } else if (!wpalone.isVisible()) {
-                        if (!bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                            System.out.println("South calls spades as trump\n");
-                            declarer = bb;
-                            fintp = 0;
-                        } else if (!bidsuit1.isVisible() && bidsuit2.isVisible()) {
-                            System.out.println("South calls hearts as trump\n");
-                            declarer = bb;
-                            fintp = 1;
-                        } else if (bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                            System.out.println("South calls diamonds as trump\n");
-                            declarer = bb;
-                            fintp = 2;
-                        } else {
-                            System.out.println("South calls clubs as trump\n");
-                            declarer = bb;
-                            fintp = 3;
-                        }
-                    } else {
-                        if (!bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                            System.out.println("South calls spades as trump, going alone\n");
-                            declarer = bb;
-                            lone = bb;
-                            fintp = 0;
-                        } else if (!bidsuit1.isVisible() && bidsuit2.isVisible()) {
-                            System.out.println("South calls hearts as trump, going alone\n");
-                            declarer = bb;
-                            lone = bb;
-                            fintp = 1;
-                        } else if (bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                            System.out.println("South calls diamonds as trump, going alone\n");
-                            declarer = bb;
-                            lone = bb;
-                            fintp = 2;
-                        } else {
-                            System.out.println("South calls clubs as trump, going alone\n");
-                            declarer = bb;
-                            lone = bb;
-                            fintp = 3;
-                        }
-
-                    }
-                    if (docallh == 0 && bidyes.isVisible()) {
-                        System.out.println("computer would have passed");
-                    } else if (docallh == 1 && (!bidyes.isVisible() || wpalone.isVisible())) {
-                        if (!bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                            System.out.println("computer would have bid spades with partner");
-                        } else if (!bidsuit1.isVisible() && bidsuit2.isVisible()) {
-                            System.out.println("computer would have bid hearts with partner");
-                        } else if (bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                            System.out.println("computer would have bid hearts with partner");
-                        } else {
-                            System.out.println("computer would have bid clubs with partner");
-                        }
-                    } else if (docallh == 2 && (!bidyes.isVisible() || !wpalone.isVisible())) {
-                        if (!bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                            System.out.println("computer would have bid spades with partner, going alone");
-                        } else if (!bidsuit1.isVisible() && bidsuit2.isVisible()) {
-                            System.out.println("computer would have bid hearts with partner, going alone");
-                        } else if (bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                            System.out.println("computer would have bid hearts with partner, going alone");
-                        } else {
-                            System.out.println("computer would have bid clubs with partner, going alone");
-                        }
-                    }
-                }
-            }
-
-            //  third bidder
-
+            // third bidder
             // only need to proceed if previous players passed
             if (!bidyes.isVisible()) {
                 docall = bidder23(playersuit[cc][bests[cc]][bests[cc]], right[cc][bests[cc]], left[cc][bests[cc]],
                                   acet[cc][bests[cc]], aces[cc][bests[cc]], kingt[cc][bests[cc]], upst, uprk,
                                   bidscore[cc][bests[cc]], summins[cc][bests[cc]], bests[(dealer+1)%4], points[cc], game);
 
-                if (cc == 0 && false) { // human player
-                    docallh = docall;
-                    //t3.start();
+                bidx = bid(docall, cc, bests[cc]);
 
-                } else { // computer player
-                    bidx = bid(docall, cc, bests[cc]);
+                potbid[1][cc] = bidx[3];
+                if (bidx[3] == 1) {
+                    bidwp[cc].setVisible(true);
+                    bidyes.setVisible(true);
+                }
+                if (bidx[3] == 2) {
+                    bidalone[cc].setVisible(true);
+                    wpalone.setVisible(true);
+                }
+                if (bidx[3] > 0) { // some bid made
+                    if (cc == 3) {
+                        bidder1.setVisible(true); // East bids
+                    } else if (cc == 2) {
+                        bidder2.setVisible(true); // North bids
+                    }
+                }
 
-                    potbid[1][cc] = bidx[3];
-                    if (bidx[3] == 1) {
-                        bidwp[cc].setVisible(true);
-                        bidyes.setVisible(true);
-                    }
-                    if (bidx[3] == 2) {
-                        bidalone[cc].setVisible(true);
-                        wpalone.setVisible(true);
-                    }
-                    if (bidx[3] > 0) { // some bid made
-                        if (cc == 3) {
-                            bidder1.setVisible(true); // East bids
-                        } else if (cc == 2) {
-                            bidder2.setVisible(true); // North bids
-                        }
-                    }
-
-                    lone = bidx[0];
-                    declarer = bidx[1];
-                    fintp = bidx[2];
-                    // now code for which suit was declared
-                    if (bidx[2] == 1) {
-                        bidsuit2.setVisible(true);
-                        dec[cc].setIcon(cardimg[33]);
-                    } else if (bidx[2] == 2) {
-                        bidsuit1.setVisible(true);
-                        dec[cc].setIcon(cardimg[34]);
-                    } else if (bidx[2] == 3) {
-                        bidsuit2.setVisible(true);
-                        bidsuit1.setVisible(true);
-                        dec[cc].setIcon(cardimg[35]);
-                    } else {
-                        dec[cc].setIcon(cardimg[32]);
-                    }
+                lone = bidx[0];
+                declarer = bidx[1];
+                fintp = bidx[2];
+                // now code for which suit was declared
+                if (bidx[2] == 1) {
+                    bidsuit2.setVisible(true);
+                    dec[cc].setIcon(cardimg[33]);
+                } else if (bidx[2] == 2) {
+                    bidsuit1.setVisible(true);
+                    dec[cc].setIcon(cardimg[34]);
+                } else if (bidx[2] == 3) {
+                    bidsuit2.setVisible(true);
+                    bidsuit1.setVisible(true);
+                    dec[cc].setIcon(cardimg[35]);
+                } else {
+                    dec[cc].setIcon(cardimg[32]);
                 }
                 thirdbid2.setVisible(true); // signal of having reached this point
                 bidround.setVisible(true);
             }
-            if (!bidyes.isVisible() || ((bidwp[cc].isVisible() || bidalone[cc].isVisible()) &&
-                                        bidround.isVisible())) {
-                // display in console how computer would have bid if different from human player's bid
-                if (cc == 0) {
-                    if (!bidyes.isVisible()) {
-                        System.out.println("South passes\n");
-                    } else if (!wpalone.isVisible()) {
-                        if (!bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                            System.out.println("South calls spades as trump\n");
-                            declarer = cc;
-                            fintp = 0;
-                        } else if (!bidsuit1.isVisible() && bidsuit2.isVisible()) {
-                            System.out.println("South calls hearts as trump\n");
-                            declarer = cc;
-                            fintp = 1;
-                        } else if (bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                            System.out.println("South calls diamonds as trump\n");
-                            declarer = cc;
-                            fintp = 2;
-                        } else {
-                            System.out.println("South calls clubs as trump\n");
-                            declarer = cc;
-                            fintp = 3;
-                        }
-                    } else {
-                        if (!bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                            System.out.println("South calls spades as trump, going alone\n");
-                            declarer = cc;
-                            lone = cc;
-                            fintp = 0;
-                        } else if (!bidsuit1.isVisible() && bidsuit2.isVisible()) {
-                            System.out.println("South calls hearts as trump, going alone\n");
-                            declarer = cc;
-                            lone = cc;
-                            fintp = 1;
-                        } else if (bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                            System.out.println("South calls diamonds as trump, going alone\n");
-                            declarer = cc;
-                            lone = cc;
-                            fintp = 2;
-                        } else {
-                            System.out.println("South calls clubs as trump, going alone\n");
-                            declarer = cc;
-                            lone = cc;
-                            fintp = 3;
-                        }
 
-                    }
-                    if (docallh == 0 && bidyes.isVisible()) {
-                        System.out.println("computer would have passed");
-                    } else if (docallh == 1 && (!bidyes.isVisible() || wpalone.isVisible())) {
-                        if (!bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                            System.out.println("computer would have bid spades with partner");
-                        } else if (!bidsuit1.isVisible() && bidsuit2.isVisible()) {
-                            System.out.println("computer would have bid hearts with partner");
-                        } else if (bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                            System.out.println("computer would have bid hearts with partner");
-                        } else {
-                            System.out.println("computer would have bid clubs with partner");
-                        }
-                    } else if (docallh == 2 && (!bidyes.isVisible() || !wpalone.isVisible())) {
-                        if (!bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                            System.out.println("computer would have bid spades with partner, going alone");
-                        } else if (!bidsuit1.isVisible() && bidsuit2.isVisible()) {
-                            System.out.println("computer would have bid hearts with partner, going alone");
-                        } else if (bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                            System.out.println("computer would have bid hearts with partner, going alone");
-                        } else {
-                            System.out.println("computer would have bid clubs with partner, going alone");
-                        }
-                    }
-                }
-            }
-
-            //  last bidder (dealer)
-
+            // last bidder (dealer)
             // only need to proceed if previous players passed
             if (!bidyes.isVisible()) {
                 docall = bidder24(playersuit[dd][bests[dd]][bests[dd]], playersuit[dd][bests[dd]][3-bests[dd]],
                                   right[dd][bests[dd]], left[dd][bests[dd]], acet[dd][bests[dd]], upst, uprk,
                                   bidscore[dd][bests[dd]], summins[dd][bests[dd]], bests[(dealer+1)%4], points[dd], game);
 
-                if (dd == 0 && false) { // human player
-                    docallh = docall;
-                    //t3.start();
+                bidx = bid(docall, dd, bests[dd]);
 
-                } else { // computer player
-                    bidx = bid(docall, dd, bests[dd]);
+                potbid[1][dd] = bidx[3];
+                if (bidx[3] == 1) {
+                    bidwp[dd].setVisible(true);
+                    bidyes.setVisible(true);
+                }
+                if (bidx[3] == 2) {
+                    bidalone[dd].setVisible(true);
+                    wpalone.setVisible(true);
+                }
+                if (bidx[3] > 0) { // some bid made
+                    if (dd == 3) {
+                        bidder1.setVisible(true); // East bids
+                    } else if (dd == 2) {
+                        bidder2.setVisible(true); // North bids
+                    }
+                }
 
-                    potbid[1][dd] = bidx[3];
-                    if (bidx[3] == 1) {
-                        bidwp[dd].setVisible(true);
-                        bidyes.setVisible(true);
-                    }
-                    if (bidx[3] == 2) {
-                        bidalone[dd].setVisible(true);
-                        wpalone.setVisible(true);
-                    }
-                    if (bidx[3] > 0) { // some bid made
-                        if (dd == 3) {
-                            bidder1.setVisible(true); // East bids
-                        } else if (dd == 2) {
-                            bidder2.setVisible(true); // North bids
-                        }
-                    }
-
-                    lone = bidx[0];
-                    declarer = bidx[1];
-                    fintp = bidx[2];
-                    // now code for which suit was declared
-                    if (bidx[2] == 1) {
-                        bidsuit2.setVisible(true);
-                        dec[dd].setIcon(cardimg[33]);
-                    } else if (bidx[2] == 2) {
-                        bidsuit1.setVisible(true);
-                        dec[dd].setIcon(cardimg[34]);
-                    } else if (bidx[2] == 3) {
-                        bidsuit2.setVisible(true);
-                        bidsuit1.setVisible(true);
-                        dec[dd].setIcon(cardimg[35]);
-                    } else {
-                        dec[dd].setIcon(cardimg[32]);
-                    }
+                lone = bidx[0];
+                declarer = bidx[1];
+                fintp = bidx[2];
+                // now code for which suit was declared
+                if (bidx[2] == 1) {
+                    bidsuit2.setVisible(true);
+                    dec[dd].setIcon(cardimg[33]);
+                } else if (bidx[2] == 2) {
+                    bidsuit1.setVisible(true);
+                    dec[dd].setIcon(cardimg[34]);
+                } else if (bidx[2] == 3) {
+                    bidsuit2.setVisible(true);
+                    bidsuit1.setVisible(true);
+                    dec[dd].setIcon(cardimg[35]);
+                } else {
+                    dec[dd].setIcon(cardimg[32]);
                 }
                 fourthbid2.setVisible(true); // signal of having reached this point
                 bidround.setVisible(true);
-            }
-
-            if (!bidyes.isVisible() || ((bidwp[dd].isVisible() || bidalone[dd].isVisible()) &&
-                                        bidround.isVisible())) {
-                // display in console how computer would have bid if different from human player's bid
-                if (dd == 0) {
-                    if (!bidyes.isVisible()) {
-                        System.out.println("South passes\n");
-                    } else if (!wpalone.isVisible()) {
-                        if (!bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                            System.out.println("South calls spades as trump\n");
-                            declarer = dd;
-                            fintp = 0;
-                        } else if (!bidsuit1.isVisible() && bidsuit2.isVisible()) {
-                            System.out.println("South calls hearts as trump\n");
-                            declarer = dd;
-                            fintp = 1;
-                        } else if (bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                            System.out.println("South calls diamonds as trump\n");
-                            declarer = dd;
-                            fintp = 2;
-                        } else {
-                            System.out.println("South calls clubs as trump\n");
-                            declarer = dd;
-                            fintp = 3;
-                        }
-                    } else {
-                        if (!bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                            System.out.println("South calls spades as trump, going alone\n");
-                            declarer = dd;
-                            lone = dd;
-                            fintp = 0;
-                        } else if (!bidsuit1.isVisible() && bidsuit2.isVisible()) {
-                            System.out.println("South calls hearts as trump, going alone\n");
-                            declarer = dd;
-                            lone = dd;
-                            fintp = 1;
-                        } else if (bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                            System.out.println("South calls diamonds as trump, going alone\n");
-                            declarer = dd;
-                            lone = dd;
-                            fintp = 2;
-                        } else {
-                            System.out.println("South calls clubs as trump, going alone\n");
-                            declarer = dd;
-                            lone = dd;
-                            fintp = 3;
-                        }
-
-                    }
-                    if (docallh == 0 && bidyes.isVisible()) {
-                        System.out.println("computer would have passed");
-                    } else if (docallh == 1 && (!bidyes.isVisible() || wpalone.isVisible())) {
-                        if (!bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                            System.out.println("computer would have bid spades with partner");
-                        } else if (!bidsuit1.isVisible() && bidsuit2.isVisible()) {
-                            System.out.println("computer would have bid hearts with partner");
-                        } else if (bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                            System.out.println("computer would have bid hearts with partner");
-                        } else {
-                            System.out.println("computer would have bid clubs with partner");
-                        }
-                    } else if (docallh == 2 && (!bidyes.isVisible() || !wpalone.isVisible())) {
-                        if (!bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                            System.out.println("computer would have bid spades with partner, going alone");
-                        } else if (!bidsuit1.isVisible() && bidsuit2.isVisible()) {
-                            System.out.println("computer would have bid hearts with partner, going alone");
-                        } else if (bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                            System.out.println("computer would have bid hearts with partner, going alone");
-                        } else {
-                            System.out.println("computer would have bid clubs with partner, going alone");
-                        }
-                    }
-                }
             }
 
             // skip play if no one bids second round
@@ -3584,28 +3072,9 @@ public class EuchreBeta {
                     m11 = cardplay%10;
                     n11 = (cardplay/10)%10;
 
-                    if (aa == 0 && false) {
-                        result = cardplay/100;
-                        //p1.start();
-                        while (!pcdone1.isVisible()) { // wait for human to select card to play
-                            try {
-                                Thread.sleep(200);
-                            }
-                            catch(InterruptedException b1) {
-                            }
-                        }
-                        m11 = cards[4]%4;
-                        n11 = cards[4]/4;
-                    } else {
-                        first[aa].setIcon(cardimg2[m11][n11]);
-                        contentPane.add(first[aa]);
-                        SwingUtilities.updateComponentTreeUI(frame);
-                    }
-                    try {
-                        Thread.sleep(800);
-                    }
-                    catch(InterruptedException b2) {
-                    }
+                    first[aa].setIcon(cardimg2[m11][n11]);
+                    contentPane.add(first[aa]);
+                    SwingUtilities.updateComponentTreeUI(frame);
 
                     System.out.println("Player " + position[aa] + " leads the " + cardname[m11][n11] + "\n");
                     for (int i=0; i<4; i++) {
@@ -3764,36 +3233,9 @@ public class EuchreBeta {
                     m12 = cardplay%10;
                     n12 = (cardplay/10)%10;
 
-                    if (bb == 0 && false) {
-                        result = cardplay/100;
-                        if (playst[bb][suit[0][0]] > 0 && (flone != 1 || dealer != 2)) { // human not leading, so need to check play
-                            for (int i=0; i<5; i++) {
-                                if (cards[i]%4 != suit[0][0]) {
-                                    c1[i].setEnabled(false);
-                                }
-                            }
-                        }
-                        //p1.start();
-                        while (!pcdone1.isVisible()) { // wait for human to select card to play
-                            try {
-                                Thread.sleep(200);
-
-                            }
-                            catch(InterruptedException b3) {
-                            }
-                        }
-                        m12 = cards[4]%4;
-                        n12 = cards[4]/4;
-                    } else {
-                        first[bb].setIcon(cardimg2[m12][n12]);
-                        contentPane.add(first[bb]);
-                        SwingUtilities.updateComponentTreeUI(frame);
-                    }
-                    try {
-                        Thread.sleep(800);
-                    }
-                    catch (InterruptedException b4) {
-                    }
+                    first[bb].setIcon(cardimg2[m12][n12]);
+                    contentPane.add(first[bb]);
+                    SwingUtilities.updateComponentTreeUI(frame);
 
                     if (lone == cc) { // if 3rd seat going alone, assign m11 the value of m12, the true lead
                         m11 = m12;
@@ -3949,35 +3391,9 @@ public class EuchreBeta {
                     m13 = cardplay%10;
                     n13 = (cardplay/10)%10;
 
-                    if (cc == 0 && false) {
-                        result = cardplay/100;
-                        if (playst[cc][suit[0][0]] > 0 && (flone != 1 || dealer != 2)) { // human not leading, so need to check play
-                            for (int i=0; i<5; i++) {
-                                if (cards[i]%4 != suit[0][0]) {
-                                    c1[i].setEnabled(false);
-                                }
-                            }
-                        }
-                        //p1.start();
-                        while (!pcdone1.isVisible()) { // wait for human to select card to play
-                            try {
-                                Thread.sleep(200);
-                            }
-                            catch(InterruptedException b5) {
-                            }
-                        }
-                        m13 = cards[4]%4;
-                        n13 = cards[4]/4;
-                    } else {
-                        first[cc].setIcon(cardimg2[m13][n13]);
-                        contentPane.add(first[cc]);
-                        SwingUtilities.updateComponentTreeUI(frame);
-                    }
-                    try {
-                        Thread.sleep(800);
-                    }
-                    catch (InterruptedException b6) {
-                    }
+                    first[cc].setIcon(cardimg2[m13][n13]);
+                    contentPane.add(first[cc]);
+                    SwingUtilities.updateComponentTreeUI(frame);
 
                     System.out.println("Player " + position[cc] + " plays the " + cardname[m13][n13] + "." + "\n");
                     for (int i=0; i<4; i++) {
@@ -4137,36 +3553,9 @@ public class EuchreBeta {
                     m14 = cardplay%10;
                     n14 = (cardplay/10)%10;
 
-                    if (dd == 0 && false) {
-                        result = cardplay/100;
-                        if (playst[dd][suit[0][0]] > 0 && (flone != 1 || dealer != 2)) { // human not leading, so need to check play
-                            for (int i=0; i<5; i++) {
-                                if (cards[i]%4 != suit[0][0]) {
-                                    c1[i].setEnabled(false);
-                                }
-                            }
-                        }
-                        //p1.start();
-                        while (!pcdone1.isVisible()) { // wait for human to select card to play
-                            try {
-                                Thread.sleep(200);
-                            }
-                            catch(InterruptedException b7) {
-                            }
-                        }
-                        // code for card which human actually selected
-                        m14 = cards[4]%4;
-                        n14 = cards[4]/4;
-                    } else {
-                        first[dd].setIcon(cardimg2[m14][n14]);
-                        contentPane.add(first[dd]);
-                        SwingUtilities.updateComponentTreeUI(frame);
-                    }
-                    try {
-                        Thread.sleep(800);
-                    }
-                    catch (InterruptedException b8) {
-                    }
+                    first[dd].setIcon(cardimg2[m14][n14]);
+                    contentPane.add(first[dd]);
+                    SwingUtilities.updateComponentTreeUI(frame);
 
                     System.out.println("Player " + position[dd] + " plays the " + cardname[m14][n14] + "." + "\n");
                     for (int i=0; i<4; i++) {
@@ -4480,28 +3869,9 @@ public class EuchreBeta {
                 m21 = cardplay%10;
                 n21 = (cardplay/10)%10;
 
-                if (aa2 == 0 && false) {
-                    result = cardplay/100;
-                    //p2.start();
-                    while (!pcdone2.isVisible()) { // wait for human to select card to play
-                        try {
-                            Thread.sleep(200);
-                        }
-                        catch(InterruptedException b9) {
-                        }
-                    }
-                    m21 = cards[3]%4;
-                    n21 = cards[3]/4;
-                } else {
-                    second[aa2].setIcon(cardimg2[m21][n21]);
-                    contentPane.add(second[aa2]);
-                    SwingUtilities.updateComponentTreeUI(frame);
-                }
-                try {
-                    Thread.sleep(800);
-                }
-                catch (InterruptedException b10) {
-                }
+                second[aa2].setIcon(cardimg2[m21][n21]);
+                contentPane.add(second[aa2]);
+                SwingUtilities.updateComponentTreeUI(frame);
 
                 System.out.println("Player " + position[win1] + " leads the " + cardname[m21][n21] + "." + "\n");
                 for (int i=0; i<4; i++) {
@@ -4626,35 +3996,9 @@ public class EuchreBeta {
                     m22 = cardplay%10;
                     n22 = (cardplay/10)%10;
 
-                    if (bb2 == 0 && false) {
-                        result = cardplay/100;
-                        if (playst[bb2][suit[1][0]] > 0 && (flone != 1 || dealer != 2)) { // human not leading, so need to check play
-                            for (int i=0; i<4; i++) {
-                                if (cards[i]%4 != suit[1][0]) {
-                                    c2[i].setEnabled(false);
-                                }
-                            }
-                        }
-                        //p2.start();
-                        while (!pcdone2.isVisible()) { // wait for human to select card to play
-                            try {
-                                Thread.sleep(200);
-                            }
-                            catch(InterruptedException b11) {
-                            }
-                        }
-                        m22 = cards[3]%4;
-                        n22 = cards[3]/4;
-                    } else {
-                        second[bb2].setIcon(cardimg2[m22][n22]);
-                        contentPane.add(second[bb2]);
-                        SwingUtilities.updateComponentTreeUI(frame);
-                    }
-                    try {
-                        Thread.sleep(800);
-                    }
-                    catch (InterruptedException b12) {
-                    }
+                    second[bb2].setIcon(cardimg2[m22][n22]);
+                    contentPane.add(second[bb2]);
+                    SwingUtilities.updateComponentTreeUI(frame);
 
                     System.out.println("Player " + position[bb2] + " plays the " + cardname[m22][n22] + "." + "\n");
                     for (int i=0; i<4; i++) {
@@ -4816,35 +4160,9 @@ public class EuchreBeta {
                     m23 = cardplay%10;
                     n23 = (cardplay/10)%10;
 
-                    if (cc2 == 0 && false) {
-                        result = cardplay/100;
-                        if (playst[cc2][suit[1][0]] > 0 && (flone != 1 || dealer != 2)) { // human not leading, so need to check play
-                            for (int i=0; i<4; i++) {
-                                if (cards[i]%4 != suit[1][0]) {
-                                    c2[i].setEnabled(false);
-                                }
-                            }
-                        }
-                        //p2.start();
-                        while (!pcdone2.isVisible()) { // wait for human to select card to play
-                            try {
-                                Thread.sleep(200);
-                            }
-                            catch(InterruptedException b13) {
-                            }
-                        }
-                        m23 = cards[3]%4;
-                        n23 = cards[3]/4;
-                    } else {
-                        second[cc2].setIcon(cardimg2[m23][n23]);
-                        contentPane.add(second[cc2]);
-                        SwingUtilities.updateComponentTreeUI(frame);
-                    }
-                    try {
-                        Thread.sleep(800);
-                    }
-                    catch (InterruptedException b14) {
-                    }
+                    second[cc2].setIcon(cardimg2[m23][n23]);
+                    contentPane.add(second[cc2]);
+                    SwingUtilities.updateComponentTreeUI(frame);
 
                     System.out.println("Player " + position[cc2] + " plays the " + cardname[m23][n23] + "." + "\n");
                     for (int i=0; i<4; i++) {
@@ -4964,35 +4282,9 @@ public class EuchreBeta {
                     m24 = cardplay%10;
                     n24 = (cardplay/10)%10;
 
-                    if (dd2 == 0 && false) {
-                        result = cardplay/100;
-                        if (playst[dd2][suit[1][0]] > 0 && (flone != 1 || dealer != 2)) { // human not leading, so need to check play
-                            for (int i=0; i<4; i++) {
-                                if (cards[i]%4 != suit[1][0]) {
-                                    c2[i].setEnabled(false);
-                                }
-                            }
-                        }
-                        //p2.start();
-                        while (!pcdone2.isVisible()) { // wait for human to select card to play
-                            try {
-                                Thread.sleep(200);
-                            }
-                            catch(InterruptedException b15) {
-                            }
-                        }
-                        m24 = cards[3]%4;
-                        n24 = cards[3]/4;
-                    } else {
-                        second[dd2].setIcon(cardimg2[m24][n24]);
-                        contentPane.add(second[dd2]);
-                        SwingUtilities.updateComponentTreeUI(frame);
-                    }
-                    try {
-                        Thread.sleep(800);
-                    }
-                    catch (InterruptedException b16) {
-                    }
+                    second[dd2].setIcon(cardimg2[m24][n24]);
+                    contentPane.add(second[dd2]);
+                    SwingUtilities.updateComponentTreeUI(frame);
 
                     System.out.println("Player " + position[dd2] + " plays the " + cardname[m24][n24] + "." + "\n");
                     for (int i=0; i<4; i++) {
@@ -5251,28 +4543,9 @@ public class EuchreBeta {
                 m31 = cardplay%10;
                 n31 = (cardplay/10)%10;
 
-                if (aa3 == 0 && false) {
-                    result = cardplay/100;
-                    //p3.start();
-                    while (!pcdone3.isVisible()) { // wait for human to select card to play
-                        try {
-                            Thread.sleep(200);
-                        }
-                        catch(InterruptedException b17) {
-                        }
-                    }
-                    m31 = cards[2]%4;
-                    n31 = cards[2]/4;
-                } else {
-                    third[aa3].setIcon(cardimg2[m31][n31]);
-                    contentPane.add(third[aa3]);
-                    SwingUtilities.updateComponentTreeUI(frame);
-                }
-                try {
-                    Thread.sleep(800);
-                }
-                catch (InterruptedException b18) {
-                }
+                third[aa3].setIcon(cardimg2[m31][n31]);
+                contentPane.add(third[aa3]);
+                SwingUtilities.updateComponentTreeUI(frame);
 
                 System.out.println("Player " + position[aa3] + " leads the " + cardname[m31][n31] + "." + "\n");//
                 for (int i=0; i<4; i++) {
@@ -5399,35 +4672,9 @@ public class EuchreBeta {
                     m32 = cardplay%10;
                     n32 = (cardplay/10)%10;
 
-                    if (bb3 == 0 && false) {
-                        result = cardplay/100;
-                        if (playst[bb3][suit[2][0]] > 0 && (flone != 1 || dealer != 2)) { // human not leading, so need to check play
-                            for (int i=0; i<3; i++) {
-                                if (cards[i]%4 != suit[2][0]) {
-                                    c3[i].setEnabled(false);
-                                }
-                            }
-                        }
-                        //p3.start();
-                        while (!pcdone3.isVisible()) { // wait for human to select card to play
-                            try {
-                                Thread.sleep(200);
-                            }
-                            catch (InterruptedException b19) {
-                            }
-                        }
-                        m32 = cards[2]%4;
-                        n32 = cards[2]/4;
-                    } else {
-                        third[bb3].setIcon(cardimg2[m32][n32]);
-                        contentPane.add(third[bb3]);
-                        SwingUtilities.updateComponentTreeUI(frame);
-                    }
-                    try {
-                        Thread.sleep(800);
-                    }
-                    catch (InterruptedException b20) {
-                    }
+                    third[bb3].setIcon(cardimg2[m32][n32]);
+                    contentPane.add(third[bb3]);
+                    SwingUtilities.updateComponentTreeUI(frame);
 
                     System.out.println("Player " + position[bb3] + " plays the " + cardname[m32][n32] + "." + "\n");
                     for (int i=0; i<4; i++) {
@@ -5564,35 +4811,9 @@ public class EuchreBeta {
                     m33 = cardplay%10;
                     n33 = (cardplay/10)%10;
 
-                    if (cc3 == 0 && false) {
-                        result = cardplay/100;
-                        if (playst[cc3][suit[2][0]] > 0 && (flone != 1 || dealer != 2)) { // human not leading, so need to check play
-                            for (int i=0; i<3; i++) {
-                                if (cards[i]%4 != suit[2][0]) {
-                                    c3[i].setEnabled(false);
-                                }
-                            }
-                        }
-                        //p3.start();
-                        while (!pcdone3.isVisible()) { // wait for human to select card to play
-                            try {
-                                Thread.sleep(200);
-                            }
-                            catch (InterruptedException b21) {
-                            }
-                        }
-                        m33 = cards[2]%4;
-                        n33 = cards[2]/4;
-                    } else {
-                        third[cc3].setIcon(cardimg2[m33][n33]);
-                        contentPane.add(third[cc3]);
-                        SwingUtilities.updateComponentTreeUI(frame);
-                    }
-                    try {
-                        Thread.sleep(800);
-                    }
-                    catch (InterruptedException b22) {
-                    }
+                    third[cc3].setIcon(cardimg2[m33][n33]);
+                    contentPane.add(third[cc3]);
+                    SwingUtilities.updateComponentTreeUI(frame);
 
                     System.out.println("Player " + position[cc3] + " plays the " + cardname[m33][n33] + "." + "\n");
                     for (int i=0; i<4; i++) {
@@ -5713,35 +4934,9 @@ public class EuchreBeta {
                     m34 = cardplay%10;
                     n34 = (cardplay/10)%10;
 
-                    if (dd3 == 0 && false) {
-                        result = cardplay/100;
-                        if (playst[dd3][suit[2][0]] > 0 && (flone != 1 || dealer != 2)) { // human not leading, so need to check play
-                            for (int i=0; i<3; i++) {
-                                if (cards[i]%4 != suit[2][0]) {
-                                    c3[i].setEnabled(false);
-                                }
-                            }
-                        }
-                        //p3.start();
-                        while (!pcdone3.isVisible()) { // wait for human to select card to play
-                            try {
-                                Thread.sleep(200);
-                            }
-                            catch (InterruptedException b23) {
-                            }
-                        }
-                        m34 = cards[2]%4;
-                        n34 = cards[2]/4;
-                    } else {
-                        third[dd3].setIcon(cardimg2[m34][n34]);
-                        contentPane.add(third[dd3]);
-                        SwingUtilities.updateComponentTreeUI(frame);
-                    }
-                    try {
-                        Thread.sleep(800);
-                    }
-                    catch (InterruptedException b24) {
-                    }
+                    third[dd3].setIcon(cardimg2[m34][n34]);
+                    contentPane.add(third[dd3]);
+                    SwingUtilities.updateComponentTreeUI(frame);
 
                     System.out.println("Player " + position[dd3] + " plays the " + cardname[m34][n34] + "." + "\n");
                     for (int i=0; i<4; i++) {
@@ -5997,28 +5192,9 @@ public class EuchreBeta {
                 m41 = cardplay%10;
                 n41 = (cardplay/10)%10;
 
-                if (aa4 == 0 && false) {
-                    result = cardplay/100;
-                    //p4.start();
-                    while (!pcdone4.isVisible()) { // wait for human to select card to play
-                        try {
-                            Thread.sleep(200);
-                        }
-                        catch (InterruptedException b25) {
-                        }
-                    }
-                    m41 = cards[1]%4;
-                    n41 = cards[1]/4;
-                } else {
-                    fourth[aa4].setIcon(cardimg2[m41][n41]);
-                    contentPane.add(fourth[aa4]);
-                    SwingUtilities.updateComponentTreeUI(frame);
-                }
-                try {
-                    Thread.sleep(800);
-                }
-                catch (InterruptedException b26) {
-                }
+                fourth[aa4].setIcon(cardimg2[m41][n41]);
+                contentPane.add(fourth[aa4]);
+                SwingUtilities.updateComponentTreeUI(frame);
 
                 System.out.println("Player " + position[aa4] + " plays the " + cardname[m41][n41] + "." + "\n");//
                 for (int i=0; i<4; i++) {
@@ -6125,35 +5301,9 @@ public class EuchreBeta {
                     m42 = cardplay%10;
                     n42 = (cardplay/10)%10;
 
-                    if (bb4 == 0 && false) {
-                        result = cardplay/100;
-                        if (playst[bb4][suit[3][0]] > 0 && (flone != 1 || dealer != 2)) { // human not leading, so need to check play
-                            for (int i=0; i<2; i++) {
-                                if (cards[i]%4 != suit[3][0]) {
-                                    c4[i].setEnabled(false);
-                                }
-                            }
-                        }
-                        //p4.start();
-                        while (!pcdone4.isVisible()) { // wait for human to select card to play
-                            try {
-                                Thread.sleep(200);
-                            }
-                            catch (InterruptedException b27) {
-                            }
-                        }
-                        m42 = cards[1]%4;
-                        n42 = cards[1]/4;
-                    } else {
-                        fourth[bb4].setIcon(cardimg2[m42][n42]);
-                        contentPane.add(fourth[bb4]);
-                        SwingUtilities.updateComponentTreeUI(frame);
-                    }
-                    try {
-                        Thread.sleep(800);
-                    }
-                    catch (InterruptedException b28) {
-                    }
+                    fourth[bb4].setIcon(cardimg2[m42][n42]);
+                    contentPane.add(fourth[bb4]);
+                    SwingUtilities.updateComponentTreeUI(frame);
 
                     System.out.println("Player " + position[bb4] + " plays the " + cardname[m42][n42] + "." + "\n");
                     for (int i=0; i<4; i++) {
@@ -6269,35 +5419,9 @@ public class EuchreBeta {
                     m43 = cardplay%10;
                     n43 = (cardplay/10)%10;
 
-                    if (cc4 == 0 && false) {
-                        result = cardplay/100;
-                        if (playst[cc4][suit[3][0]] > 0 && (flone != 1 || dealer != 2)) { // human not leading, so need to check play
-                            for (int i=0; i<2; i++) {
-                                if (cards[i]%4 != suit[3][0]) {
-                                    c4[i].setEnabled(false);
-                                }
-                            }
-                        }
-                        //p4.start();
-                        while (!pcdone4.isVisible()) { // wait for human to select card to play
-                            try {
-                                Thread.sleep(200);
-                            }
-                            catch (InterruptedException b29) {
-                            }
-                        }
-                        m43 = cards[1]%4;
-                        n43 = cards[1]/4;
-                    } else {
-                        fourth[cc4].setIcon(cardimg2[m43][n43]);
-                        contentPane.add(fourth[cc4]);
-                        SwingUtilities.updateComponentTreeUI(frame);
-                    }
-                    try {
-                        Thread.sleep(800);
-                    }
-                    catch (InterruptedException b30) {
-                    }
+                    fourth[cc4].setIcon(cardimg2[m43][n43]);
+                    contentPane.add(fourth[cc4]);
+                    SwingUtilities.updateComponentTreeUI(frame);
 
                     System.out.println("Player " + position[cc4] + " plays the " + cardname[m43][n43] + "." + "\n");
                     for (int i=0; i<4; i++) {
@@ -6405,35 +5529,9 @@ public class EuchreBeta {
                     m44 = cardplay%10;
                     n44 = (cardplay/10)%10;
 
-                    if (dd4 == 0  && false) {
-                        result = cardplay/100;
-                        if (playst[dd4][suit[3][0]] > 0 && (flone != 1 || dealer != 2)) { // human not leading, so need to check play
-                            for (int i=0; i<2; i++) {
-                                if (cards[i]%4 != suit[3][0]) {
-                                    c4[i].setEnabled(false);
-                                }
-                            }
-                        }
-                        //p4.start();
-                        while (!pcdone4.isVisible()) { // wait for human to select card to play
-                            try {
-                                Thread.sleep(200);
-                            }
-                            catch (InterruptedException b31) {
-                            }
-                        }
-                        m44 = cards[1]%4;
-                        n44 = cards[1]/4;
-                    } else {
-                        fourth[dd4].setIcon(cardimg2[m44][n44]);
-                        contentPane.add(fourth[dd4]);
-                        SwingUtilities.updateComponentTreeUI(frame);
-                    }
-                    try {
-                        Thread.sleep(800);
-                    }
-                    catch (InterruptedException b32) {
-                    }
+                    fourth[dd4].setIcon(cardimg2[m44][n44]);
+                    contentPane.add(fourth[dd4]);
+                    SwingUtilities.updateComponentTreeUI(frame);
 
                     System.out.println("Player " + position[dd4] + " plays the " + cardname[m44][n44] + "." + "\n");
                     for (int i=0; i<4; i++) {
@@ -6484,34 +5582,6 @@ public class EuchreBeta {
                 final int cc5 = (win4+2)%4; // third to play
                 final int dd5 = (win4+3)%4; // fourth to play
 
-                continu4.addActionListener(new ActionListener() {
-                        public void actionPerformed (ActionEvent e) {
-                            contentPane.remove(fourth[aa]);
-                            contentPane.remove(fourth[bb]);
-                            contentPane.remove(fourth[cc]);
-                            contentPane.remove(fourth[dd]);
-                            contentPane.remove(winner);
-                            contentPane.remove(continu4);
-                            trick4.setVisible(true);
-                            SwingUtilities.updateComponentTreeUI(frame);
-                            try {
-                                Thread.sleep(800);
-                            }
-                            catch (InterruptedException e20) {
-                            }
-                            continu4.setEnabled(false);
-                            continu4.removeActionListener(this);
-                        }
-                    });
-
-                while (continu4.isEnabled() && false) { // wait for human to press 'continue' button
-                    try {
-                        Thread.sleep(200);
-                    }
-                    catch (InterruptedException e21) {
-                    }
-                }
-
                 // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
                 // play out fifth trick; first to play is winner of fourth trick
                 wturn = 5; // trick 5
@@ -6530,15 +5600,7 @@ public class EuchreBeta {
 
                 fifth[aa5].setIcon(cardimg2[m51][n51]);
                 contentPane.add(fifth[aa5]);
-                if (aa5 == 0 && false) {
-                    contentPane.remove(c5);
-                }
                 SwingUtilities.updateComponentTreeUI(frame);
-                try {
-                    Thread.sleep(800);
-                }
-                catch (InterruptedException e22) {
-                }
 
                 System.out.println("Player " + position[win4] + " leads the " + cardname[m51][n51] + "." + "\n");
                 suit[4][0] = m51;
@@ -6569,15 +5631,7 @@ public class EuchreBeta {
 
                     fifth[bb5].setIcon(cardimg2[m52][n52]);
                     contentPane.add(fifth[bb5]);
-                    if (bb5 == 0 && false) {
-                        contentPane.remove(c5);
-                    }
                     SwingUtilities.updateComponentTreeUI(frame);
-                    try {
-                        Thread.sleep(800);
-                    }
-                    catch (InterruptedException e23) {
-                    }
 
                     System.out.println("Player " + position[(win4+1)%4] + " plays the " + cardname[m52][n52] + "." + "\n");
                     suit[4][1] = m52;
@@ -6614,15 +5668,7 @@ public class EuchreBeta {
 
                     fifth[cc5].setIcon(cardimg2[m53][n53]);
                     contentPane.add(fifth[cc5]);
-                    if (cc5 == 0 && false) {
-                        contentPane.remove(c5);
-                    }
                     SwingUtilities.updateComponentTreeUI(frame);
-                    try {
-                        Thread.sleep(800);
-                    }
-                    catch (InterruptedException e24) {
-                    }
 
                     System.out.println("Player " + position[(win4+2)%4] + " plays the " + cardname[m53][n53] + "." + "\n");
                     suit[4][2] = m53;
@@ -6659,15 +5705,7 @@ public class EuchreBeta {
 
                     fifth[dd5].setIcon(cardimg2[m54][n54]);
                     contentPane.add(fifth[dd5]);
-                    if (dd5 == 0 && false) {
-                        contentPane.remove(c5);
-                    }
                     SwingUtilities.updateComponentTreeUI(frame);
-                    try {
-                        Thread.sleep(800);
-                    }
-                    catch (InterruptedException e25) {
-                    }
 
                     System.out.println("Player " + position[(win4+3)%4] + " plays the " + cardname[m54][n54] + "." + "\n");
                     suit[4][3] = m54;
@@ -6768,67 +5806,6 @@ public class EuchreBeta {
                 ptns.setText(spns);
                 ptew.setText(spew);
                 SwingUtilities.updateComponentTreeUI(frame);
-
-                final int ftop = top;
-                continu5.addActionListener(new ActionListener() {
-                        public void actionPerformed (ActionEvent e) {
-                            trick5.setVisible(true);
-                            contentPane.remove(fifth[aa]);
-                            contentPane.remove(fifth[bb]);
-                            contentPane.remove(fifth[cc]);
-                            contentPane.remove(fifth[dd]);
-                            contentPane.remove(winner);
-                            contentPane.remove(continu5);
-                            if (!bidyes.isVisible()) {
-                                dealn.setEnabled(false);
-                            } else if (ftop  >= game) {
-                                contentPane.add(rscore);
-                                try {
-                                    Thread.sleep(2000);
-                                }
-                                catch (InterruptedException e29) {
-                                }
-                                dealn.setEnabled(false);
-                            } else {
-                                contentPane.add(rscore);
-                                contentPane.add(dealn);
-                            }
-                            SwingUtilities.updateComponentTreeUI(frame);
-                            try {
-                                Thread.sleep(500);
-                            }
-                            catch(InterruptedException e26) {
-                            }
-                            continu5.setEnabled(false);
-                            continu5.removeActionListener(this);
-                        }
-                    });
-
-                while (continu5.isEnabled() && false) { // wait for human to press 'continue' button
-                    try {
-                        Thread.sleep(200);
-                    }
-                    catch (InterruptedException e27) {
-                    }
-                }
-
-                dealn.addActionListener(new ActionListener() { // setEnabled(false) = clicked = deal new hand
-                        public void actionPerformed (ActionEvent e) {
-                            contentPane.remove(rscore);
-                            contentPane.remove(dealn);
-                            SwingUtilities.updateComponentTreeUI(frame);
-                            dealn.setEnabled(false);
-                            dealn.removeActionListener(this);
-                        }
-                    });
-
-                while (dealn.isEnabled() && false) { // wait for human to press 'deal new game' button
-                    try {
-                        Thread.sleep(200);
-                    }
-                    catch (InterruptedException e28) {
-                    }
-                }
 
                 contentPane.remove(DS);
                 contentPane.remove(DW);
