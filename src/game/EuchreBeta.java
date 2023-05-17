@@ -1724,8 +1724,6 @@ public class EuchreBeta {
         // these variables don't reset when new hand is played (same game)
         int pns = 0; // N/S game pts
         int pew = 0; // E/W game pts
-        JLabel gscore = new JLabel("");
-        gscore.setBounds(280,200,100,110);
 
         while (top < game) { // play until one team reaches the threshold winning score
             lone = -1; // reset value of 'lone'
@@ -1984,77 +1982,77 @@ public class EuchreBeta {
             // ********************************************************
 
             // use boolean "isVisible" of these JLabels to track who has bid what and when
-            JLabel bidround = new JLabel(""); // bid round 1 or 2
-            JLabel bidyes = new JLabel(""); // pass or bid
-            JLabel wpalone = new JLabel(""); // bid wp or alone
-            JLabel bidder1 = new JLabel(""); // 0/0 = W; 0/1 = N; 1/0 = E; 1/1 = S
-            JLabel bidder2 = new JLabel("");
-            JLabel bidsuit1 = new JLabel(""); // 0/0 = spades; 0/1 = hearts; 1/0 = diamonds; 1/1 = clubs
-            JLabel bidsuit2 = new JLabel("");
+            boolean bidround = false; // bid round 1 or 2
+            boolean bidyes = false; // pass or bid
+            boolean wpalone = false; // bid wp or alone
+            boolean bidder1 = false; // 0/0 = W; 0/1 = N; 1/0 = E; 1/1 = S
+            boolean bidder2 = false;
+            boolean bidsuit1 = false; // 0/0 = spades; 0/1 = hearts; 1/0 = diamonds; 1/1 = clubs
+            boolean bidsuit2 = false;
 
             // use boolean "isVisible" of these JLabels to see if thread t1 has dealt with these bidders
-            JLabel firstbid1 = new JLabel("");
-            JLabel secondbid1 = new JLabel("");
-            JLabel thirdbid1 = new JLabel("");
-            JLabel fourthbid1 = new JLabel("");
-            JLabel firstbid2 = new JLabel("");
-            JLabel secondbid2 = new JLabel("");
-            JLabel thirdbid2 = new JLabel("");
-            JLabel fourthbid2 = new JLabel("");
+            boolean firstbid1 = false;
+            boolean secondbid1 = false;
+            boolean thirdbid1 = false;
+            boolean fourthbid1 = false;
+            boolean firstbid2 = false;
+            boolean secondbid2 = false;
+            boolean thirdbid2 = false;
+            boolean fourthbid2 = false;
 
             // use boolean "isVisible" of these JLabels to see if player has bid
-            JLabel[] bidwp = new JLabel[4];
-            JLabel[] bidalone = new JLabel[4];
+            boolean[] bidwp = new boolean[4];
+            boolean[] bidalone = new boolean[4];
             for (int i=0; i<4; i++) {
-                bidwp[i] = new JLabel("");
-                bidalone[i] = new JLabel("");
+                bidwp[i] = false;
+                bidalone[i] = false;
             }
 
             // use boolean "isVisible" of these JLabels to see if human bidder selects trump, round 2
-            JLabel picks = new JLabel("");
-            JLabel pickh = new JLabel("");
-            JLabel pickd = new JLabel("");
-            JLabel pickc = new JLabel("");
+            boolean picks = false;
+            boolean pickh = false;
+            boolean pickd = false;
+            boolean pickc = false;
 
             // use boolean of "isVisible" to see if human dealer has swapped a card with turn
-            JLabel swap0 = new JLabel("");
-            JLabel swap1 = new JLabel("");
-            JLabel swap2 = new JLabel("");
-            JLabel swap3 = new JLabel("");
-            JLabel swap4 = new JLabel("");
-            JLabel swapper = new JLabel("");
+            boolean swap0 = false;
+            boolean swap1 = false;
+            boolean swap2 = false;
+            boolean swap3 = false;
+            boolean swap4 = false;
+            boolean swapper = false;
 
             // use booleans of "isVisible" to see if thread 5 has finished each trick
-            JLabel trick1 = new JLabel("");
-            JLabel trick2 = new JLabel("");
-            JLabel trick3 = new JLabel("");
-            JLabel trick4 = new JLabel("");
-            JLabel trick5 = new JLabel("");
-            JLabel stk1 = new JLabel(""); // don't update trick score until everyone has played
-            JLabel stk2 = new JLabel("");
-            JLabel stk3 = new JLabel("");
-            JLabel stk4 = new JLabel("");
-            JLabel stk5 = new JLabel("");
+            boolean trick1 = false;
+            boolean trick2 = false;
+            boolean trick3 = false;
+            boolean trick4 = false;
+            boolean trick5 = false;
+            boolean stk1 = false; // don't update trick score until everyone has played
+            boolean stk2 = false;
+            boolean stk3 = false;
+            boolean stk4 = false;
+            boolean stk5 = false;
 
             // use booleans of "isVisible" to show which card human has played
-            JLabel pc11 = new JLabel("");
-            JLabel pc12 = new JLabel("");
-            JLabel pc13 = new JLabel("");
-            JLabel pc14 = new JLabel("");
-            JLabel pc15 = new JLabel("");
-            JLabel pc21 = new JLabel("");
-            JLabel pc22 = new JLabel("");
-            JLabel pc23 = new JLabel("");
-            JLabel pc24 = new JLabel("");
-            JLabel pc31 = new JLabel("");
-            JLabel pc32 = new JLabel("");
-            JLabel pc33 = new JLabel("");
-            JLabel pc41 = new JLabel("");
-            JLabel pc42 = new JLabel("");
-            JLabel pcdone1 = new JLabel("");
-            JLabel pcdone2 = new JLabel("");
-            JLabel pcdone3 = new JLabel("");
-            JLabel pcdone4 = new JLabel("");
+            boolean pc11 = false;
+            boolean pc12 = false;
+            boolean pc13 = false;
+            boolean pc14 = false;
+            boolean pc15 = false;
+            boolean pc21 = false;
+            boolean pc22 = false;
+            boolean pc23 = false;
+            boolean pc24 = false;
+            boolean pc31 = false;
+            boolean pc32 = false;
+            boolean pc33 = false;
+            boolean pc41 = false;
+            boolean pc42 = false;
+            boolean pcdone1 = false;
+            boolean pcdone2 = false;
+            boolean pcdone3 = false;
+            boolean pcdone4 = false;
 
             // explain the game set-up
             JLabel info = new JLabel("<html><div style = 'text-align: center'>You are sitting<br>in seat South."
@@ -2185,63 +2183,6 @@ public class EuchreBeta {
             DW.setText(null);
             DN.setText(null);
             DE.setText(null);
-            bidround.setVisible(false);
-            bidyes.setVisible(false);
-            wpalone.setVisible(false);
-            bidder1.setVisible(false);
-            bidder2.setVisible(false);
-            bidsuit1.setVisible(false);
-            bidsuit2.setVisible(false);
-            firstbid1.setVisible(false);
-            secondbid1.setVisible(false);
-            thirdbid1.setVisible(false);
-            fourthbid1.setVisible(false);
-            firstbid2.setVisible(false);
-            secondbid2.setVisible(false);
-            thirdbid2.setVisible(false);
-            fourthbid2.setVisible(false);
-            for (int i=0; i<4; i++) {
-                bidwp[i].setVisible(false);
-                bidalone[i].setVisible(false);
-            }
-            swapper.setVisible(false);
-            swap0.setVisible(false);
-            swap1.setVisible(false);
-            swap2.setVisible(false);
-            swap3.setVisible(false);
-            swap4.setVisible(false);
-            picks.setVisible(false);
-            pickh.setVisible(false);
-            pickd.setVisible(false);
-            pickc.setVisible(false);
-            trick1.setVisible(false);
-            trick2.setVisible(false);
-            trick3.setVisible(false);
-            trick4.setVisible(false);
-            trick5.setVisible(false);
-            stk1.setVisible(false);
-            stk2.setVisible(false);
-            stk3.setVisible(false);
-            stk4.setVisible(false);
-            stk5.setVisible(false);
-            pc11.setVisible(false);
-            pc12.setVisible(false);
-            pc13.setVisible(false);
-            pc14.setVisible(false);
-            pc15.setVisible(false);
-            pc21.setVisible(false);
-            pc22.setVisible(false);
-            pc23.setVisible(false);
-            pc24.setVisible(false);
-            pc31.setVisible(false);
-            pc32.setVisible(false);
-            pc33.setVisible(false);
-            pc41.setVisible(false);
-            pc42.setVisible(false);
-            pcdone1.setVisible(false);
-            pcdone2.setVisible(false);
-            pcdone3.setVisible(false);
-            pcdone4.setVisible(false);
 
             contentPane.add(deal);
             contentPane.add(info);
@@ -2385,35 +2326,35 @@ public class EuchreBeta {
 
             potbid[0][aa] = bidx[3];
             if (bidx[3] == 1) {
-                bidwp[aa].setVisible(true);
-                bidyes.setVisible(true);
+                bidwp[aa] = true;
+                bidyes = true;
             }
             if (bidx[3] == 2) {
-                bidalone[aa].setVisible(true);
-                wpalone.setVisible(true);
+                bidalone[aa] = true;
+                wpalone = true;
             }
             if (bidx[3] > 0) { // some bid made
                 if (aa == 3) {
-                    bidder1.setVisible(true); // East bids
+                    bidder1 = true; // East bids
                 } else if (aa == 2) {
-                    bidder2.setVisible(true); // North bids
+                    bidder2 = true; // North bids
                 }
             }
             if (bidx[2] < 1) {
-                bidsuit1.setVisible(true); // diamonds or clubs bid
+                bidsuit1 = true; // diamonds or clubs bid
             }
             if (bidx[2] == 1 || bidx[2] == 3) {
-                bidsuit2.setVisible(true); // hearts or clubs bid
+                bidsuit2 = true; // hearts or clubs bid
             }
 
             lone = bidx[0];
             declarer = bidx[1];
             fintp = bidx[2];
-            firstbid1.setVisible(true); // signal of having reached this point
+            firstbid1 = true; // signal of having reached this point
 
             // second bidder
             // only need to proceed if previous players passed
-            if (!bidyes.isVisible()) {
+            if (!bidyes) {
                 docall = bidder12(playersuit[bb][upst][upst], playersuit[bb][upst][3-upst], right[bb][upst],
                                   left[bb][upst], acet[bb][upst], kingt[bb][upst], uprk, upst, bidscore[bb][upst],
                                   summins[bb][upst], vd[bb], points[bb], game);
@@ -2422,36 +2363,36 @@ public class EuchreBeta {
 
                 potbid[0][bb] = bidx[3];
                 if (bidx[3] == 1) {
-                    bidwp[bb].setVisible(true);
-                    bidyes.setVisible(true);
+                    bidwp[bb] = true;
+                    bidyes = true;
                 }
                 if (bidx[3] == 2) {
-                    bidalone[bb].setVisible(true);
-                    wpalone.setVisible(true);
+                    bidalone[bb] = true;
+                    wpalone = true;
                 }
                 if (bidx[3] > 0) { // some bid made
                     if (bb == 3) {
-                        bidder1.setVisible(true); // East bids
+                        bidder1 = true; // East bids
                     } else if (bb == 2) {
-                        bidder2.setVisible(true); // North bids
+                        bidder2 = true; // North bids
                     }
                 }
                 if (bidx[2] < 1) {
-                    bidsuit1.setVisible(true); // diamonds or clubs bid
+                    bidsuit1 = true; // diamonds or clubs bid
                 }
                 if (bidx[2] == 1 || bidx[2] == 3) {
-                    bidsuit2.setVisible(true); // hearts or clubs bid
+                    bidsuit2 = true; // hearts or clubs bid
                 }
 
                 lone = bidx[0];
                 declarer = bidx[1];
                 fintp = bidx[2];
-                secondbid1.setVisible(true); // signal of having reached this point
+                secondbid1 = true; // signal of having reached this point
             }
 
             // third bidder
             // only need to proceed if previous players passed
-            if (!bidyes.isVisible()) {
+            if (!bidyes) {
                 docall = bidder13(playersuit[cc][upst][upst], playersuit[cc][upst][3-upst], right[cc][upst], left[cc][upst],
                                   acet[cc][upst], uprk, upst, bidscore[cc][upst], summins[cc][upst], vd[cc], points[cc], game);
 
@@ -2459,36 +2400,36 @@ public class EuchreBeta {
 
                 potbid[0][cc] = bidx[3];
                 if (bidx[3] == 1) {
-                    bidwp[cc].setVisible(true);
-                    bidyes.setVisible(true);
+                    bidwp[cc] = true;
+                    bidyes = true;
                 }
                 if (bidx[3] == 2) {
-                    bidalone[cc].setVisible(true);
-                    wpalone.setVisible(true);
+                    bidalone[cc] = true;
+                    wpalone = true;
                 }
                 if (bidx[3] > 0) { // some bid made
                     if (cc == 3) {
-                        bidder1.setVisible(true); // East bids
+                        bidder1 = true; // East bids
                     } else if (cc == 2) {
-                        bidder2.setVisible(true); // North bids
+                        bidder2 = true; // North bids
                     }
                 }
                 if (bidx[2] < 1) {
-                    bidsuit1.setVisible(true); // diamonds or clubs bid
+                    bidsuit1 = true; // diamonds or clubs bid
                 }
                 if (bidx[2] == 1 || bidx[2] == 3) {
-                    bidsuit2.setVisible(true); // hearts or clubs bid
+                    bidsuit2 = true; // hearts or clubs bid
                 }
 
                 lone = bidx[0];
                 declarer = bidx[1];
                 fintp = bidx[2];
-                thirdbid1.setVisible(true); // signal of having reached this point
+                thirdbid1 = true; // signal of having reached this point
             }
 
             // dealer
             // only need to proceed if previous players passed
-            if (!bidyes.isVisible()) {
+            if (!bidyes) {
                 docall = bidder14(playersuit[dd][upst][upst], playersuit[dd][upst][3-upst], right[dd][upst], left[dd][upst],
                                   acet[dd][upst], aces[dd][upst], kingt[dd][upst], uprk, upst, bidscore[dd][upst], summins[dd][upst],
                                   vd[dd], points[dd], game);
@@ -2497,35 +2438,35 @@ public class EuchreBeta {
 
                 potbid[0][dd] = bidx[3];
                 if (bidx[3] == 1) {
-                    bidwp[dd].setVisible(true);
-                    bidyes.setVisible(true);
+                    bidwp[dd] = true;
+                    bidyes = true;
                 }
                 if (bidx[3] == 2) {
-                    bidalone[dd].setVisible(true);
-                    wpalone.setVisible(true);
+                    bidalone[dd] = true;
+                    wpalone = true;
                 }
                 if (bidx[3] > 0) { // some bid made
                     if (dd == 3) {
-                        bidder1.setVisible(true); // East bids
+                        bidder1 = true; // East bids
                     } else if (dd == 2) {
-                        bidder2.setVisible(true); // North bids
+                        bidder2 = true; // North bids
                     }
                 }
                 if (bidx[2] < 1) {
-                    bidsuit1.setVisible(true); // diamonds or clubs bid
+                    bidsuit1 = true; // diamonds or clubs bid
                 }
                 if (bidx[2] == 1 || bidx[2] == 3) {
-                    bidsuit2.setVisible(true); // hearts or clubs bid
+                    bidsuit2 = true; // hearts or clubs bid
                 }
 
                 lone = bidx[0];
                 declarer = bidx[1];
                 fintp = bidx[2];
-                fourthbid1.setVisible(true); // signal of having reached this point
+                fourthbid1 = true; // signal of having reached this point
             }
 
             //  if all players pass, have second round of bidding
-            if (!bidyes.isVisible()) {
+            if (!bidyes) {
                 System.out.println("No one bids in the first round");
                 round = 1;
             }
@@ -2546,7 +2487,7 @@ public class EuchreBeta {
 
             // first bidder
             // only need to proceed if previous players passed
-            if (!bidyes.isVisible()) {
+            if (!bidyes) {
                 docall = bidder21(playersuit[aa][bests[aa]][bests[aa]], playersuit[aa][bests[aa]][3-bests[aa]],
                                   right[aa][bests[aa]], left[aa][bests[aa]], acet[aa][bests[aa]], aces[aa][bests[aa]],
                                   kingt[aa][bests[aa]], upst, bidscore[aa][bests[aa]], summins[aa][bests[aa]], bests[(dealer+1)%4],
@@ -2556,18 +2497,18 @@ public class EuchreBeta {
 
                 potbid[1][aa] = bidx[3];
                 if (bidx[3] == 1) {
-                    bidwp[aa].setVisible(true);
-                    bidyes.setVisible(true);
+                    bidwp[aa] = true;
+                    bidyes = true;
                 }
                 if (bidx[3] == 2) {
-                    bidalone[aa].setVisible(true);
-                    wpalone.setVisible(true);
+                    bidalone[aa] = true;
+                    wpalone = true;
                 }
                 if (bidx[3] > 0) { // some bid made
                     if (aa == 3) {
-                        bidder1.setVisible(true); // East bids
+                        bidder1 = true; // East bids
                     } else if (aa == 2) {
-                        bidder2.setVisible(true); // North bids
+                        bidder2 = true; // North bids
                     }
                 }
 
@@ -2576,25 +2517,25 @@ public class EuchreBeta {
                 fintp = bidx[2];
                 // now code for which suit was declared
                 if (bidx[2] == 1) { // hearts
-                    bidsuit2.setVisible(true);
+                    bidsuit2 = true;
                     dec[aa].setIcon(cardimg[33]);
                 } else if (bidx[2] == 2) { // diamonds
-                    bidsuit1.setVisible(true);
+                    bidsuit1 = true;
                     dec[aa].setIcon(cardimg[34]);
                 } else if (bidx[2] == 3) { // clubs
-                    bidsuit2.setVisible(true);
-                    bidsuit1.setVisible(true);
+                    bidsuit2 = true;
+                    bidsuit1 = true;
                     dec[aa].setIcon(cardimg[35]);
                 } else {
                     dec[aa].setIcon(cardimg[32]);
                 }
-                firstbid2.setVisible(true); // signal of having reached this point
-                bidround.setVisible(true);
+                firstbid2 = true; // signal of having reached this point
+                bidround = true;
             }
 
             // second bidder
             // only need to proceed if previous players passed
-            if (!bidyes.isVisible()) {
+            if (!bidyes) {
                 docall = bidder22(playersuit[bb][bests[bb]][bests[bb]], playersuit[bb][bests[bb]][3-bests[bb]],
                                   right[bb][bests[bb]], left[bb][bests[bb]], acet[bb][bests[bb]], aces[bb][bests[bb]],
                                   kingt[bb][bests[bb]], upst, uprk,bidscore[bb][bests[bb]], summins[bb][bests[bb]],
@@ -2603,18 +2544,18 @@ public class EuchreBeta {
                 bidx = bid(docall, bb, bests[bb]);
                 potbid[1][bb] = bidx[3];
                 if (bidx[3] == 1) {
-                    bidwp[bb].setVisible(true);
-                    bidyes.setVisible(true);
+                    bidwp[bb] = true;
+                    bidyes = true;
                 }
                 if (bidx[3] == 2) {
-                    bidalone[bb].setVisible(true);
-                    wpalone.setVisible(true);
+                    bidalone[bb] = true;
+                    wpalone = true;
                 }
                 if (bidx[3] > 0) { // some bid made
                     if (bb == 3) {
-                        bidder1.setVisible(true); // East bids
+                        bidder1 = true; // East bids
                     } else if (bb == 2) {
-                        bidder2.setVisible(true); // North bids
+                        bidder2 = true; // North bids
                     }
                 }
 
@@ -2623,25 +2564,25 @@ public class EuchreBeta {
                 fintp = bidx[2];
                 // now code for which suit was declared
                 if (bidx[2] == 1) {
-                    bidsuit2.setVisible(true);
+                    bidsuit2 = true;
                     dec[bb].setIcon(cardimg[33]);
                 } else if (bidx[2] == 2) {
-                    bidsuit1.setVisible(true);
+                    bidsuit1 = true;
                     dec[bb].setIcon(cardimg[34]);
                 } else if (bidx[2] == 3) {
-                    bidsuit2.setVisible(true);
-                    bidsuit1.setVisible(true);
+                    bidsuit2 = true;
+                    bidsuit1 = true;
                     dec[bb].setIcon(cardimg[35]);
                 } else {
                     dec[bb].setIcon(cardimg[32]);
                 }
-                secondbid2.setVisible(true); // signal of having reached this point
-                bidround.setVisible(true);
+                secondbid2 = true; // signal of having reached this point
+                bidround = true;
             }
 
             // third bidder
             // only need to proceed if previous players passed
-            if (!bidyes.isVisible()) {
+            if (!bidyes) {
                 docall = bidder23(playersuit[cc][bests[cc]][bests[cc]], right[cc][bests[cc]], left[cc][bests[cc]],
                                   acet[cc][bests[cc]], aces[cc][bests[cc]], kingt[cc][bests[cc]], upst, uprk,
                                   bidscore[cc][bests[cc]], summins[cc][bests[cc]], bests[(dealer+1)%4], points[cc], game);
@@ -2650,18 +2591,18 @@ public class EuchreBeta {
 
                 potbid[1][cc] = bidx[3];
                 if (bidx[3] == 1) {
-                    bidwp[cc].setVisible(true);
-                    bidyes.setVisible(true);
+                    bidwp[cc] = true;
+                    bidyes = true;
                 }
                 if (bidx[3] == 2) {
-                    bidalone[cc].setVisible(true);
-                    wpalone.setVisible(true);
+                    bidalone[cc] = true;
+                    wpalone = true;
                 }
                 if (bidx[3] > 0) { // some bid made
                     if (cc == 3) {
-                        bidder1.setVisible(true); // East bids
+                        bidder1 = true; // East bids
                     } else if (cc == 2) {
-                        bidder2.setVisible(true); // North bids
+                        bidder2 = true; // North bids
                     }
                 }
 
@@ -2670,25 +2611,25 @@ public class EuchreBeta {
                 fintp = bidx[2];
                 // now code for which suit was declared
                 if (bidx[2] == 1) {
-                    bidsuit2.setVisible(true);
+                    bidsuit2 = true;
                     dec[cc].setIcon(cardimg[33]);
                 } else if (bidx[2] == 2) {
-                    bidsuit1.setVisible(true);
+                    bidsuit1 = true;
                     dec[cc].setIcon(cardimg[34]);
                 } else if (bidx[2] == 3) {
-                    bidsuit2.setVisible(true);
-                    bidsuit1.setVisible(true);
+                    bidsuit2 = true;
+                    bidsuit1 = true;
                     dec[cc].setIcon(cardimg[35]);
                 } else {
                     dec[cc].setIcon(cardimg[32]);
                 }
-                thirdbid2.setVisible(true); // signal of having reached this point
-                bidround.setVisible(true);
+                thirdbid2 = true; // signal of having reached this point
+                bidround = true;
             }
 
             // last bidder (dealer)
             // only need to proceed if previous players passed
-            if (!bidyes.isVisible()) {
+            if (!bidyes) {
                 docall = bidder24(playersuit[dd][bests[dd]][bests[dd]], playersuit[dd][bests[dd]][3-bests[dd]],
                                   right[dd][bests[dd]], left[dd][bests[dd]], acet[dd][bests[dd]], upst, uprk,
                                   bidscore[dd][bests[dd]], summins[dd][bests[dd]], bests[(dealer+1)%4], points[dd], game);
@@ -2697,18 +2638,18 @@ public class EuchreBeta {
 
                 potbid[1][dd] = bidx[3];
                 if (bidx[3] == 1) {
-                    bidwp[dd].setVisible(true);
-                    bidyes.setVisible(true);
+                    bidwp[dd] = true;
+                    bidyes = true;
                 }
                 if (bidx[3] == 2) {
-                    bidalone[dd].setVisible(true);
-                    wpalone.setVisible(true);
+                    bidalone[dd] = true;
+                    wpalone = true;
                 }
                 if (bidx[3] > 0) { // some bid made
                     if (dd == 3) {
-                        bidder1.setVisible(true); // East bids
+                        bidder1 = true; // East bids
                     } else if (dd == 2) {
-                        bidder2.setVisible(true); // North bids
+                        bidder2 = true; // North bids
                     }
                 }
 
@@ -2717,20 +2658,20 @@ public class EuchreBeta {
                 fintp = bidx[2];
                 // now code for which suit was declared
                 if (bidx[2] == 1) {
-                    bidsuit2.setVisible(true);
+                    bidsuit2 = true;
                     dec[dd].setIcon(cardimg[33]);
                 } else if (bidx[2] == 2) {
-                    bidsuit1.setVisible(true);
+                    bidsuit1 = true;
                     dec[dd].setIcon(cardimg[34]);
                 } else if (bidx[2] == 3) {
-                    bidsuit2.setVisible(true);
-                    bidsuit1.setVisible(true);
+                    bidsuit2 = true;
+                    bidsuit1 = true;
                     dec[dd].setIcon(cardimg[35]);
                 } else {
                     dec[dd].setIcon(cardimg[32]);
                 }
-                fourthbid2.setVisible(true); // signal of having reached this point
-                bidround.setVisible(true);
+                fourthbid2 = true; // signal of having reached this point
+                bidround = true;
             }
 
             // skip play if no one bids second round
@@ -5833,30 +5774,8 @@ public class EuchreBeta {
 
         if (top == points[0]) {
             System.out.println("North and South win the game " + points[0] + " to " + points[1] + "\n");
-            gscore.setText("<html><div style = 'text-align: center'>Congratulations!<br>You win!");
-            contentPane.add(gscore);
-            String spns = String.valueOf(pns);
-            String spew = String.valueOf(pew);
-            JLabel ptns = new JLabel(spns);
-            JLabel ptew = new JLabel(spew);
-            contentPane.add(ptns);
-            contentPane.add(ptew);
-            ptns.setBounds(85,45,20,20);
-            ptew.setBounds(145,45,20,20);
-            SwingUtilities.updateComponentTreeUI(frame);
         } else {
             System.out.println("East and West win the game " + points[1] + " to " + points[0] + "\n");
-            gscore.setText("<html><div style = 'text-align: center'>Sorry,<br>You lose.");
-            contentPane.add(gscore);
-            String spns = String.valueOf(pns);
-            String spew = String.valueOf(pew);
-            JLabel ptns = new JLabel(spns);
-            JLabel ptew = new JLabel(spew);
-            contentPane.add(ptns);
-            contentPane.add(ptew);
-            ptns.setBounds(85,45,20,20);
-            ptew.setBounds(145,45,20,20);
-            SwingUtilities.updateComponentTreeUI(frame);
         }
     }
 }
