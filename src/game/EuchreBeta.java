@@ -11,6 +11,10 @@ import javax.swing.event.ChangeEvent;
 
 public class EuchreBeta {
 
+    // unified RNG for repeatability in testing
+    static final int RANDOM_SEED = 12345;
+    static final Random rgen = new Random(RANDOM_SEED);
+
     // define strings for card ranks, suits and players
     public static int[] cards = new int[28];        // 24 cards + 4 placeholders for suit images
     public static String[] position = {"South", "West", "North", "East", "fifth"};
@@ -46,7 +50,6 @@ public class EuchreBeta {
 
     // *** Method "shuffle" for shuffling cards (twice) ***
     public static int[] shuffle(int cards[]) {
-        Random rgen = new Random();
         for (int i=0; i<24; i++) {
             int randomPosition = rgen.nextInt(24);
             int temp = cards[i];
@@ -58,9 +61,8 @@ public class EuchreBeta {
         }
         catch(InterruptedException e9) {
         }
-        Random rgen2 = new Random();
         for (int i=0; i<24; i++) {
-            int randomPosition = rgen2.nextInt(24);
+            int randomPosition = rgen.nextInt(24);
             int temp = cards[i];
             cards[i] = cards[randomPosition];
             cards[randomPosition] = temp;
@@ -1728,8 +1730,7 @@ public class EuchreBeta {
         // clubs = 3, 4 = trump not declared)
 
         // Assign random seat as first dealer
-        Random pgen = new Random();
-        int randomDealer = pgen.nextInt(4);
+        int randomDealer = rgen.nextInt(4);
         dealer = randomDealer;
         //              dealer = 0;
 
@@ -2441,800 +2442,6 @@ public class EuchreBeta {
             // reset suit of 2nd round bid
             ct1 = 0;
 
-            Object locka = new Object();
-            Object lockb = new Object();
-            Thread t1a = new Thread(new Runnable() { // handle bidding, round 1
-                    @Override
-                    public void run() {
-                        synchronized(locka) {
-                            try {
-                                contentPane.remove(deal);
-                                contentPane.remove(info);
-                                contentPane.add(c0[0]);
-                                contentPane.remove(deal);
-                                contentPane.remove(info);
-                                contentPane.add(c0[0]);
-                                SwingUtilities.updateComponentTreeUI(frame);
-                                Thread.sleep(500);
-                                contentPane.add(c0[1]);
-                                SwingUtilities.updateComponentTreeUI(frame);
-                                Thread.sleep(500);
-                                contentPane.add(c0[2]);
-                                SwingUtilities.updateComponentTreeUI(frame);
-                                Thread.sleep(500);
-                                contentPane.add(c0[3]);
-                                SwingUtilities.updateComponentTreeUI(frame);
-                                Thread.sleep(500);
-                                contentPane.add(c0[4]);
-                                SwingUtilities.updateComponentTreeUI(frame);
-                                Thread.sleep(500);
-                                contentPane.add(turn);
-                                SwingUtilities.updateComponentTreeUI(frame);
-                                Thread.sleep(500);
-
-                                // 1st bidder
-                                int humanbid = 0;
-                                if (aa == 0 && false) { // human to bid
-                                    contentPane.add(pick);
-                                    contentPane.add(alone);
-                                    contentPane.add(bidS);
-                                    contentPane.add(pass1);
-                                    SwingUtilities.updateComponentTreeUI(frame);
-                                    humanbid = 1;
-                                } else if (bidalone[aa].isVisible()) { // computer player bids alone
-                                    bid[aa].setText("<html>" + position[aa] + " calls<br>" + suitx[upst]
-                                                    + " as trump,<br>going alone</html>");
-                                    contentPane.add(bid[aa]);
-                                    contentPane.add(dec[aa]);
-                                    bidyes.setVisible(true);
-                                    wpalone.setVisible(true);
-                                    SwingUtilities.updateComponentTreeUI(frame);
-                                } else if (bidwp[aa].isVisible()) { // computer player bids w/ partner
-                                    bid[aa].setText("<html>" + position[aa] + " calls<br>" + suitx[upst] + " as trump</html>");
-                                    contentPane.add(bid[aa]);
-                                    contentPane.add(dec[aa]);
-                                    bidyes.setVisible(true);
-                                    SwingUtilities.updateComponentTreeUI(frame);
-                                } else { // computer player passes
-                                    bid[aa].setText(position[aa] + " passes");
-                                    contentPane.add(bid[aa]);
-                                    SwingUtilities.updateComponentTreeUI(frame);
-                                }
-                                if (humanbid == 1) {
-                                    humanbid = 0;
-                                    locka.wait(); // switch to t2 and wait for human player to decide action
-                                }
-                                firstbid1.setVisible(true); // signal of having reached this point
-
-                                // 2nd bidder
-                                if (!bidyes.isVisible()) { // only proceed if 1st bidder passed
-                                    Thread.sleep(800);
-                                    contentPane.remove(bid[aa]);
-                                    if (bb == 0 && false) { // human to bid
-                                        contentPane.add(pick);
-                                        contentPane.add(alone);
-                                        contentPane.add(bidS);
-                                        contentPane.add(pass1);
-                                        SwingUtilities.updateComponentTreeUI(frame);
-                                        humanbid = 1;
-                                    } else if (bidalone[bb].isVisible()) { // computer player bids alone
-                                        bid[bb].setText("<html>" + position[bb] + " calls<br>" + suitx[upst]
-                                                        + " as trump,<br>going alone</html>");
-                                        contentPane.add(bid[bb]);
-                                        contentPane.add(dec[bb]);
-                                        bidyes.setVisible(true);
-                                        wpalone.setVisible(true);
-                                        SwingUtilities.updateComponentTreeUI(frame);
-                                    } else if (bidwp[bb].isVisible()) { // computer player bids w/ partner
-                                        bid[bb].setText("<html>" + position[bb] + " calls<br>" + suitx[upst] + " as trump</html>");
-                                        contentPane.add(bid[bb]);
-                                        contentPane.add(dec[bb]);
-                                        bidyes.setVisible(true);
-                                        SwingUtilities.updateComponentTreeUI(frame);
-                                    } else { // computer player passes
-                                        bid[bb].setText(position[bb] + " passes");
-                                        contentPane.add(bid[bb]);
-                                        SwingUtilities.updateComponentTreeUI(frame);
-                                    }
-                                    if (humanbid == 1) {
-                                        humanbid = 0;
-                                        locka.wait(); // switch to t2 and wait for human player to decide action
-                                    }
-                                    secondbid1.setVisible(true); // signal of having reached this point
-                                }
-
-                                // 3rd bidder
-                                if (!bidyes.isVisible()) { // only proceed if 2nd bidder passed
-                                    Thread.sleep(800);
-                                    contentPane.remove(bid[bb]);
-                                    if (cc == 0 && false) { // human to bid
-                                        contentPane.add(pick);
-                                        contentPane.add(alone);
-                                        contentPane.add(bidS);
-                                        contentPane.add(pass1);
-                                        SwingUtilities.updateComponentTreeUI(frame);
-                                        humanbid = 1;
-                                    } else if (bidalone[cc].isVisible()) { // computer player bids alone
-                                        bid[cc].setText("<html>" + position[cc] + " calls<br>" + suitx[upst]
-                                                        + " as trump,<br>going alone</html>");
-                                        contentPane.add(bid[cc]);
-                                        contentPane.add(dec[cc]);
-                                        bidyes.setVisible(true);
-                                        wpalone.setVisible(true);
-                                        SwingUtilities.updateComponentTreeUI(frame);
-                                    } else if (bidwp[cc].isVisible()) { // computer player bids w/ partner
-                                        bid[cc].setText("<html>" + position[cc] + " calls<br>" + suitx[upst] + " as trump</html>");
-                                        contentPane.add(bid[cc]);
-                                        contentPane.add(dec[cc]);
-                                        bidyes.setVisible(true);
-                                        SwingUtilities.updateComponentTreeUI(frame);
-                                    } else { // computer player passes
-                                        bid[cc].setText(position[cc] + " passes");
-                                        contentPane.add(bid[cc]);
-                                        SwingUtilities.updateComponentTreeUI(frame);
-                                    }
-                                    if (humanbid == 1) {
-                                        humanbid = 0;
-                                        locka.wait(); // switch to t2 and wait for human player to decide action
-                                    }
-                                    thirdbid1.setVisible(true); // signal of having reached this point
-                                }
-
-                                // 4th bidder
-                                if (!bidyes.isVisible()) { // only proceed if 3rd bidder passed
-                                    Thread.sleep(800);
-                                    contentPane.remove(bid[cc]);
-                                    if (dd == 0 && false) { // human to bid
-                                        contentPane.add(pick);
-                                        contentPane.add(alone);
-                                        contentPane.add(bidS);
-                                        contentPane.add(pass1);
-                                        SwingUtilities.updateComponentTreeUI(frame);
-                                        humanbid = 1;
-                                    } else if (bidalone[dd].isVisible()) { // computer player bids alone
-                                        bid[dd].setText("<html>" + position[dd] + " calls<br>" + suitx[upst]
-                                                        + " as trump,<br>going alone</html>");
-                                        contentPane.add(bid[dd]);
-                                        contentPane.add(dec[dd]);
-                                        bidyes.setVisible(true);
-                                        wpalone.setVisible(true);
-                                        SwingUtilities.updateComponentTreeUI(frame);
-                                    } else if (bidwp[dd].isVisible()) { // computer player bids w/ partner
-                                        bid[dd].setText("<html>" + position[dd] + " calls<br>" + suitx[upst] + " as trump</html>");
-                                        contentPane.add(bid[dd]);
-                                        contentPane.add(dec[dd]);
-                                        bidyes.setVisible(true);
-                                        SwingUtilities.updateComponentTreeUI(frame);
-                                    } else { // computer player passes
-                                        bid[dd].setText(position[dd] + " passes");
-                                        contentPane.add(bid[dd]);
-                                        SwingUtilities.updateComponentTreeUI(frame);
-                                    }
-                                    if (humanbid == 1) {
-                                        humanbid = 0;
-                                        locka.wait(); // switch to t2 and wait for human player to decide action
-                                    }
-                                    fourthbid1.setVisible(true); // signal of having reached this point
-                                }
-                                if (!bidyes.isVisible()) { // only proceed if all preceding bidders passed
-                                    Thread.sleep(800);
-                                    contentPane.remove(turn);
-                                    contentPane.remove(bid[dd]);
-                                    contentPane.add(allpass);
-                                    SwingUtilities.updateComponentTreeUI(frame);
-                                    Thread.sleep(800);
-                                    contentPane.remove(allpass);
-                                    SwingUtilities.updateComponentTreeUI(frame);
-                                }
-
-                            } catch (InterruptedException e1) {
-                            }
-                        }
-                    }
-                });
-
-            Thread t1b = new Thread(new Runnable() { // handle bidding, round 2
-                    @Override
-                    public void run() {
-                        synchronized(lockb) {
-                            try {
-                                // 1st bidder, round 2
-                                int humanbid = 0;
-                                if (!bidyes.isVisible()) { // only proceed all preceding bidders passed
-                                    Thread.sleep(800);
-                                    if (aa == 0 && false) { // human to bid
-                                        contentPane.add(pick);
-                                        contentPane.add(alone);
-                                        contentPane.add(bidS2);
-                                        contentPane.add(pass2);
-                                        SwingUtilities.updateComponentTreeUI(frame);
-                                        humanbid = 1;
-                                    } else if (bidalone[aa].isVisible()) { // computer player bids alone
-                                        int suitbid = 0;
-                                        if (!bidsuit1.isVisible() && bidsuit2.isVisible()) {
-                                            suitbid = 1;
-                                        } else if (bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                                            suitbid = 2;
-                                        } else if (bidsuit1.isVisible() && bidsuit2.isVisible()) {
-                                            suitbid = 3;
-                                        }
-                                        bid[aa].setText("<html>" + position[aa] + " calls<br>" + suitx[suitbid]
-                                                        + " as trump,<br>going alone</html>");
-                                        contentPane.add(bid[aa]);
-                                        contentPane.add(dec[aa]);
-                                        bidyes.setVisible(true);
-                                        wpalone.setVisible(true);
-                                        SwingUtilities.updateComponentTreeUI(frame);
-                                    } else if (bidwp[aa].isVisible()) { // computer player bids w/ partner
-                                        int suitbid = 0;
-                                        if (!bidsuit1.isVisible() && bidsuit2.isVisible()) {
-                                            suitbid = 1;
-                                        } else if (bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                                            suitbid = 2;
-                                        } else if (bidsuit1.isVisible() && bidsuit2.isVisible()) {
-                                            suitbid = 3;
-                                        }
-                                        bid[aa].setText("<html>" + position[aa] + " calls<br>" + suitx[suitbid] + " as trump</html>");
-                                        contentPane.add(bid[aa]);
-                                        contentPane.add(dec[aa]);
-                                        bidyes.setVisible(true);
-                                        SwingUtilities.updateComponentTreeUI(frame);
-                                    } else { // computer player passes
-                                        bid[aa].setText(position[aa] + " passes");
-                                        contentPane.add(bid[aa]);
-                                        SwingUtilities.updateComponentTreeUI(frame);
-                                    }
-                                    if (humanbid == 1) {
-                                        humanbid = 0;
-                                        lockb.wait(); // switch to t3 and wait for human player to decide action
-                                    }
-                                    firstbid2.setVisible(true); // signal of having reached this point
-                                    bidround.setVisible(true);
-                                }
-
-                                // 2nd bidder, round 2
-                                if (!bidyes.isVisible()) { // only proceed if all preceding bidders passed
-                                    Thread.sleep(800);
-                                    if (bb == 0 && false) { // human to bid
-                                        contentPane.add(pick);
-                                        contentPane.add(alone);
-                                        contentPane.add(bidS2);
-                                        contentPane.add(pass2);
-                                        SwingUtilities.updateComponentTreeUI(frame);
-                                        humanbid = 1;
-                                    } else if (bidalone[bb].isVisible()) { // computer player bids alone
-                                        int suitbid = 0;
-                                        if (!bidsuit1.isVisible() && bidsuit2.isVisible()) {
-                                            suitbid = 1;
-                                        } else if (bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                                            suitbid = 2;
-                                        } else if (bidsuit1.isVisible() && bidsuit2.isVisible()) {
-                                            suitbid = 3;
-                                        }
-                                        bid[bb].setText("<html>" + position[bb] + " calls<br>" + suitx[suitbid]
-                                                        + " as trump,<br>going alone</html>");
-                                        contentPane.add(bid[bb]);
-                                        contentPane.add(dec[bb]);
-                                        bidyes.setVisible(true);
-                                        wpalone.setVisible(true);
-                                        SwingUtilities.updateComponentTreeUI(frame);
-                                    } else if (bidwp[bb].isVisible()) { // computer player bids w/ partner
-                                        int suitbid = 0;
-                                        if (!bidsuit1.isVisible() && bidsuit2.isVisible()) {
-                                            suitbid = 1;
-                                        } else if (bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                                            suitbid = 2;
-                                        } else if (bidsuit1.isVisible() && bidsuit2.isVisible()) {
-                                            suitbid = 3;
-                                        }
-                                        bid[bb].setText("<html>" + position[bb] + " calls<br>" + suitx[suitbid] + " as trump</html>");
-                                        contentPane.add(bid[bb]);
-                                        contentPane.add(dec[bb]);
-                                        bidyes.setVisible(true);
-                                        SwingUtilities.updateComponentTreeUI(frame);
-                                    } else { // computer player passes
-                                        bid[bb].setText(position[bb] + " passes");
-                                        contentPane.add(bid[bb]);
-                                        SwingUtilities.updateComponentTreeUI(frame);
-                                    }
-                                    if (humanbid == 1) {
-                                        humanbid = 0;
-                                        lockb.wait(); // switch to t2 and wait for human player to decide action
-                                    }
-                                    secondbid2.setVisible(true); // signal of having reached this point
-                                    bidround.setVisible(true);
-                                }
-
-                                // 3rd bidder, round 2
-                                if (!bidyes.isVisible()) { // only proceed all preceding bidders passed
-                                    Thread.sleep(800);
-                                    if (cc == 0 && false) { // human to bid
-                                        contentPane.add(pick);
-                                        contentPane.add(alone);
-                                        contentPane.add(bidS2);
-                                        contentPane.add(pass2);
-                                        SwingUtilities.updateComponentTreeUI(frame);
-                                        humanbid = 1;
-                                    } else if (bidalone[cc].isVisible()) { // computer player bids alone
-                                        int suitbid = 0;
-                                        if (!bidsuit1.isVisible() && bidsuit2.isVisible()) {
-                                            suitbid = 1;
-                                        } else if (bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                                            suitbid = 2;
-                                        } else if (bidsuit1.isVisible() && bidsuit2.isVisible()) {
-                                            suitbid = 3;
-                                        }
-                                        bid[cc].setText("<html>" + position[cc] + " calls<br>" + suitx[suitbid]
-                                                        + " as trump,<br>going alone</html>");
-                                        contentPane.add(bid[cc]);
-                                        contentPane.add(dec[cc]);
-                                        bidyes.setVisible(true);
-                                        wpalone.setVisible(true);
-                                        SwingUtilities.updateComponentTreeUI(frame);
-                                    } else if (bidwp[cc].isVisible()) { // computer player bids w/ partner
-                                        int suitbid = 0;
-                                        if (!bidsuit1.isVisible() && bidsuit2.isVisible()) {
-                                            suitbid = 1;
-                                        } else if (bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                                            suitbid = 2;
-                                        } else if (bidsuit1.isVisible() && bidsuit2.isVisible()) {
-                                            suitbid = 3;
-                                        }
-                                        bid[cc].setText("<html>" + position[cc] + " calls<br>" + suitx[suitbid] + " as trump</html>");
-                                        contentPane.add(bid[cc]);
-                                        contentPane.add(dec[cc]);
-                                        bidyes.setVisible(true);
-                                        SwingUtilities.updateComponentTreeUI(frame);
-                                    } else { // computer player passes
-                                        bid[cc].setText(position[cc] + " passes");
-                                        contentPane.add(bid[cc]);
-                                        SwingUtilities.updateComponentTreeUI(frame);
-                                    }
-                                    if (humanbid == 1) {
-                                        humanbid = 0;
-                                        lockb.wait(); // switch to t2 and wait for human player to decide action
-                                    }
-                                    thirdbid2.setVisible(true); // signal of having reached this point
-                                    bidround.setVisible(true);
-                                }
-
-                                // 4th bidder, round 2
-                                if (!bidyes.isVisible()) { // only proceed all preceding bidders passed
-                                    Thread.sleep(800);
-                                    if (dd == 0 && false) { // human to bid
-                                        contentPane.add(pick);
-                                        contentPane.add(alone);
-                                        contentPane.add(bidS2);
-                                        contentPane.add(pass2);
-                                        SwingUtilities.updateComponentTreeUI(frame);
-                                        humanbid = 1;
-                                    } else if (bidalone[dd].isVisible()) { // computer player bids alone
-                                        int suitbid = 0;
-                                        if (!bidsuit1.isVisible() && bidsuit2.isVisible()) {
-                                            suitbid = 1;
-                                        } else if (bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                                            suitbid = 2;
-                                        } else if (bidsuit1.isVisible() && bidsuit2.isVisible()) {
-                                            suitbid = 3;
-                                        }
-                                        bid[dd].setText("<html>" + position[dd] + " calls<br>" + suitx[suitbid]
-                                                        + " as trump,<br>going alone</html>");
-                                        contentPane.add(bid[dd]);
-                                        contentPane.add(dec[dd]);
-                                        bidyes.setVisible(true);
-                                        wpalone.setVisible(true);
-                                        SwingUtilities.updateComponentTreeUI(frame);
-                                    } else if (bidwp[dd].isVisible()) { // computer player bids w/ partner
-                                        int suitbid = 0;
-                                        if (!bidsuit1.isVisible() && bidsuit2.isVisible()) {
-                                            suitbid = 1;
-                                        } else if (bidsuit1.isVisible() && !bidsuit2.isVisible()) {
-                                            suitbid = 2;
-                                        } else if (bidsuit1.isVisible() && bidsuit2.isVisible()) {
-                                            suitbid = 3;
-                                        }
-                                        bid[dd].setText("<html>" + position[dd] + " calls<br>" + suitx[suitbid] + " as trump</html>");
-                                        contentPane.add(bid[dd]);
-                                        contentPane.add(dec[dd]);
-                                        bidyes.setVisible(true);
-                                        SwingUtilities.updateComponentTreeUI(frame);
-                                    } else { // computer player passes
-                                        bid[dd].setText(position[dd] + " passes");
-                                        contentPane.add(bid[dd]);
-                                        SwingUtilities.updateComponentTreeUI(frame);
-                                    }
-                                    if (humanbid == 1) {
-                                        humanbid = 0;
-                                        lockb.wait(); // switch to t2 and wait for human player to decide action
-                                    }
-                                    fourthbid2.setVisible(true); // signal of having reached this point
-                                    bidround.setVisible(true);
-                                }
-                                if (bidyes.isVisible() && (bidround.isVisible() || dd != 0 ||
-                                                           (wpalone.isVisible() && !bidder1.isVisible() && bidder2.isVisible()) )) {
-                                    // a player has bid AND (either bid was made round 2 OR south is not dealer OR north bids alone)
-                                    contentPane.remove(turn);
-                                    contentPane.add(playgame);
-                                    contentPane.add(play);
-                                    SwingUtilities.updateComponentTreeUI(frame);
-                                }
-                            } catch (InterruptedException e2) {
-                            }
-                        }
-                    }
-                });
-
-            Thread t2 = new Thread(new Runnable() { // handle human bid, round 1
-                    @Override
-                    public void run() {
-                        synchronized(locka) {
-                            try {
-                                bidS.addActionListener(new ActionListener() { // detect if South bids
-                                        public void actionPerformed (ActionEvent e) {
-                                            contentPane.remove(pick);
-                                            contentPane.remove(alone);
-                                            contentPane.remove(bidS);
-                                            contentPane.remove(pass1);
-                                            // *** check if bidding alone or with partner ***
-                                            if (awp == 0) {
-                                                bid[0].setText("<html>South calls<br>" + suitx[upst] + " as trump</html>");
-                                                contentPane.add(dec[0]);
-                                            } else if (awp == 1) {
-                                                bid[0].setText("<html>South calls<br>" + suitx[upst] + " as trump<br>going alone</html>");
-                                                wpalone.setVisible(true);
-                                                contentPane.add(dec[0]);
-                                            }
-                                            bidyes.setVisible(true);
-                                            bidder1.setVisible(true);
-                                            bidder2.setVisible(true);
-                                            contentPane.add(bid[0]);
-                                            SwingUtilities.updateComponentTreeUI(frame);
-                                            bidS.setEnabled(false);
-                                            bidS.removeActionListener(this);
-                                        }
-                                    });
-                                pass1.addActionListener(new ActionListener() { // detect if South passes
-                                        public void actionPerformed (ActionEvent e) {
-                                            contentPane.remove(pick);
-                                            contentPane.remove(alone);
-                                            contentPane.remove(bidS);
-                                            contentPane.remove(pass1);
-                                            bid[0].setText("South passes");
-                                            contentPane.add(bid[0]);
-                                            SwingUtilities.updateComponentTreeUI(frame);
-                                            pass1.setEnabled(false);
-                                            pass1.removeActionListener(this);
-                                        }
-                                    });
-                                // wait for human to bid or pass, or another player to bid before human
-                                while(pass1.isEnabled() && bidS.isEnabled() && !bidyes.isVisible()) {
-                                    Thread.sleep(200);
-                                }
-                                locka.notify(); // switch back to t1
-                            } catch (InterruptedException e3) {
-                            }
-                        }
-                    }
-                });
-
-            Thread t3 = new Thread(new Runnable() { // handle human bid, round 2
-                    @Override
-                    public void run() {
-                        synchronized(lockb) {
-                            try {
-                                bidS2.addActionListener(new ActionListener() { // detect if South bids
-                                        public void actionPerformed (ActionEvent e) {
-                                            contentPane.remove(pick);
-                                            contentPane.remove(alone);
-                                            contentPane.remove(bidS2);
-                                            contentPane.remove(pass2);
-                                            contentPane.add(bids);
-                                            contentPane.add(bidh);
-                                            contentPane.add(bidd);
-                                            contentPane.add(bidc);
-                                            contentPane.add(callt);
-                                            SwingUtilities.updateComponentTreeUI(frame);
-                                            // *** disable choice of turned suit as trump, round 2
-                                            if (upst == 0) {
-                                                bids.setEnabled(false);
-                                            } else if (upst == 1) {
-                                                bidh.setEnabled(false);
-                                            } else if (upst == 2) {
-                                                bidd.setEnabled(false);
-                                            } else if (upst == 3) {
-                                                bidc.setEnabled(false);
-                                            }
-                                            bidyes.setVisible(true);
-                                            bidder1.setVisible(true);
-                                            bidder2.setVisible(true);
-                                            SwingUtilities.updateComponentTreeUI(frame);
-                                            bids.addMouseListener(new MouseAdapter() {
-                                                    public void mouseClicked (MouseEvent e) {
-                                                        if (ct1 < 1) {
-                                                            if (upst == 0) {
-                                                                contentPane.add(bads);
-                                                                SwingUtilities.updateComponentTreeUI(frame);
-                                                            } else {
-                                                                ct1++;
-                                                                contentPane.remove(bids);
-                                                                contentPane.remove(bidh);
-                                                                contentPane.remove(bidd);
-                                                                contentPane.remove(bidc);
-                                                                contentPane.remove(bads);
-                                                                contentPane.remove(callt);
-                                                                dec[0].setIcon(cardimg[32]);
-                                                                if (awp == 0) { // check if bidding alone or with partner
-                                                                    bid[0].setText("<html>South calls<br>" + suitx[0] + " as trump</html>");
-                                                                    contentPane.add(dec[0]);
-                                                                    contentPane.add(bid[0]);
-                                                                } else if (awp == 1) {
-                                                                    bid[0].setText("<html>South calls<br>" + suitx[0] + " as trump<br>"
-                                                                                   + "going alone</html>");
-                                                                    wpalone.setVisible(true);
-                                                                    contentPane.add(dec[0]);
-                                                                    contentPane.add(bid[0]);
-                                                                }
-                                                                SwingUtilities.updateComponentTreeUI(frame);
-                                                                picks.setVisible(true);
-                                                                bids.removeMouseListener(this);
-                                                            }
-                                                        }
-                                                    }
-                                                });
-                                            bidh.addMouseListener(new MouseAdapter() {
-                                                    public void mouseClicked (MouseEvent e) {
-                                                        if (ct1 < 1) {
-                                                            if (upst == 1) {
-                                                                contentPane.add(bads);
-                                                                SwingUtilities.updateComponentTreeUI(frame);
-                                                            } else {
-                                                                ct1++;
-                                                                contentPane.remove(bids);
-                                                                contentPane.remove(bidh);
-                                                                contentPane.remove(bidd);
-                                                                contentPane.remove(bidc);
-                                                                contentPane.remove(bads);
-                                                                contentPane.remove(callt);
-                                                                dec[0].setIcon(cardimg[33]);
-                                                                if (awp == 0) { // check if bidding alone or with partner
-                                                                    bid[0].setText("<html>South calls<br>" + suitx[1] + " as trump</html>");
-                                                                    contentPane.add(dec[0]);
-                                                                    contentPane.add(bid[0]);
-                                                                } else if (awp == 1) {
-                                                                    bid[0].setText("<html>South calls<br>" + suitx[1] + " as trump<br>"
-                                                                                   + "going alone</html>");
-                                                                    wpalone.setVisible(true);
-                                                                    contentPane.add(dec[0]);
-                                                                    contentPane.add(bid[0]);
-                                                                }
-                                                                bidsuit2.setVisible(true);
-                                                                SwingUtilities.updateComponentTreeUI(frame);
-                                                                pickh.setVisible(true);
-                                                                bidh.removeMouseListener(this);
-                                                            }
-                                                        }
-                                                    }
-                                                });
-                                            bidd.addMouseListener(new MouseAdapter() {
-                                                    public void mouseClicked (MouseEvent e) {
-                                                        if (ct1 < 1) {
-                                                            if(upst == 2) {
-                                                                contentPane.add(bads);
-                                                                SwingUtilities.updateComponentTreeUI(frame);
-                                                            } else {
-                                                                ct1++;
-                                                                contentPane.remove(bids);
-                                                                contentPane.remove(bidh);
-                                                                contentPane.remove(bidd);
-                                                                contentPane.remove(bidc);
-                                                                contentPane.remove(bads);
-                                                                contentPane.remove(callt);
-                                                                dec[0].setIcon(cardimg[34]);
-                                                                if (awp == 0) { // check if bidding alone or with partner
-                                                                    bid[0].setText("<html>South calls<br>" + suitx[2] + " as trump</html>");
-                                                                    contentPane.add(dec[0]);
-                                                                    contentPane.add(bid[0]);
-                                                                } else if (awp == 1) {
-                                                                    bid[0].setText("<html>South calls<br>" + suitx[2] + " as trump<br>"
-                                                                                   + "going alone</html>");
-                                                                    wpalone.setVisible(true);
-                                                                    contentPane.add(dec[0]);
-                                                                    contentPane.add(bid[0]);
-                                                                }
-                                                                bidsuit1.setVisible(true);
-                                                                SwingUtilities.updateComponentTreeUI(frame);
-                                                                pickd.setVisible(true);
-                                                                bidd.removeMouseListener(this);
-                                                            }
-                                                        }
-                                                    }
-                                                });
-                                            bidc.addMouseListener(new MouseAdapter() {
-                                                    public void mouseClicked (MouseEvent e) {
-                                                        if (ct1 < 1) {
-                                                            if(upst == 3) {
-                                                                contentPane.add(bads);
-                                                                SwingUtilities.updateComponentTreeUI(frame);
-                                                            } else {
-                                                                ct1++;
-                                                                contentPane.remove(bids);
-                                                                contentPane.remove(bidh);
-                                                                contentPane.remove(bidd);
-                                                                contentPane.remove(bidc);
-                                                                contentPane.remove(bads);
-                                                                contentPane.remove(callt);
-                                                                dec[0].setIcon(cardimg[35]);
-                                                                if (awp == 0) { // check if bidding alone or with partner
-                                                                    bid[0].setText("<html>South calls<br>" + suitx[3] + " as trump</html>");
-                                                                    contentPane.add(dec[0]);
-                                                                    contentPane.add(bid[0]);
-                                                                } else if (awp == 1) {
-                                                                    bid[0].setText("<html>South calls<br>" + suitx[3] + " as trump<br>"
-                                                                                   + "going alone</html>");
-                                                                    wpalone.setVisible(true);
-                                                                    contentPane.add(dec[0]);
-                                                                    contentPane.add(bid[0]);
-                                                                }
-                                                                bidsuit1.setVisible(true);
-                                                                bidsuit2.setVisible(true);
-                                                                SwingUtilities.updateComponentTreeUI(frame);
-                                                                pickc.setVisible(true);
-                                                                bidc.removeMouseListener(this);
-                                                            }
-                                                        }
-                                                    }
-                                                });
-                                            bidS2.setEnabled(false);
-                                            bidS2.removeActionListener(this);
-                                        }
-                                    });
-                                pass2.addActionListener(new ActionListener() { // detect if South passes
-                                        public void actionPerformed (ActionEvent e) {
-                                            contentPane.remove(pick);
-                                            contentPane.remove(alone);
-                                            contentPane.remove(bidS2);
-                                            contentPane.remove(pass2);
-                                            bid[0].setText("South passes*");
-                                            contentPane.add(bid[0]);
-                                            SwingUtilities.updateComponentTreeUI(frame);
-                                            pass2.setEnabled(false);
-                                            pass2.removeActionListener(this);
-                                        }
-                                    });
-                                // wait for human to bid or pass
-                                while(pass2.isEnabled() && !picks.isVisible() && !pickh.isVisible() &&
-                                      !pickd.isVisible() && !pickc.isVisible()) {
-                                    Thread.sleep(200);
-                                }
-                                lockb.notify(); // switch back to t1b
-                            }
-                            catch (InterruptedException e5) {
-                            }
-                        }
-                    }
-                });
-
-            Thread t4 = new Thread(new Runnable() { // handle card swap when human is dealer
-                    @Override
-                    public void run() {
-                        try {
-                            contentPane.remove(bid[0]);
-                            contentPane.add(swap);
-                            SwingUtilities.updateComponentTreeUI(frame);
-                            c0[0].addMouseListener(new MouseAdapter() {
-                                    public void mouseClicked (MouseEvent e) {
-                                        if (!swapper.isVisible()) {
-                                            int temp = cards[0];
-                                            cards[0] = cards[20];
-                                            cards[20] = temp;
-                                            c0[0].setIcon(cardimg[cards[0]]);
-                                            c1[0].setIcon(cardimg[cards[0]]);
-                                            c2[0].setIcon(cardimg[cards[0]]);
-                                            c3[0].setIcon(cardimg[cards[0]]);
-                                            c4[0].setIcon(cardimg[cards[0]]);
-                                            c5.setIcon(cardimg[cards[0]]);
-                                            swapper.setVisible(true);
-                                            contentPane.remove(swap);
-                                            contentPane.remove(turn);
-                                            SwingUtilities.updateComponentTreeUI(frame);
-                                            swap0.setVisible(true);
-                                            c0[0].removeMouseListener(this);
-                                        }
-                                    }
-                                });
-                            c0[1].addMouseListener(new MouseAdapter() {
-                                    public void mouseClicked (MouseEvent e) {
-                                        if (!swapper.isVisible()) {
-                                            int temp = cards[1];
-                                            cards[1] = cards[20];
-                                            cards[20] = temp;
-                                            c0[1].setIcon(cardimg[cards[1]]);
-                                            c1[1].setIcon(cardimg[cards[1]]);
-                                            c2[1].setIcon(cardimg[cards[1]]);
-                                            c3[1].setIcon(cardimg[cards[1]]);
-                                            c4[1].setIcon(cardimg[cards[1]]);
-                                            swapper.setVisible(true);
-                                            contentPane.remove(swap);
-                                            contentPane.remove(turn);
-                                            SwingUtilities.updateComponentTreeUI(frame);
-                                            swap1.setVisible(true);
-                                            c0[1].removeMouseListener(this);
-                                        }
-                                    }
-                                });
-                            c0[2].addMouseListener(new MouseAdapter() {
-                                    public void mouseClicked (MouseEvent e) {
-                                        if (!swapper.isVisible()) {
-                                            int temp = cards[2];
-                                            cards[2] = cards[20];
-                                            cards[20] = temp;
-                                            c0[2].setIcon(cardimg[cards[2]]);
-                                            c1[2].setIcon(cardimg[cards[2]]);
-                                            c2[2].setIcon(cardimg[cards[2]]);
-                                            c3[2].setIcon(cardimg[cards[2]]);
-                                            swapper.setVisible(true);
-                                            contentPane.remove(swap);
-                                            contentPane.remove(turn);
-                                            SwingUtilities.updateComponentTreeUI(frame);
-                                            swap2.setVisible(true);
-                                            c0[2].removeMouseListener(this);
-                                        }
-                                    }
-                                });
-                            c0[3].addMouseListener(new MouseAdapter() {
-                                    public void mouseClicked (MouseEvent e) {
-                                        if (!swapper.isVisible ()) {
-                                            int temp = cards[3];
-                                            cards[3] = cards[20];
-                                            cards[20] = temp;
-                                            c0[3].setIcon(cardimg[cards[3]]);
-                                            c1[3].setIcon(cardimg[cards[3]]);
-                                            c2[3].setIcon(cardimg[cards[3]]);
-                                            swapper.setVisible(true);
-                                            contentPane.remove(swap);
-                                            contentPane.remove(turn);
-                                            SwingUtilities.updateComponentTreeUI(frame);
-                                            swap3.setVisible(true);
-                                            c0[3].removeMouseListener(this);
-                                        }
-                                    }
-                                });
-                            c0[4].addMouseListener(new MouseAdapter() {
-                                    public void mouseClicked (MouseEvent e) {
-                                        if (!swapper.isVisible()) {
-                                            int temp = cards[4];
-                                            cards[4] = cards[20];
-                                            cards[20] = temp;
-                                            c0[4].setIcon(cardimg[cards[4]]);
-                                            c1[4].setIcon(cardimg[cards[4]]);
-                                            swapper.setVisible(true);
-                                            contentPane.remove(swap);
-                                            contentPane.remove(turn);
-                                            SwingUtilities.updateComponentTreeUI(frame);
-                                            swap4.setVisible(true);
-                                            c0[4].removeMouseListener(this);
-                                        }
-                                    }
-                                });
-
-                            // wait for human to swap card
-                            while(!swap0.isVisible() && !swap1.isVisible() && !swap2.isVisible() &&
-                                  !swap3.isVisible() && !swap4.isVisible()) {
-                                Thread.sleep(200);
-                            }
-                            contentPane.remove(bid[0]);
-                            contentPane.remove(bid[1]);
-                            contentPane.remove(bid[2]);
-                            contentPane.remove(bid[3]);
-                            contentPane.add(play);
-                            contentPane.add(playgame);
-                            SwingUtilities.updateComponentTreeUI(frame);
-
-                        } catch (InterruptedException e6) {
-                        }
-                    }
-                });
-
             // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
             //              System.out.println("Let's play Euchre!" + "\n");
@@ -3256,9 +2463,11 @@ public class EuchreBeta {
                 potbid[0][aa] = bidx[3];
                 if (bidx[3] == 1) {
                     bidwp[aa].setVisible(true);
+                    bidyes.setVisible(true);
                 }
                 if (bidx[3] == 2) {
                     bidalone[aa].setVisible(true);
+                    wpalone.setVisible(true);
                 }
                 if (bidx[3] > 0) { // some bid made
                     if (aa == 3) {
@@ -3278,64 +2487,7 @@ public class EuchreBeta {
                 declarer = bidx[1];
                 fintp = bidx[2];
             }
-
-            if (top == 0 && false) {
-                deal.addActionListener(new ActionListener() {
-                        public void actionPerformed (ActionEvent e) {
-                            t1a.start();
-                            try {
-                                Thread.sleep(100);
-                            }
-                            catch(InterruptedException e10) {
-                            }
-                            t2.start();
-                            deal.setEnabled(false);
-                            deal.removeActionListener(this);
-                        }
-                    });
-            } else {
-                t1a.start();
-                try {
-                    Thread.sleep(100);
-                }
-                catch(InterruptedException e10) {
-                }
-                t2.start();
-            }
-
-            //  second bidder
-
-            // wait for thread t1 to finish with first bidder
-            while (!firstbid1.isVisible() && !bidyes.isVisible()) {
-                try {
-                    Thread.sleep(200);
-                }
-                catch(InterruptedException ee1) {
-                }
-            }
-
-            // display in console how computer would have bid if different from human player's bid
-            if (aa == 0) {
-                if (!bidyes.isVisible()) {
-                    System.out.println("South passes\n");
-                } else if (!wpalone.isVisible()) {
-                    System.out.println("South calls " + cardname[cards[20]%4][cards[20]/4] + " as trump\n");
-                    declarer = aa;
-                    fintp = upst;
-                } else {
-                    System.out.println("South calls " + cardname[cards[20]%4][cards[20]/4] + " as trump, going alone\n");
-                    declarer = aa;
-                    lone = aa;
-                    fintp = upst;
-                }
-                if (docallh == 0 && bidyes.isVisible()) {
-                    System.out.println("computer would have passed");
-                } else if (docallh == 1 && (!bidyes.isVisible() || wpalone.isVisible())) {
-                    System.out.println("computer would have bid with partner");
-                } else if (docallh == 2 && (!bidyes.isVisible() || !wpalone.isVisible())) {
-                    System.out.println("computer would have bid alone");
-                }
-            }
+            firstbid1.setVisible(true); // signal of having reached this point
 
             // only need to proceed if previous players passed
             if (!bidyes.isVisible()) {
@@ -3353,9 +2505,11 @@ public class EuchreBeta {
                     potbid[0][bb] = bidx[3];
                     if (bidx[3] == 1) {
                         bidwp[bb].setVisible(true);
+                        bidyes.setVisible(true);
                     }
                     if (bidx[3] == 2) {
                         bidalone[bb].setVisible(true);
+                        wpalone.setVisible(true);
                     }
                     if (bidx[3] > 0) { // some bid made
                         if (bb == 3) {
@@ -3376,17 +2530,10 @@ public class EuchreBeta {
                     fintp = bidx[2];
                 }
             }
+            secondbid1.setVisible(true); // signal of having reached this point
 
             //  third bidder
             if (!bidyes.isVisible() || (bidwp[bb].isVisible() || bidalone[bb].isVisible())) {
-                while (!secondbid1.isVisible()) { // wait for thread t1 to finish with second bidder
-                    try {
-                        Thread.sleep(200);
-                    }
-                    catch(InterruptedException ee2) {
-                    }
-                }
-
                 // display in console how computer would have bid if different from human player's bid
                 if (bb == 0) {
                     if (!bidyes.isVisible()) {
@@ -3410,6 +2557,7 @@ public class EuchreBeta {
                     }
                 }
             }
+            thirdbid1.setVisible(true); // signal of having reached this point
 
             // only need to proceed if previous players passed
             if (!bidyes.isVisible()) {
@@ -3425,9 +2573,11 @@ public class EuchreBeta {
                     potbid[0][cc] = bidx[3];
                     if (bidx[3] == 1) {
                         bidwp[cc].setVisible(true);
+                        bidyes.setVisible(true);
                     }
                     if (bidx[3] == 2) {
                         bidalone[cc].setVisible(true);
+                        wpalone.setVisible(true);
                     }
                     if (bidx[3] > 0) { // some bid made
                         if (cc == 3) {
@@ -3448,17 +2598,10 @@ public class EuchreBeta {
                     fintp = bidx[2];
                 }
             }
+            fourthbid1.setVisible(true); // signal of having reached this point
 
             //  dealer
             if (!bidyes.isVisible() || (bidwp[cc].isVisible() || bidalone[cc].isVisible())) {
-                while(!thirdbid1.isVisible()) { // wait for thread t1 to finish with third bidder
-                    try {
-                        Thread.sleep(200);
-                    }
-                    catch(InterruptedException ee3) {
-                    }
-                }
-
                 // display in console how computer would have bid if different from human player's bid
                 if (cc == 0) {
                     if (!bidyes.isVisible()) {
@@ -3498,9 +2641,11 @@ public class EuchreBeta {
                     potbid[0][dd] = bidx[3];
                     if (bidx[3] == 1) {
                         bidwp[dd].setVisible(true);
+                        bidyes.setVisible(true);
                     }
                     if (bidx[3] == 2) {
                         bidalone[dd].setVisible(true);
+                        wpalone.setVisible(true);
                     }
                     if (bidx[3] > 0) { // some bid made
                         if (dd == 3) {
@@ -3523,14 +2668,6 @@ public class EuchreBeta {
             }
 
             if (!bidyes.isVisible() || (bidwp[dd].isVisible() || bidalone[dd].isVisible())) {
-                while(!fourthbid1.isVisible()) { // wait for thread t1 to finish with fourth bidder
-                    try {
-                        Thread.sleep(200);
-                    }
-                    catch(InterruptedException ee4) {
-                    }
-                }
-
                 // display in console how computer would have bid if different from human player's bid
                 if (dd == 0) {
                     if (!bidyes.isVisible()) {
@@ -3559,13 +2696,6 @@ public class EuchreBeta {
             if (!bidyes.isVisible()) {
                 System.out.println("No one bids in the first round");
                 round = 1;
-                while (t1a.isAlive()) {
-                    try {
-                        Thread.sleep(200);
-                    }
-                    catch(InterruptedException ee10) {
-                    }
-                }
             }
 
             //  if seat 2 didn't call lone AND some player declared, have dealer swap cards
@@ -3576,7 +2706,7 @@ public class EuchreBeta {
                 cswap = swapcard(cards, seat, dealer); // determines # of card swapped by dealer for turn card
 
                 if (dealer == 0  && false) { // human player is dealer
-                    t4.start();
+                    //t4.start();
                     while (!swap0.isVisible() && !swap1.isVisible() && !swap2.isVisible() &&
                            !swap3.isVisible() && !swap4.isVisible()) {
                         try {
@@ -3600,8 +2730,6 @@ public class EuchreBeta {
                 }
             }
 
-            t1b.start();
-
             // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
             //  second round of bidding, if necessary
 
@@ -3616,7 +2744,7 @@ public class EuchreBeta {
 
                 if (aa == 0 && false) { // human player
                     docallh = docall;
-                    t3.start();
+                    //t3.start();
 
                 } else { // computer player
                     bidx = bid(docall, aa, bests[aa]);
@@ -3624,9 +2752,11 @@ public class EuchreBeta {
                     potbid[1][aa] = bidx[3];
                     if (bidx[3] == 1) {
                         bidwp[aa].setVisible(true);
+                        bidyes.setVisible(true);
                     }
                     if (bidx[3] == 2) {
                         bidalone[aa].setVisible(true);
+                        wpalone.setVisible(true);
                     }
                     if (bidx[3] > 0) { // some bid made
                         if (aa == 3) {
@@ -3654,18 +2784,12 @@ public class EuchreBeta {
                         dec[aa].setIcon(cardimg[32]);
                     }
                 }
+                firstbid2.setVisible(true); // signal of having reached this point
+                bidround.setVisible(true);
             }
 
             if (!bidyes.isVisible() || ((bidwp[aa].isVisible() || bidalone[aa].isVisible()) &&
                                         bidround.isVisible())) {
-                while(!firstbid2.isVisible()) { // wait for thread t1 to finish with first bidder, round 2
-                    try {
-                        Thread.sleep(200);
-                    }
-                    catch(InterruptedException ee6) {
-                    }
-                }
-
                 // display in console how computer would have bid if different from human player's bid
                 if (aa == 0) {
                     if (!bidyes.isVisible()) {
@@ -3749,16 +2873,18 @@ public class EuchreBeta {
 
                 if (bb == 0 && false) { // human player
                     docallh = docall;
-                    t3.start();
+                    //t3.start();
 
                 } else { // computer player
                     bidx = bid(docall, bb, bests[bb]);
                     potbid[1][bb] = bidx[3];
                     if (bidx[3] == 1) {
                         bidwp[bb].setVisible(true);
+                        bidyes.setVisible(true);
                     }
                     if (bidx[3] == 2) {
                         bidalone[bb].setVisible(true);
+                        wpalone.setVisible(true);
                     }
                     if (bidx[3] > 0) { // some bid made
                         if (bb == 3) {
@@ -3786,18 +2912,12 @@ public class EuchreBeta {
                         dec[bb].setIcon(cardimg[32]);
                     }
                 }
+                secondbid2.setVisible(true); // signal of having reached this point
+                bidround.setVisible(true);
             }
 
             if (!bidyes.isVisible() || ((bidwp[bb].isVisible() || bidalone[bb].isVisible()) &&
                                         bidround.isVisible())) {
-                while(!secondbid2.isVisible()) { // wait for thread t1 to finish with second bidder, round 2
-                    try {
-                        Thread.sleep(200);
-                    }
-                    catch(InterruptedException ee7) {
-                    }
-                }
-
                 // display in console how computer would have bid if different from human player's bid
                 if (bb == 0) {
                     if (!bidyes.isVisible()) {
@@ -3880,7 +3000,7 @@ public class EuchreBeta {
 
                 if (cc == 0 && false) { // human player
                     docallh = docall;
-                    t3.start();
+                    //t3.start();
 
                 } else { // computer player
                     bidx = bid(docall, cc, bests[cc]);
@@ -3888,9 +3008,11 @@ public class EuchreBeta {
                     potbid[1][cc] = bidx[3];
                     if (bidx[3] == 1) {
                         bidwp[cc].setVisible(true);
+                        bidyes.setVisible(true);
                     }
                     if (bidx[3] == 2) {
                         bidalone[cc].setVisible(true);
+                        wpalone.setVisible(true);
                     }
                     if (bidx[3] > 0) { // some bid made
                         if (cc == 3) {
@@ -3918,17 +3040,11 @@ public class EuchreBeta {
                         dec[cc].setIcon(cardimg[32]);
                     }
                 }
+                thirdbid2.setVisible(true); // signal of having reached this point
+                bidround.setVisible(true);
             }
             if (!bidyes.isVisible() || ((bidwp[cc].isVisible() || bidalone[cc].isVisible()) &&
                                         bidround.isVisible())) {
-                while(!thirdbid2.isVisible()) { // wait for thread t1 to finish with third bidder, round 2
-                    try {
-                        Thread.sleep(200);
-                    }
-                    catch(InterruptedException ee8) {
-                    }
-                }
-
                 // display in console how computer would have bid if different from human player's bid
                 if (cc == 0) {
                     if (!bidyes.isVisible()) {
@@ -4011,7 +3127,7 @@ public class EuchreBeta {
 
                 if (dd == 0 && false) { // human player
                     docallh = docall;
-                    t3.start();
+                    //t3.start();
 
                 } else { // computer player
                     bidx = bid(docall, dd, bests[dd]);
@@ -4019,9 +3135,11 @@ public class EuchreBeta {
                     potbid[1][dd] = bidx[3];
                     if (bidx[3] == 1) {
                         bidwp[dd].setVisible(true);
+                        bidyes.setVisible(true);
                     }
                     if (bidx[3] == 2) {
                         bidalone[dd].setVisible(true);
+                        wpalone.setVisible(true);
                     }
                     if (bidx[3] > 0) { // some bid made
                         if (dd == 3) {
@@ -4049,18 +3167,12 @@ public class EuchreBeta {
                         dec[dd].setIcon(cardimg[32]);
                     }
                 }
+                fourthbid2.setVisible(true); // signal of having reached this point
+                bidround.setVisible(true);
             }
 
             if (!bidyes.isVisible() || ((bidwp[dd].isVisible() || bidalone[dd].isVisible()) &&
                                         bidround.isVisible())) {
-                while(!fourthbid2.isVisible()) { // wait for thread t1 to finish with fourth bidder, round 2
-                    try {
-                        Thread.sleep(200);
-                    }
-                    catch(InterruptedException ee9) {
-                    }
-                }
-
                 // display in console how computer would have bid if different from human player's bid
                 if (dd == 0) {
                     if (!bidyes.isVisible()) {
