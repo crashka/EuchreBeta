@@ -3409,275 +3409,6 @@ public class EuchreBeta {
                 //  play out the hand
                 // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
-                Thread p1 = new Thread(new Runnable() { // human player chooses card for 1st trick
-                        @Override
-                        public void run() {
-                            try {
-                                contentPane.add(playc);
-                                SwingUtilities.updateComponentTreeUI(frame);
-                                c1[0].addMouseListener(new MouseAdapter() {
-                                        public void mouseClicked (MouseEvent e) {
-                                            if (!pcdone1.isVisible()) {
-                                                if (!c1[0].isEnabled()) {
-                                                    contentPane.add(badc);
-                                                    contentPane.remove(playc);
-                                                    SwingUtilities.updateComponentTreeUI(frame);
-                                                } else {
-                                                    int temp = cards[0];
-                                                    cards[0] = cards[1];
-                                                    cards[1] = cards[2];
-                                                    cards[2] = cards[3];
-                                                    cards[3] = cards[4];
-                                                    cards[4] = temp;
-                                                    c1[0].setIcon(cardimg[cards[0]]);
-                                                    c1[1].setIcon(cardimg[cards[1]]);
-                                                    c1[2].setIcon(cardimg[cards[2]]);
-                                                    c1[3].setIcon(cardimg[cards[3]]);
-                                                    c2[0].setIcon(cardimg[cards[0]]);
-                                                    c2[1].setIcon(cardimg[cards[1]]);
-                                                    c2[2].setIcon(cardimg[cards[2]]);
-                                                    c2[3].setIcon(cardimg[cards[3]]);
-                                                    c3[0].setIcon(cardimg[cards[0]]);
-                                                    c3[1].setIcon(cardimg[cards[1]]);
-                                                    c3[2].setIcon(cardimg[cards[2]]);
-                                                    c4[0].setIcon(cardimg[cards[0]]);
-                                                    c4[1].setIcon(cardimg[cards[1]]);
-                                                    c5.setIcon(cardimg[cards[0]]);
-                                                    contentPane.remove(badc);
-                                                    pcdone1.setVisible(true);
-                                                    contentPane.remove(playc);
-                                                    first[0].setIcon(cardimg[cards[4]]);
-                                                    contentPane.add(first[0]);
-                                                    SwingUtilities.updateComponentTreeUI(frame);
-                                                    pc11.setVisible(true);
-                                                    c1[0].removeMouseListener(this);
-                                                }
-                                            }
-                                        }
-                                    });
-                                c1[1].addMouseListener(new MouseAdapter() {
-                                        public void mouseClicked (MouseEvent e) {
-                                            if (!pcdone1.isVisible()) {
-                                                if (!c1[1].isEnabled()) {
-                                                    contentPane.add(badc);
-                                                    contentPane.remove(playc);
-                                                    SwingUtilities.updateComponentTreeUI(frame);
-                                                } else {
-                                                    int temp = cards[1];
-                                                    cards[1] = cards[2];
-                                                    cards[2] = cards[3];
-                                                    cards[3] = cards[4];
-                                                    cards[4] = temp;
-                                                    c1[0].setIcon(cardimg[cards[0]]);
-                                                    c1[1].setIcon(cardimg[cards[1]]);
-                                                    c1[2].setIcon(cardimg[cards[2]]);
-                                                    c1[3].setIcon(cardimg[cards[3]]);
-                                                    c2[0].setIcon(cardimg[cards[0]]);
-                                                    c2[1].setIcon(cardimg[cards[1]]);
-                                                    c2[2].setIcon(cardimg[cards[2]]);
-                                                    c2[3].setIcon(cardimg[cards[3]]);
-                                                    c3[0].setIcon(cardimg[cards[0]]);
-                                                    c3[1].setIcon(cardimg[cards[1]]);
-                                                    c3[2].setIcon(cardimg[cards[2]]);
-                                                    c4[0].setIcon(cardimg[cards[0]]);
-                                                    c4[1].setIcon(cardimg[cards[1]]);
-                                                    c5.setIcon(cardimg[cards[0]]);
-                                                    contentPane.remove(badc);
-                                                    pcdone1.setVisible(true);
-                                                    contentPane.remove(playc);
-                                                    first[0].setIcon(cardimg[cards[4]]);
-                                                    contentPane.add(first[0]);
-                                                    SwingUtilities.updateComponentTreeUI(frame);
-                                                    pc12.setVisible(true);
-                                                    c1[1].removeMouseListener(this);
-                                                }
-                                            }
-                                        }
-                                    });
-                                c1[2].addMouseListener(new MouseAdapter() {
-                                        public void mouseClicked (MouseEvent e) {
-                                            if (!pcdone1.isVisible()) {
-                                                if (!c1[2].isEnabled()) {
-                                                    contentPane.add(badc);
-                                                    contentPane.remove(playc);
-                                                    SwingUtilities.updateComponentTreeUI(frame);
-                                                } else {
-                                                    int temp = cards[2];
-                                                    cards[2] = cards[3];
-                                                    cards[3] = cards[4];
-                                                    cards[4] = temp;
-                                                    c1[0].setIcon(cardimg[cards[0]]);
-                                                    c1[1].setIcon(cardimg[cards[1]]);
-                                                    c1[2].setIcon(cardimg[cards[2]]);
-                                                    c1[3].setIcon(cardimg[cards[3]]);
-                                                    c2[0].setIcon(cardimg[cards[0]]);
-                                                    c2[1].setIcon(cardimg[cards[1]]);
-                                                    c2[2].setIcon(cardimg[cards[2]]);
-                                                    c2[3].setIcon(cardimg[cards[3]]);
-                                                    c3[0].setIcon(cardimg[cards[0]]);
-                                                    c3[1].setIcon(cardimg[cards[1]]);
-                                                    c3[2].setIcon(cardimg[cards[2]]);
-                                                    c4[0].setIcon(cardimg[cards[0]]);
-                                                    c4[1].setIcon(cardimg[cards[1]]);
-                                                    c5.setIcon(cardimg[cards[0]]);
-                                                    contentPane.remove(badc);
-                                                    pcdone1.setVisible(true);
-                                                    contentPane.remove(playc);
-                                                    first[0].setIcon(cardimg[cards[4]]);
-                                                    contentPane.add(first[0]);
-                                                    SwingUtilities.updateComponentTreeUI(frame);
-                                                    pc13.setVisible(true);
-                                                    c1[2].removeMouseListener(this);
-                                                }
-                                            }
-                                        }
-                                    });
-                                c1[3].addMouseListener(new MouseAdapter() {
-                                        public void mouseClicked (MouseEvent e) {
-                                            if (!pcdone1.isVisible()) {
-                                                if (!c1[3].isEnabled()) {
-                                                    contentPane.add(badc);
-                                                    contentPane.remove(playc);
-                                                    SwingUtilities.updateComponentTreeUI(frame);
-                                                } else {
-                                                    int temp = cards[3];
-                                                    cards[3] = cards[4];
-                                                    cards[4] = temp;
-                                                    c1[0].setIcon(cardimg[cards[0]]);
-                                                    c1[1].setIcon(cardimg[cards[1]]);
-                                                    c1[2].setIcon(cardimg[cards[2]]);
-                                                    c1[3].setIcon(cardimg[cards[3]]);
-                                                    c2[0].setIcon(cardimg[cards[0]]);
-                                                    c2[1].setIcon(cardimg[cards[1]]);
-                                                    c2[2].setIcon(cardimg[cards[2]]);
-                                                    c2[3].setIcon(cardimg[cards[3]]);
-                                                    c3[0].setIcon(cardimg[cards[0]]);
-                                                    c3[1].setIcon(cardimg[cards[1]]);
-                                                    c3[2].setIcon(cardimg[cards[2]]);
-                                                    c4[0].setIcon(cardimg[cards[0]]);
-                                                    c4[1].setIcon(cardimg[cards[1]]);
-                                                    c5.setIcon(cardimg[cards[0]]);
-                                                    contentPane.remove(badc);
-                                                    pcdone1.setVisible(true);
-                                                    contentPane.remove(playc);
-                                                    first[0].setIcon(cardimg[cards[4]]);
-                                                    contentPane.add(first[0]);
-                                                    SwingUtilities.updateComponentTreeUI(frame);
-                                                    pc14.setVisible(true);
-                                                    c1[3].removeMouseListener(this);
-                                                }
-                                            }
-                                        }
-                                    });
-                                c1[4].addMouseListener(new MouseAdapter() {
-                                        public void mouseClicked (MouseEvent e) {
-                                            if (!pcdone1.isVisible()) {
-                                                if (!c1[4].isEnabled()) {
-                                                    contentPane.add(badc);
-                                                    contentPane.remove(playc);
-                                                    SwingUtilities.updateComponentTreeUI(frame);
-                                                } else {
-                                                    c1[0].setIcon(cardimg[cards[0]]);
-                                                    c1[1].setIcon(cardimg[cards[1]]);
-                                                    c1[2].setIcon(cardimg[cards[2]]);
-                                                    c1[3].setIcon(cardimg[cards[3]]);
-                                                    c2[0].setIcon(cardimg[cards[0]]);
-                                                    c2[1].setIcon(cardimg[cards[1]]);
-                                                    c2[2].setIcon(cardimg[cards[2]]);
-                                                    c2[3].setIcon(cardimg[cards[3]]);
-                                                    c3[0].setIcon(cardimg[cards[0]]);
-                                                    c3[1].setIcon(cardimg[cards[1]]);
-                                                    c3[2].setIcon(cardimg[cards[2]]);
-                                                    c4[0].setIcon(cardimg[cards[0]]);
-                                                    c4[1].setIcon(cardimg[cards[1]]);
-                                                    c5.setIcon(cardimg[cards[0]]);
-                                                    contentPane.remove(badc);
-                                                    pcdone1.setVisible(true);
-                                                    contentPane.remove(playc);
-                                                    first[0].setIcon(cardimg[cards[4]]);
-                                                    contentPane.add(first[0]);
-                                                    SwingUtilities.updateComponentTreeUI(frame);
-                                                    pc15.setVisible(true);
-                                                    c1[4].removeMouseListener(this);
-                                                }
-                                            }
-                                        }
-                                    });
-                                // wait for human to play card
-                                while (!pcdone1.isVisible()) {
-                                    Thread.sleep(200);
-                                }
-                                contentPane.remove(c1[0]);
-                                contentPane.remove(c1[1]);
-                                contentPane.remove(c1[2]);
-                                contentPane.remove(c1[3]);
-                                contentPane.remove(c1[4]);
-                                contentPane.add(c2[0]);
-                                contentPane.add(c2[1]);
-                                contentPane.add(c2[2]);
-                                contentPane.add(c2[3]);
-                                SwingUtilities.updateComponentTreeUI(frame);
-                            }
-                            catch(InterruptedException e7) {
-                            }
-                        }
-                    });
-
-                play.addActionListener(new ActionListener() {
-                        public void actionPerformed (ActionEvent e) {
-                            contentPane.remove(play);
-                            contentPane.remove(bid[aa]);
-                            contentPane.remove(bid[bb]);
-                            contentPane.remove(bid[cc]);
-                            contentPane.remove(bid[dd]);
-                            contentPane.remove(playgame);
-                            if (flone != 2) { // North didn't bid alone
-                                c1[0].setIcon(cardimg[cards[0]]);
-                                c2[0].setIcon(cardimg[cards[0]]);
-                                c3[0].setIcon(cardimg[cards[0]]);
-                                c4[0].setIcon(cardimg[cards[0]]);
-                                c5.setIcon(cardimg[cards[0]]);
-                                c1[1].setIcon(cardimg[cards[1]]);
-                                c2[1].setIcon(cardimg[cards[1]]);
-                                c3[1].setIcon(cardimg[cards[1]]);
-                                c4[1].setIcon(cardimg[cards[1]]);
-                                c1[2].setIcon(cardimg[cards[2]]);
-                                c2[2].setIcon(cardimg[cards[2]]);
-                                c3[2].setIcon(cardimg[cards[2]]);
-                                c1[3].setIcon(cardimg[cards[3]]);
-                                c2[3].setIcon(cardimg[cards[3]]);
-                                c1[4].setIcon(cardimg[cards[4]]);
-                                contentPane.remove(c0[0]);
-                                contentPane.add(c1[0]);
-                                contentPane.remove(c0[1]);
-                                contentPane.add(c1[1]);
-                                contentPane.remove(c0[2]);
-                                contentPane.add(c1[2]);
-                                contentPane.remove(c0[3]);
-                                contentPane.add(c1[3]);
-                                contentPane.remove(c0[4]);
-                                contentPane.add(c1[4]);
-                            } else {
-                                contentPane.remove(c0[0]);
-                                contentPane.remove(c0[1]);
-                                contentPane.remove(c0[2]);
-                                contentPane.remove(c0[3]);
-                                contentPane.remove(c0[4]);
-                            }
-                            SwingUtilities.updateComponentTreeUI(frame);
-                            play.setEnabled(false);
-                            play.removeActionListener(this);
-                        }
-                    });
-
-                while (play.isEnabled() && false) { // wait for human to press 'play' button
-                    try {
-                        Thread.sleep(200);
-                    }
-                    catch(InterruptedException e8) {
-                    }
-                }
-
                 //  first to play is left of the dealer
                 int wturn = 1; // trick 1
                 double p11 = 20;
@@ -3855,7 +3586,7 @@ public class EuchreBeta {
 
                     if (aa == 0 && false) {
                         result = cardplay/100;
-                        p1.start();
+                        //p1.start();
                         while (!pcdone1.isVisible()) { // wait for human to select card to play
                             try {
                                 Thread.sleep(200);
@@ -4042,7 +3773,7 @@ public class EuchreBeta {
                                 }
                             }
                         }
-                        p1.start();
+                        //p1.start();
                         while (!pcdone1.isVisible()) { // wait for human to select card to play
                             try {
                                 Thread.sleep(200);
@@ -4227,7 +3958,7 @@ public class EuchreBeta {
                                 }
                             }
                         }
-                        p1.start();
+                        //p1.start();
                         while (!pcdone1.isVisible()) { // wait for human to select card to play
                             try {
                                 Thread.sleep(200);
@@ -4415,7 +4146,7 @@ public class EuchreBeta {
                                 }
                             }
                         }
-                        p1.start();
+                        //p1.start();
                         while (!pcdone1.isVisible()) { // wait for human to select card to play
                             try {
                                 Thread.sleep(200);
@@ -4555,189 +4286,6 @@ public class EuchreBeta {
                 final int bb2 = (win1+1)%4; // second to play
                 final int cc2 = (win1+2)%4; // third to play
                 final int dd2 = (win1+3)%4; // fourth to play
-
-                Thread p2 = new Thread(new Runnable() { // human player chooses card for 2nd trick
-                        @Override
-                        public void run() {
-                            try {
-                                contentPane.add(playc);
-                                SwingUtilities.updateComponentTreeUI(frame);
-                                c2[0].addMouseListener(new MouseAdapter() {
-                                        public void mouseClicked (MouseEvent e) {
-                                            if (!pcdone2.isVisible()) {
-                                                if (!c2[0].isEnabled()) {
-                                                    contentPane.add(badc);
-                                                    contentPane.remove(playc);
-                                                    SwingUtilities.updateComponentTreeUI(frame);
-                                                } else {
-                                                    int temp = cards[0];
-                                                    cards[0] = cards[1];
-                                                    cards[1] = cards[2];
-                                                    cards[2] = cards[3];
-                                                    cards[3] = temp;
-                                                    c2[0].setIcon(cardimg[cards[0]]);
-                                                    c2[1].setIcon(cardimg[cards[1]]);
-                                                    c2[2].setIcon(cardimg[cards[2]]);
-                                                    c2[3].setIcon(cardimg[cards[3]]);
-                                                    c3[0].setIcon(cardimg[cards[0]]);
-                                                    c3[1].setIcon(cardimg[cards[1]]);
-                                                    c3[2].setIcon(cardimg[cards[2]]);
-                                                    c4[0].setIcon(cardimg[cards[0]]);
-                                                    c4[1].setIcon(cardimg[cards[1]]);
-                                                    c5.setIcon(cardimg[cards[0]]);
-                                                    contentPane.remove(badc);
-                                                    pcdone2.setVisible(true);
-                                                    contentPane.remove(playc);
-                                                    second[0].setIcon(cardimg[cards[3]]);
-                                                    contentPane.add(second[0]);
-                                                    SwingUtilities.updateComponentTreeUI(frame);
-                                                    pc21.setVisible(true);
-                                                    c2[0].removeMouseListener(this);
-                                                }
-                                            }
-                                        }
-                                    });
-                                c2[1].addMouseListener(new MouseAdapter() {
-                                        public void mouseClicked (MouseEvent e) {
-                                            if (!pcdone2.isVisible()) {
-                                                if (!c2[1].isEnabled()) {
-                                                    contentPane.add(badc);
-                                                    contentPane.remove(playc);
-                                                    SwingUtilities.updateComponentTreeUI(frame);
-                                                } else {
-                                                    int temp = cards[1];
-                                                    cards[1] = cards[2];
-                                                    cards[2] = cards[3];
-                                                    cards[3] = temp;
-                                                    c2[0].setIcon(cardimg[cards[0]]);
-                                                    c2[1].setIcon(cardimg[cards[1]]);
-                                                    c2[2].setIcon(cardimg[cards[2]]);
-                                                    c2[3].setIcon(cardimg[cards[3]]);
-                                                    c3[0].setIcon(cardimg[cards[0]]);
-                                                    c3[1].setIcon(cardimg[cards[1]]);
-                                                    c3[2].setIcon(cardimg[cards[2]]);
-                                                    c4[0].setIcon(cardimg[cards[0]]);
-                                                    c4[1].setIcon(cardimg[cards[1]]);
-                                                    c5.setIcon(cardimg[cards[0]]);
-                                                    contentPane.remove(badc);
-                                                    pcdone2.setVisible(true);
-                                                    contentPane.remove(playc);
-                                                    second[0].setIcon(cardimg[cards[3]]);
-                                                    contentPane.add(second[0]);
-                                                    SwingUtilities.updateComponentTreeUI(frame);
-                                                    pc22.setVisible(true);
-                                                    c2[1].removeMouseListener(this);
-                                                }
-                                            }
-                                        }
-                                    });
-                                c2[2].addMouseListener(new MouseAdapter() {
-                                        public void mouseClicked (MouseEvent e) {
-                                            if (!pcdone2.isVisible()) {
-                                                if (!c2[2].isEnabled()) {
-                                                    contentPane.add(badc);
-                                                    contentPane.remove(playc);
-                                                    SwingUtilities.updateComponentTreeUI(frame);
-                                                } else {
-                                                    int temp = cards[2];
-                                                    cards[2] = cards[3];
-                                                    cards[3] = temp;
-                                                    c2[0].setIcon(cardimg[cards[0]]);
-                                                    c2[1].setIcon(cardimg[cards[1]]);
-                                                    c2[2].setIcon(cardimg[cards[2]]);
-                                                    c2[3].setIcon(cardimg[cards[3]]);
-                                                    c3[0].setIcon(cardimg[cards[0]]);
-                                                    c3[1].setIcon(cardimg[cards[1]]);
-                                                    c3[2].setIcon(cardimg[cards[2]]);
-                                                    c4[0].setIcon(cardimg[cards[0]]);
-                                                    c4[1].setIcon(cardimg[cards[1]]);
-                                                    c5.setIcon(cardimg[cards[0]]);
-                                                    contentPane.remove(badc);
-                                                    pcdone2.setVisible(true);
-                                                    contentPane.remove(playc);
-                                                    second[0].setIcon(cardimg[cards[3]]);
-                                                    contentPane.add(second[0]);
-                                                    SwingUtilities.updateComponentTreeUI(frame);
-                                                    pc23.setVisible(true);
-                                                    c2[2].removeMouseListener(this);
-                                                }
-                                            }
-                                        }
-                                    });
-                                c2[3].addMouseListener(new MouseAdapter() {
-                                        public void mouseClicked (MouseEvent e) {
-                                            if (!pcdone2.isVisible()) {
-                                                if (!c2[3].isEnabled()) {
-                                                    contentPane.add(badc);
-                                                    contentPane.remove(playc);
-                                                    SwingUtilities.updateComponentTreeUI(frame);
-                                                } else {
-                                                    c2[0].setIcon(cardimg[cards[0]]);
-                                                    c2[1].setIcon(cardimg[cards[1]]);
-                                                    c2[2].setIcon(cardimg[cards[2]]);
-                                                    c2[3].setIcon(cardimg[cards[3]]);
-                                                    c3[0].setIcon(cardimg[cards[0]]);
-                                                    c3[1].setIcon(cardimg[cards[1]]);
-                                                    c3[2].setIcon(cardimg[cards[2]]);
-                                                    c4[0].setIcon(cardimg[cards[0]]);
-                                                    c4[1].setIcon(cardimg[cards[1]]);
-                                                    c5.setIcon(cardimg[cards[0]]);
-                                                    contentPane.remove(badc);
-                                                    pcdone2.setVisible(true);
-                                                    contentPane.remove(playc);
-                                                    second[0].setIcon(cardimg[cards[3]]);
-                                                    contentPane.add(second[0]);
-                                                    SwingUtilities.updateComponentTreeUI(frame);
-                                                    pc24.setVisible(true);
-                                                    c2[3].removeMouseListener(this);
-                                                }
-                                            }
-                                        }
-                                    });
-                                // wait for human to play card
-                                while (!pcdone2.isVisible()) {
-                                    Thread.sleep(200);
-                                }
-                                contentPane.remove(c2[0]);
-                                contentPane.remove(c2[1]);
-                                contentPane.remove(c2[2]);
-                                contentPane.remove(c2[3]);
-                                contentPane.add(c3[0]);
-                                contentPane.add(c3[1]);
-                                contentPane.add(c3[2]);
-                                SwingUtilities.updateComponentTreeUI(frame);
-                            }
-                            catch (InterruptedException e11) {
-                            }
-                        }
-                    });
-
-                continu.addActionListener(new ActionListener() {
-                        public void actionPerformed (ActionEvent e) {
-                            contentPane.remove(first[aa]);
-                            contentPane.remove(first[bb]);
-                            contentPane.remove(first[cc]);
-                            contentPane.remove(first[dd]);
-                            contentPane.remove(winner);
-                            contentPane.remove(continu);
-                            trick1.setVisible(true);
-                            SwingUtilities.updateComponentTreeUI(frame);
-                            try {
-                                Thread.sleep(800);
-                            }
-                            catch (InterruptedException e12) {
-                            }
-                            continu.setEnabled(false);
-                            continu.removeActionListener(this);
-                        }
-                    });
-                while (continu.isEnabled() && false) { // wait for human to press 'continue' button
-                    try {
-                        Thread.sleep(200);
-                    }
-                    catch(InterruptedException e13) {
-                    }
-                }
 
                 // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
                 // play out second trick; first to play is winner of first trick
@@ -4934,7 +4482,7 @@ public class EuchreBeta {
 
                 if (aa2 == 0 && false) {
                     result = cardplay/100;
-                    p2.start();
+                    //p2.start();
                     while (!pcdone2.isVisible()) { // wait for human to select card to play
                         try {
                             Thread.sleep(200);
@@ -5087,7 +4635,7 @@ public class EuchreBeta {
                                 }
                             }
                         }
-                        p2.start();
+                        //p2.start();
                         while (!pcdone2.isVisible()) { // wait for human to select card to play
                             try {
                                 Thread.sleep(200);
@@ -5277,7 +4825,7 @@ public class EuchreBeta {
                                 }
                             }
                         }
-                        p2.start();
+                        //p2.start();
                         while (!pcdone2.isVisible()) { // wait for human to select card to play
                             try {
                                 Thread.sleep(200);
@@ -5425,7 +4973,7 @@ public class EuchreBeta {
                                 }
                             }
                         }
-                        p2.start();
+                        //p2.start();
                         while (!pcdone2.isVisible()) { // wait for human to select card to play
                             try {
                                 Thread.sleep(200);
@@ -5580,141 +5128,6 @@ public class EuchreBeta {
                 final int cc3 = (win2+2)%4; // third to play
                 final int dd3 = (win2+3)%4; // fourth to play
 
-                Thread p3 = new Thread(new Runnable() { // human player chooses card for 3rd trick
-                        @Override
-                        public void run() {
-                            try {
-                                contentPane.add(playc);
-                                SwingUtilities.updateComponentTreeUI(frame);
-                                c3[0].addMouseListener(new MouseAdapter() {
-                                        public void mouseClicked (MouseEvent e) {
-                                            if (!pcdone3.isVisible()) {
-                                                if (!c3[0].isEnabled()) {
-                                                    contentPane.add(badc);
-                                                    contentPane.remove(playc);
-                                                    SwingUtilities.updateComponentTreeUI(frame);
-                                                } else {
-                                                    int temp = cards[0];
-                                                    cards[0] = cards[1];
-                                                    cards[1] = cards[2];
-                                                    cards[2] = temp;
-                                                    c3[0].setIcon(cardimg[cards[0]]);
-                                                    c3[1].setIcon(cardimg[cards[1]]);
-                                                    c3[2].setIcon(cardimg[cards[2]]);
-                                                    c4[0].setIcon(cardimg[cards[0]]);
-                                                    c4[1].setIcon(cardimg[cards[1]]);
-                                                    c5.setIcon(cardimg[cards[0]]);
-                                                    contentPane.remove(badc);
-                                                    pcdone3.setVisible(true);
-                                                    contentPane.remove(playc);
-                                                    third[0].setIcon(cardimg[cards[2]]);
-                                                    contentPane.add(third[0]);
-                                                    SwingUtilities.updateComponentTreeUI(frame);
-                                                    pc31.setVisible(true);
-                                                    c3[0].removeMouseListener(this);
-                                                }
-                                            }
-                                        }
-                                    });
-                                c3[1].addMouseListener(new MouseAdapter() {
-                                        public void mouseClicked (MouseEvent e) {
-                                            if (!pcdone3.isVisible()) {
-                                                if (!c3[1].isEnabled()) {
-                                                    contentPane.add(badc);
-                                                    contentPane.remove(playc);
-                                                    SwingUtilities.updateComponentTreeUI(frame);
-                                                } else {
-                                                    int temp = cards[1];
-                                                    cards[1] = cards[2];
-                                                    cards[2] = temp;
-                                                    c3[0].setIcon(cardimg[cards[0]]);
-                                                    c3[1].setIcon(cardimg[cards[1]]);
-                                                    c3[2].setIcon(cardimg[cards[2]]);
-                                                    c4[0].setIcon(cardimg[cards[0]]);
-                                                    c4[1].setIcon(cardimg[cards[1]]);
-                                                    c5.setIcon(cardimg[cards[0]]);
-                                                    contentPane.remove(badc);
-                                                    pcdone3.setVisible(true);
-                                                    contentPane.remove(playc);
-                                                    third[0].setIcon(cardimg[cards[2]]);
-                                                    contentPane.add(third[0]);
-                                                    SwingUtilities.updateComponentTreeUI(frame);
-                                                    pc32.setVisible(true);
-                                                    c3[1].removeMouseListener(this);
-                                                }
-                                            }
-                                        }
-                                    });
-                                c3[2].addMouseListener(new MouseAdapter() {
-                                        public void mouseClicked (MouseEvent e) {
-                                            if (!pcdone3.isVisible()) {
-                                                if (!c3[2].isEnabled()) {
-                                                    contentPane.add(badc);
-                                                    contentPane.remove(playc);
-                                                    SwingUtilities.updateComponentTreeUI(frame);
-                                                } else {
-                                                    c3[0].setIcon(cardimg[cards[0]]);
-                                                    c3[1].setIcon(cardimg[cards[1]]);
-                                                    c3[2].setIcon(cardimg[cards[2]]);
-                                                    c4[0].setIcon(cardimg[cards[0]]);
-                                                    c4[1].setIcon(cardimg[cards[1]]);
-                                                    c5.setIcon(cardimg[cards[0]]);
-                                                    contentPane.remove(badc);
-                                                    pcdone3.setVisible(true);
-                                                    contentPane.remove(playc);
-                                                    third[0].setIcon(cardimg[cards[2]]);
-                                                    contentPane.add(third[0]);
-                                                    SwingUtilities.updateComponentTreeUI(frame);
-                                                    pc33.setVisible(true);
-                                                    c3[2].removeMouseListener(this);
-                                                }
-                                            }
-                                        }
-                                    });
-                                // wait for human to play card
-                                while (!pcdone3.isVisible()) {
-                                    Thread.sleep(200);
-                                }
-                                contentPane.remove(c3[0]);
-                                contentPane.remove(c3[1]);
-                                contentPane.remove(c3[2]);
-                                contentPane.add(c4[0]);
-                                contentPane.add(c4[1]);
-                                SwingUtilities.updateComponentTreeUI(frame);
-                            }
-                            catch (InterruptedException e14) {
-                            }
-                        }
-                    });
-
-                continu2.addActionListener(new ActionListener() {
-                        public void actionPerformed (ActionEvent e) {
-                            contentPane.remove(second[aa]);
-                            contentPane.remove(second[bb]);
-                            contentPane.remove(second[cc]);
-                            contentPane.remove(second[dd]);
-                            contentPane.remove(winner);
-                            contentPane.remove(continu2);
-                            trick2.setVisible(true);
-                            SwingUtilities.updateComponentTreeUI(frame);
-                            try {
-                                Thread.sleep(800);
-                            }
-                            catch (InterruptedException e15) {
-                            }
-                            continu2.setEnabled(false);
-                            continu2.removeActionListener(this);
-                        }
-                    });
-
-                while (continu2.isEnabled() && false) { // wait for human to press 'continue' button
-                    try {
-                        Thread.sleep(200);
-                    }
-                    catch (InterruptedException e16) {
-                    }
-                }
-
                 // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
                 // play out third trick; first to play is winner of second trick
                 wturn = 3; // trick 3
@@ -5840,7 +5253,7 @@ public class EuchreBeta {
 
                 if (aa3 == 0 && false) {
                     result = cardplay/100;
-                    p3.start();
+                    //p3.start();
                     while (!pcdone3.isVisible()) { // wait for human to select card to play
                         try {
                             Thread.sleep(200);
@@ -5995,7 +5408,7 @@ public class EuchreBeta {
                                 }
                             }
                         }
-                        p3.start();
+                        //p3.start();
                         while (!pcdone3.isVisible()) { // wait for human to select card to play
                             try {
                                 Thread.sleep(200);
@@ -6160,7 +5573,7 @@ public class EuchreBeta {
                                 }
                             }
                         }
-                        p3.start();
+                        //p3.start();
                         while (!pcdone3.isVisible()) { // wait for human to select card to play
                             try {
                                 Thread.sleep(200);
@@ -6309,7 +5722,7 @@ public class EuchreBeta {
                                 }
                             }
                         }
-                        p3.start();
+                        //p3.start();
                         while (!pcdone3.isVisible()) { // wait for human to select card to play
                             try {
                                 Thread.sleep(200);
@@ -6453,103 +5866,6 @@ public class EuchreBeta {
                 final int cc4 = (win3+2)%4; // third to play
                 final int dd4 = (win3+3)%4; // fourth to play
 
-                Thread p4 = new Thread(new Runnable() { // human player chooses card for 4th trick
-                        @Override
-                        public void run() {
-                            try {
-                                contentPane.add(playc);
-                                SwingUtilities.updateComponentTreeUI(frame);
-                                c4[0].addMouseListener(new MouseAdapter() {
-                                        public void mouseClicked (MouseEvent e) {
-                                            if (!pcdone4.isVisible()) {
-                                                if (!c4[0].isEnabled()) {
-                                                    contentPane.add(badc);
-                                                    contentPane.remove(playc);
-                                                    SwingUtilities.updateComponentTreeUI(frame);
-                                                } else {
-                                                    int temp = cards[0];
-                                                    cards[0] = cards[1];
-                                                    cards[1] = temp;
-                                                    c4[0].setIcon(cardimg[cards[0]]);
-                                                    c4[1].setIcon(cardimg[cards[1]]);
-                                                    c5.setIcon(cardimg[cards[0]]);
-                                                    contentPane.remove(badc);
-                                                    pcdone4.setVisible(true);
-                                                    contentPane.remove(playc);
-                                                    fourth[0].setIcon(cardimg[cards[1]]);
-                                                    contentPane.add(fourth[0]);
-                                                    SwingUtilities.updateComponentTreeUI(frame);
-                                                    pc41.setVisible(true);
-                                                    c4[0].removeMouseListener(this);
-                                                }
-                                            }
-                                        }
-                                    });
-                                c4[1].addMouseListener(new MouseAdapter() {
-                                        public void mouseClicked (MouseEvent e) {
-                                            if (!pcdone4.isVisible()) {
-                                                if (!c4[1].isEnabled()) {
-                                                    contentPane.add(badc);
-                                                    contentPane.remove(playc);
-                                                    SwingUtilities.updateComponentTreeUI(frame);
-                                                } else {
-                                                    c4[0].setIcon(cardimg[cards[0]]);
-                                                    c4[1].setIcon(cardimg[cards[1]]);
-                                                    c5.setIcon(cardimg[cards[0]]);
-                                                    contentPane.remove(badc);
-                                                    pcdone4.setVisible(true);
-                                                    contentPane.remove(playc);
-                                                    fourth[0].setIcon(cardimg[cards[1]]);
-                                                    contentPane.add(fourth[0]);
-                                                    SwingUtilities.updateComponentTreeUI(frame);
-                                                    pc42.setVisible(true);
-                                                    c4[1].removeMouseListener(this);
-                                                }
-                                            }
-                                        }
-                                    });
-                                // wait for human to play card
-                                while (!pcdone4.isVisible()) {
-                                    Thread.sleep(200);
-                                }
-                                contentPane.remove(c4[0]);
-                                contentPane.remove(c4[1]);
-                                contentPane.add(c5);
-                                SwingUtilities.updateComponentTreeUI(frame);
-                            }
-                            catch (InterruptedException e17) {
-                            }
-                        }
-                    });
-
-                continu3.addActionListener(new ActionListener() {
-                        public void actionPerformed (ActionEvent e) {
-                            contentPane.remove(third[aa]);
-                            contentPane.remove(third[bb]);
-                            contentPane.remove(third[cc]);
-                            contentPane.remove(third[dd]);
-                            contentPane.remove(winner);
-                            contentPane.remove(continu3);
-                            trick3.setVisible(true);
-                            SwingUtilities.updateComponentTreeUI(frame);
-                            try {
-                                Thread.sleep(800);
-                            }
-                            catch (InterruptedException e18) {
-                            }
-                            continu3.setEnabled(false);
-                            continu3.removeActionListener(this);
-                        }
-                    });
-
-                while (continu3.isEnabled() && false) { // wait for human to press 'continue' button
-                    try {
-                        Thread.sleep(200);
-                    }
-                    catch(InterruptedException e19) {
-                    }
-                }
-
                 // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
                 // play out fourth trick; first to play is winner of third trick
                 wturn = 4; // turn 4
@@ -6683,7 +5999,7 @@ public class EuchreBeta {
 
                 if (aa4 == 0 && false) {
                     result = cardplay/100;
-                    p4.start();
+                    //p4.start();
                     while (!pcdone4.isVisible()) { // wait for human to select card to play
                         try {
                             Thread.sleep(200);
@@ -6818,7 +6134,7 @@ public class EuchreBeta {
                                 }
                             }
                         }
-                        p4.start();
+                        //p4.start();
                         while (!pcdone4.isVisible()) { // wait for human to select card to play
                             try {
                                 Thread.sleep(200);
@@ -6962,7 +6278,7 @@ public class EuchreBeta {
                                 }
                             }
                         }
-                        p4.start();
+                        //p4.start();
                         while (!pcdone4.isVisible()) { // wait for human to select card to play
                             try {
                                 Thread.sleep(200);
@@ -7098,7 +6414,7 @@ public class EuchreBeta {
                                 }
                             }
                         }
-                        p4.start();
+                        //p4.start();
                         while (!pcdone4.isVisible()) { // wait for human to select card to play
                             try {
                                 Thread.sleep(200);
