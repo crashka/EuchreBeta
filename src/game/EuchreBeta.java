@@ -2,8 +2,6 @@ package game;
 
 import java.lang.Math;
 import java.util.*;
-import javax.swing.*;
-import java.awt.*;
 
 public class EuchreBeta {
 
@@ -17,20 +15,9 @@ public class EuchreBeta {
     public static String[] suitx = {"spades", "hearts", "diamonds", "clubs"};
     public static String[] rankx = {"9", "10", "Jack", "Queen", "King", "Ace", "Jack", "Jack"};
     public static String cardname[][] = new String[4][8];
-    public static ImageIcon cardimg[] = new ImageIcon[36];
-    public static ImageIcon cardimg2[][] = new ImageIcon[4][8];
 
     // define a few more global variables
     public static int game = 10; // points needed to win a game (can modify this to extend play)
-
-    // *** Method "buildFrame" for creating frame ***
-    public static JFrame buildFrame() {
-        JFrame frame = new JFrame("Euchre");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setBounds(150, 150, 600, 700);
-        frame.setVisible(true);
-        return frame;
-    }
 
     // *** Method "naming" for assigning names to cards ***
     public static String[][] naming(String cardname[][], String suit[], String rank[]) {
@@ -128,50 +115,6 @@ public class EuchreBeta {
             cards[i] = c[i];
         }
         return cards;
-    }
-
-    // *** Method "getImgIcons" for loading card image icons ***
-    public static ImageIcon[] getImgIcons(ImageIcon cardimg[]) {
-        for (int i=0; i<24; i++) {
-            String numberAsString = String.valueOf(i);
-            java.net.URL imgURL = EuchreBeta.class.getResource("/game/images/" + numberAsString + ".gif");
-            ImageIcon currentimg = new ImageIcon(imgURL);
-            cardimg[i] = currentimg;
-        }
-        // eight additional "cards" for bowers after trump declared
-        cardimg[24] = new ImageIcon(EuchreBeta.class.getResource("/game/images/11.gif"));
-        cardimg[25] = new ImageIcon(EuchreBeta.class.getResource("/game/images/10.gif"));
-        cardimg[26] = new ImageIcon(EuchreBeta.class.getResource("/game/images/9.gif"));
-        cardimg[27] = new ImageIcon(EuchreBeta.class.getResource("/game/images/8.gif"));
-        cardimg[28] = new ImageIcon(EuchreBeta.class.getResource("/game/images/8.gif"));
-        cardimg[29] = new ImageIcon(EuchreBeta.class.getResource("/game/images/9.gif"));
-        cardimg[30] = new ImageIcon(EuchreBeta.class.getResource("/game/images/10.gif"));
-        cardimg[31] = new ImageIcon(EuchreBeta.class.getResource("/game/images/11.gif"));
-        // four additional "cards" denoting images of the four suits
-        cardimg[32] = new ImageIcon(EuchreBeta.class.getResource("/game/images/spades.jpg"));
-        cardimg[33] = new ImageIcon(EuchreBeta.class.getResource("/game/images/hearts.jpg"));
-        cardimg[34] = new ImageIcon(EuchreBeta.class.getResource("/game/images/diamonds.jpg"));
-        cardimg[35] = new ImageIcon(EuchreBeta.class.getResource("/game/images/clubs.jpg"));
-        return cardimg;
-    }
-
-    // *** Method "getImgIcons2" for loading card image icons ***
-    public static ImageIcon[][] getImgIcons(ImageIcon cardimg2[][]) {
-        for (int i=0; i<24; i++) {
-            String numberAsString = String.valueOf(i);
-            java.net.URL imgURL = EuchreBeta.class.getResource("/game/images/" + numberAsString + ".gif");
-            ImageIcon currentimg = new ImageIcon(imgURL);
-            cardimg2[i%4][i/4] = currentimg;
-        }
-        cardimg2[0][6] = new ImageIcon(EuchreBeta.class.getResource("/game/images/11.gif"));
-        cardimg2[3][7] = new ImageIcon(EuchreBeta.class.getResource("/game/images/11.gif"));
-        cardimg2[1][6] = new ImageIcon(EuchreBeta.class.getResource("/game/images/10.gif"));
-        cardimg2[2][7] = new ImageIcon(EuchreBeta.class.getResource("/game/images/10.gif"));
-        cardimg2[2][6] = new ImageIcon(EuchreBeta.class.getResource("/game/images/9.gif"));
-        cardimg2[1][7] = new ImageIcon(EuchreBeta.class.getResource("/game/images/9.gif"));
-        cardimg2[3][6] = new ImageIcon(EuchreBeta.class.getResource("/game/images/8.gif"));
-        cardimg2[0][7] = new ImageIcon(EuchreBeta.class.getResource("/game/images/8.gif"));
-        return cardimg2;
     }
 
     // *** Method "bidder11" for determining 1st round bid of 1st player to bid ***
@@ -1694,15 +1637,6 @@ public class EuchreBeta {
 
     public static void go() {
 
-        // create JFrame for visualization of game
-        JFrame frame = EuchreBeta.buildFrame();
-        Container contentPane = frame.getContentPane();
-        contentPane.setLayout(null);
-
-        // load card images
-        cardimg = getImgIcons(cardimg);
-        cardimg2 = getImgIcons(cardimg2);
-
         // Variables for shell program
         int declarer = 0;  //  marker denoting which player is declarer (0 = South, 1 = West, 2 = North, 3 = East)
         int dealer = 0;  // which player is dealer for current hand (0 = South, etc.)
@@ -1712,7 +1646,6 @@ public class EuchreBeta {
         int lone = -1; // will get value if a player goes lone (0 = South, etc.)
         int[] points = new int[4];  // points for each player
         int[] trick = new int[4]; // tricks won
-        int result = -1; // records card played by human player each trick
         int seat = -1; // see notes (pertains to bidding situation)
         int fintp = 4;  //  marker denoting the suit which is declared trump (spades = 0, hearts = 1, diamonds = 2,
                         // clubs = 3, 4 = trump not declared)
@@ -1981,7 +1914,7 @@ public class EuchreBeta {
             // ********************************************************
             // ********************************************************
 
-            // use boolean "isVisible" of these JLabels to track who has bid what and when
+            // use booleans to track who has bid what and when
             boolean bidround = false; // bid round 1 or 2
             boolean bidyes = false; // pass or bid
             boolean wpalone = false; // bid wp or alone
@@ -1990,7 +1923,7 @@ public class EuchreBeta {
             boolean bidsuit1 = false; // 0/0 = spades; 0/1 = hearts; 1/0 = diamonds; 1/1 = clubs
             boolean bidsuit2 = false;
 
-            // use boolean "isVisible" of these JLabels to see if thread t1 has dealt with these bidders
+            // use booleans to see if thread t1 has dealt with these bidders
             boolean firstbid1 = false;
             boolean secondbid1 = false;
             boolean thirdbid1 = false;
@@ -2000,7 +1933,7 @@ public class EuchreBeta {
             boolean thirdbid2 = false;
             boolean fourthbid2 = false;
 
-            // use boolean "isVisible" of these JLabels to see if player has bid
+            // use booleans to see if player has bid
             boolean[] bidwp = new boolean[4];
             boolean[] bidalone = new boolean[4];
             for (int i=0; i<4; i++) {
@@ -2008,13 +1941,13 @@ public class EuchreBeta {
                 bidalone[i] = false;
             }
 
-            // use boolean "isVisible" of these JLabels to see if human bidder selects trump, round 2
+            // use booleans to see if human bidder selects trump, round 2
             boolean picks = false;
             boolean pickh = false;
             boolean pickd = false;
             boolean pickc = false;
 
-            // use boolean of "isVisible" to see if human dealer has swapped a card with turn
+            // use booleans to see if human dealer has swapped a card with turn
             boolean swap0 = false;
             boolean swap1 = false;
             boolean swap2 = false;
@@ -2022,7 +1955,7 @@ public class EuchreBeta {
             boolean swap4 = false;
             boolean swapper = false;
 
-            // use booleans of "isVisible" to see if thread 5 has finished each trick
+            // use booleans to see if thread 5 has finished each trick
             boolean trick1 = false;
             boolean trick2 = false;
             boolean trick3 = false;
@@ -2034,7 +1967,7 @@ public class EuchreBeta {
             boolean stk4 = false;
             boolean stk5 = false;
 
-            // use booleans of "isVisible" to show which card human has played
+            // use booleans to show which card human has played
             boolean pc11 = false;
             boolean pc12 = false;
             boolean pc13 = false;
@@ -2054,270 +1987,13 @@ public class EuchreBeta {
             boolean pcdone3 = false;
             boolean pcdone4 = false;
 
-            // explain the game set-up
-            JLabel info = new JLabel("<html><div style = 'text-align: center'>You are sitting<br>in seat South."
-                                     + " Current<br>dealer is denoted by <font color = 'green'>D.</font><br>"
-                                     + "Press the 'deal'<br>button to play.</div></html>");
-            // 5 card hand dealt to South
-            JLabel[] c0 = new JLabel[5];
-            for (int i=0; i<5; i++) {
-                c0[i] = new JLabel(cardimg[cards[i]]);
-            }
-            // 5 card hand of South after swap, for first round of play
-            JLabel[] c1 = new JLabel[5];
-            for (int i=0; i<5; i++) {
-                c1[i] = new JLabel(cardimg[cards[i]]);
-            }
-            // 4 card hand of South for second round of play
-            JLabel[] c2 = new JLabel[4];
-            for (int i=0; i<4; i++) {
-                c2[i] = new JLabel(cardimg[cards[i]]);
-            }
-            // 3 card hand of South for third round of play
-            JLabel[] c3 = new JLabel[3];
-            for (int i=0; i<3; i++) {
-                c3[i] = new JLabel(cardimg[cards[i]]);
-            }
-            // 2 card hand of South for fourth round of play
-            JLabel[] c4 = new JLabel[3];
-            for (int i=0; i<2; i++) {
-                c4[i] = new JLabel(cardimg[cards[i]]);
-            }
-            // final card of South for fifth round of play
-            JLabel c5 = new JLabel(cardimg[cards[0]]);
-            // turn card
-            JLabel turn = new JLabel(cardimg[cards[20]]);
-            // label for each player
-            JLabel N = new JLabel("<html><body><b><font size=5>NORTH</font></b></body></html>");
-            JLabel S = new JLabel("<html><body><b><font size=5>SOUTH</font></b></body></html>");
-            JLabel E = new JLabel("<html><body><b><font size=5>EAST</font></b></body></html>");
-            JLabel W = new JLabel("<html><body><b><font size=5>WEST</font></b></body></html>");
-            // dealer button
-            JLabel DS = new JLabel("<html><body><b><font size=7 color='green'>D</font></b></body></html>");
-            JLabel DW = new JLabel("<html><body><b><font size=7 color='green'>D</font></b></body></html>");
-            JLabel DN = new JLabel("<html><body><b><font size=7 color='green'>D</font></b></body></html>");
-            JLabel DE = new JLabel("<html><body><b><font size=7 color='green'>D</font></b></body></html>");
-            // button for dealing
-            JButton deal = new JButton("deal"); // to activate deal of cards at start of hand
-            JButton dealn = new JButton("deal new hand"); // deal new hand
-            // bidding messages
-            JLabel[] bid = new JLabel[4];
-            for (int i=0; i<4; i++) {
-                bid[i] = new JLabel(""); // 1st and 2nd round
-            }
-            JLabel allpass = new JLabel("<html>all players pass,<br>1st round</html>");
-            JLabel allpass2 = new JLabel("<html>All players pass,<br>2nd round. Press<br>"
-                                         + "'continue' to deal<br>a new hand.</html>");
-            JLabel playgame = new JLabel("<html><div style = 'text-align: center'>Press 'play' button<br>"
-                                         + "below to play hand.<br>(cards will be<br>reordered to<br>reflect trump)</div></html>");
-            JLabel pick = new JLabel("<html>What do you<br>want to do?</html>"); // ask dealer to bid or pass, 1st round
-            // have dealer swap cards
-            JLabel swap = new JLabel("<html><div style = 'text-align: center'>Click on a card to"
-                                     + "<br>swap it with turn card</div></html>");
-            JButton bidS = new JButton("bid"); // to activate 1st round bid by South
-            JButton bidS2 = new JButton("bid"); // to activate 2nd round bid by South
-            JButton pass1 = new JButton("pass"); // to activate 1st round pass by South
-            JButton pass2 = new JButton("pass"); // to activate 2nd round pass by South
-            JButton play = new JButton("play");
-            JLabel callt = new JLabel("<html>Pick a suit<br>as trump</html>"); // 2nd round declaration
-            JLabel bads = new JLabel("<html><div style = 'text-align: center'>Can't choose turn suit!<br>Try again</div></html>");
-            JLabel playc = new JLabel("<html><div style = 'text-align: center'>Click on a card<br>to play it</div></html>");
-            JButton bids = new JButton(cardimg[32]);
-            JButton bidh = new JButton(cardimg[33]);
-            JButton bidd = new JButton(cardimg[34]);
-            JButton bidc = new JButton(cardimg[35]);
-            // indicators of who bid, and what suit is trump
-            JLabel[] dec = new JLabel[4];
-            for (int i=0; i<4; i++) {
-                dec[i] = new JLabel(cardimg[32+upst]);
-            }
-            // slider to decide if bidding w/ partner or alone
-            JSlider alone = new JSlider(0,1,0);
-            alone.setPaintLabels(true);
-            Hashtable<Integer, JLabel> table  = new Hashtable<Integer, JLabel>();
-            table.put(0, new JLabel("w/ partner"));
-            table.put(1, new JLabel("alone"));
-            alone.setLabelTable(table);
-
-            // cards played by each player, each round
-            JLabel[] first = new JLabel[4];
-            JLabel[] second = new JLabel[4];
-            JLabel[] third = new JLabel[4];
-            JLabel[] fourth = new JLabel[4];
-            JLabel[] fifth = new JLabel[4];
-            for (int i=0; i<4; i++) {
-                first[i] = new JLabel("");
-                second[i] = new JLabel("");
-                third[i] = new JLabel("");
-                fourth[i] = new JLabel("");
-                fifth[i] = new JLabel("");
-            }
-            JLabel badc = new JLabel("<html><div style = 'text-align: center'>You must follow suit!<br>Try again</div></html>");
-
-            // who wins each trick
-            JLabel winner = new JLabel ("unchanged");
-            JButton continu = new JButton("continue");
-            JButton continu2 = new JButton("continue");
-            JButton continu3 = new JButton("continue");
-            JButton continu4 = new JButton("continue");
-            JButton continu5 = new JButton("continue");
-
             // game and trick tally table
-            JLabel NS = new JLabel("<html><body><b><font size=4>N/S</font></b></body></html>");
-            JLabel EW = new JLabel("<html><body><b><font size=4>E/W</font></b></body></html>");
-            JLabel pts = new JLabel("<html><body><b><font size=4>pts</font></b></body></html>");
-            JLabel tr = new JLabel("<html><body><b><font size=4>tricks</font></b></body></html>");
             int tns = 0; // N/S tricks
             int tew = 0; // E/W tricks
-            String stns = String.valueOf(tns);
-            String stew = String.valueOf(tew);
-            String spns = String.valueOf(pns);
-            String spew = String.valueOf(pew);
-            JLabel ptns = new JLabel(spns);
-            JLabel ptew = new JLabel(spew);
-            JLabel trns = new JLabel(stns);
-            JLabel trew = new JLabel(stew);
-            JLabel rscore = new JLabel("");
-
-            DS.setText(null);
-            DW.setText(null);
-            DN.setText(null);
-            DE.setText(null);
-
-            contentPane.add(deal);
-            contentPane.add(info);
-
-            // *** decide where to show the dealer button **
-            if (dealer == 0) {
-                DS.setText("<html><body><b><font size=7 color='green'>D</font></b></body></html>");
-            } else if (dealer == 1) {
-                DW.setText("<html><body><b><font size=7 color='green'>D</font></b></body></html>");
-            } else if (dealer == 2) {
-                DN.setText("<html><body><b><font size=7 color='green'>D</font></b></body></html>");
-            } else if (dealer == 3) {
-                DE.setText("<html><body><b><font size=7 color='green'>D</font></b></body></html>");
-            }
-
-            contentPane.add(N);
-            contentPane.add(S);
-            contentPane.add(E);
-            contentPane.add(W);
-            contentPane.add(DS);
-            contentPane.add(DW);
-            contentPane.add(DN);
-            contentPane.add(DE);
-            contentPane.add(NS);
-            contentPane.add(EW);
-            contentPane.add(pts);
-            contentPane.add(tr);
-            contentPane.add(ptns);
-            contentPane.add(ptew);
-            contentPane.add(trns);
-            contentPane.add(trew);
-
-            c0[0].setBounds(120,450,75,100);
-            c0[1].setBounds(195,450,75,100);
-            c0[2].setBounds(270,450,75,100);
-            c0[3].setBounds(345,450,75,100);
-            c0[4].setBounds(420,450,75,100);
-            c1[0].setBounds(120,450,75,100);
-            c1[1].setBounds(195,450,75,100);
-            c1[2].setBounds(270,450,75,100);
-            c1[3].setBounds(345,450,75,100);
-            c1[4].setBounds(420,450,75,100);
-            c2[0].setBounds(160,450,75,100);
-            c2[1].setBounds(235,450,75,100);
-            c2[2].setBounds(310,450,75,100);
-            c2[3].setBounds(385,450,75,100);
-            c3[0].setBounds(195,450,75,100);
-            c3[1].setBounds(270,450,75,100);
-            c3[2].setBounds(345,450,75,100);
-            c4[0].setBounds(235,450,75,100);
-            c4[1].setBounds(310,450,75,100);
-            c5.setBounds(270,450,75,100);
-            N.setBounds(280,25,70,30);
-            S.setBounds(280,405,70,30);
-            E.setBounds(480,215,70,30);
-            W.setBounds(125,215,70,30);
-            DS.setBounds(365,400,40,40);
-            DW.setBounds(130,180,40,40);
-            DN.setBounds(365,20,40,40);
-            DE.setBounds(485,180,40,40);
-            turn.setBounds(280,182,75,100);
-            deal.setBounds(290,330,50,20);
-            dealn.setBounds(250,330,110,20);
-            info.setBounds(250,100,150,200);
-            bid[0].setBounds(285,570,120,80);
-            bid[1].setBounds(110,260,120,80);
-            bid[2].setBounds(285,65,120,80);
-            bid[3].setBounds(465,260,120,80);
-            allpass.setBounds(280,190,150,50);
-            allpass2.setBounds(280,190,150,120);
-            playgame.setBounds(250,170,150,120);
-            pick.setBounds(390,570,150,60);
-            swap.setBounds(240,570,150,60);
-            bidS.setBounds(280,600,60,25);
-            bidS2.setBounds(280,600,60,25);
-            pass1.setBounds(280,635,60,25);
-            pass2.setBounds(280,635,60,25);
-            bids.setBounds(280,560,20,20);
-            bidh.setBounds(320,560,20,20);
-            bidd.setBounds(280,600,20,20);
-            bidc.setBounds(320,600,20,20);
-            callt.setBounds(390,570,150,60);
-            bads.setBounds(100,570,180,40);
-            badc.setBounds(240,570,180,40);
-            alone.setBounds(230,550,150,50);
-            play.setBounds(290,330,50,20);
-            dec[0].setBounds(250,410,20,20);
-            dec[1].setBounds(95,220,20,20);
-            dec[2].setBounds(250,30,20,20);
-            dec[3].setBounds(450,220,20,20);
-            NS.setBounds(75,10,40,20);
-            EW.setBounds(135,10,40,20);
-            pts.setBounds(20,45,60,20);
-            tr.setBounds(10,75,60,20);
-            ptns.setBounds(85,45,20,20);
-            ptew.setBounds(145,45,20,20);
-            trns.setBounds(85,75,20,20);
-            trew.setBounds(145,75,20,20);
-            first[0].setBounds(280,300,75,100);
-            first[1].setBounds(190,182,75,100);
-            first[2].setBounds(280,70,75,100);
-            first[3].setBounds(370,182,75,100);
-            second[0].setBounds(280,300,75,100);
-            second[1].setBounds(190,182,75,100);
-            second[2].setBounds(280,70,75,100);
-            second[3].setBounds(370,182,75,100);
-            third[0].setBounds(280,300,75,100);
-            third[1].setBounds(190,182,75,100);
-            third[2].setBounds(280,70,75,100);
-            third[3].setBounds(370,182,75,100);
-            fourth[0].setBounds(280,300,75,100);
-            fourth[1].setBounds(190,182,75,100);
-            fourth[2].setBounds(280,70,75,100);
-            fourth[3].setBounds(370,182,75,100);
-            fifth[0].setBounds(280,300,75,100);
-            fifth[1].setBounds(190,182,75,100);
-            fifth[2].setBounds(280,70,75,100);
-            fifth[3].setBounds(370,182,75,100);
-            winner.setBounds(230,555,190,40);
-            continu.setBounds(270,610,80,20);
-            continu2.setBounds(270,610,80,20);
-            continu3.setBounds(270,610,80,20);
-            continu4.setBounds(270,610,80,20);
-            continu5.setBounds(270,610,80,20);
-            rscore.setBounds(270,140,100,110);
-            playc.setBounds(240,570,150,60);
-
-            // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-
-            //              System.out.println("Let's play Euchre!" + "\n");
 
             // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
-            //  first bidder
-
+            // first bidder
             docall = bidder11(playersuit[aa][upst][upst], playersuit[aa][upst][3-upst], playersuit[aa][3-upst][3-upst],
                               right[aa][upst], left[aa][upst], acet[aa][upst], aces[aa][upst], uprk, upst, bidscore[aa][upst],
                               bidscore[aa][3-upst], summins[aa][upst], vd[aa], bestc[aa], points[aa], game);
@@ -2518,16 +2194,12 @@ public class EuchreBeta {
                 // now code for which suit was declared
                 if (bidx[2] == 1) { // hearts
                     bidsuit2 = true;
-                    dec[aa].setIcon(cardimg[33]);
                 } else if (bidx[2] == 2) { // diamonds
                     bidsuit1 = true;
-                    dec[aa].setIcon(cardimg[34]);
                 } else if (bidx[2] == 3) { // clubs
                     bidsuit2 = true;
                     bidsuit1 = true;
-                    dec[aa].setIcon(cardimg[35]);
                 } else {
-                    dec[aa].setIcon(cardimg[32]);
                 }
                 firstbid2 = true; // signal of having reached this point
                 bidround = true;
@@ -2565,16 +2237,12 @@ public class EuchreBeta {
                 // now code for which suit was declared
                 if (bidx[2] == 1) {
                     bidsuit2 = true;
-                    dec[bb].setIcon(cardimg[33]);
                 } else if (bidx[2] == 2) {
                     bidsuit1 = true;
-                    dec[bb].setIcon(cardimg[34]);
                 } else if (bidx[2] == 3) {
                     bidsuit2 = true;
                     bidsuit1 = true;
-                    dec[bb].setIcon(cardimg[35]);
                 } else {
-                    dec[bb].setIcon(cardimg[32]);
                 }
                 secondbid2 = true; // signal of having reached this point
                 bidround = true;
@@ -2612,16 +2280,12 @@ public class EuchreBeta {
                 // now code for which suit was declared
                 if (bidx[2] == 1) {
                     bidsuit2 = true;
-                    dec[cc].setIcon(cardimg[33]);
                 } else if (bidx[2] == 2) {
                     bidsuit1 = true;
-                    dec[cc].setIcon(cardimg[34]);
                 } else if (bidx[2] == 3) {
                     bidsuit2 = true;
                     bidsuit1 = true;
-                    dec[cc].setIcon(cardimg[35]);
                 } else {
-                    dec[cc].setIcon(cardimg[32]);
                 }
                 thirdbid2 = true; // signal of having reached this point
                 bidround = true;
@@ -2659,16 +2323,12 @@ public class EuchreBeta {
                 // now code for which suit was declared
                 if (bidx[2] == 1) {
                     bidsuit2 = true;
-                    dec[dd].setIcon(cardimg[33]);
                 } else if (bidx[2] == 2) {
                     bidsuit1 = true;
-                    dec[dd].setIcon(cardimg[34]);
                 } else if (bidx[2] == 3) {
                     bidsuit2 = true;
                     bidsuit1 = true;
-                    dec[dd].setIcon(cardimg[35]);
                 } else {
-                    dec[dd].setIcon(cardimg[32]);
                 }
                 fourthbid2 = true; // signal of having reached this point
                 bidround = true;
@@ -2677,8 +2337,6 @@ public class EuchreBeta {
             // skip play if no one bids second round
             if (declarer == -1) {
                 System.out.println("No one bids in second round\n");
-                contentPane.add(allpass2);
-                contentPane.add(continu5);
             } else {
 
                 // change value of bowers to reflect proper suit and hierarchy
@@ -3013,10 +2671,6 @@ public class EuchreBeta {
                     m11 = cardplay%10;
                     n11 = (cardplay/10)%10;
 
-                    first[aa].setIcon(cardimg2[m11][n11]);
-                    contentPane.add(first[aa]);
-                    SwingUtilities.updateComponentTreeUI(frame);
-
                     System.out.println("Player " + position[aa] + " leads the " + cardname[m11][n11] + "\n");
                     for (int i=0; i<4; i++) {
                         own[i][m11][n11] = -1;
@@ -3174,10 +2828,6 @@ public class EuchreBeta {
                     m12 = cardplay%10;
                     n12 = (cardplay/10)%10;
 
-                    first[bb].setIcon(cardimg2[m12][n12]);
-                    contentPane.add(first[bb]);
-                    SwingUtilities.updateComponentTreeUI(frame);
-
                     if (lone == cc) { // if 3rd seat going alone, assign m11 the value of m12, the true lead
                         m11 = m12;
                     }
@@ -3331,10 +2981,6 @@ public class EuchreBeta {
                                              worstr, cc, playst[cc][m11], cards);
                     m13 = cardplay%10;
                     n13 = (cardplay/10)%10;
-
-                    first[cc].setIcon(cardimg2[m13][n13]);
-                    contentPane.add(first[cc]);
-                    SwingUtilities.updateComponentTreeUI(frame);
 
                     System.out.println("Player " + position[cc] + " plays the " + cardname[m13][n13] + "." + "\n");
                     for (int i=0; i<4; i++) {
@@ -3494,10 +3140,6 @@ public class EuchreBeta {
                     m14 = cardplay%10;
                     n14 = (cardplay/10)%10;
 
-                    first[dd].setIcon(cardimg2[m14][n14]);
-                    contentPane.add(first[dd]);
-                    SwingUtilities.updateComponentTreeUI(frame);
-
                     System.out.println("Player " + position[dd] + " plays the " + cardname[m14][n14] + "." + "\n");
                     for (int i=0; i<4; i++) {
                         own[i][m14][n14] = -1;
@@ -3530,21 +3172,12 @@ public class EuchreBeta {
                 int tricktally = wintrick(win1, wturn);
                 trick[tricktally]++;
                 trick[tricktally+2]++;
-                winner.setText(position[win1] + " wins the first trick.");
 
                 if (tricktally == 0) {
                     tns++;
                 } else {
                     tew++;
                 }
-
-                stns = String.valueOf(tns);
-                stew = String.valueOf(tew);
-                trns.setText(stns);
-                trew.setText(stew);
-                contentPane.add(winner);
-                contentPane.add(continu);
-                SwingUtilities.updateComponentTreeUI(frame);
 
                 //  if defending against lone, modify priority of discards
                 if (lone > -1) {
@@ -3810,10 +3443,6 @@ public class EuchreBeta {
                 m21 = cardplay%10;
                 n21 = (cardplay/10)%10;
 
-                second[aa2].setIcon(cardimg2[m21][n21]);
-                contentPane.add(second[aa2]);
-                SwingUtilities.updateComponentTreeUI(frame);
-
                 System.out.println("Player " + position[win1] + " leads the " + cardname[m21][n21] + "." + "\n");
                 for (int i=0; i<4; i++) {
                     own[i][m21][n21] = -1;
@@ -3936,10 +3565,6 @@ public class EuchreBeta {
                                          worstr, bb2, playst[bb2][m21], cards);
                     m22 = cardplay%10;
                     n22 = (cardplay/10)%10;
-
-                    second[bb2].setIcon(cardimg2[m22][n22]);
-                    contentPane.add(second[bb2]);
-                    SwingUtilities.updateComponentTreeUI(frame);
 
                     System.out.println("Player " + position[bb2] + " plays the " + cardname[m22][n22] + "." + "\n");
                     for (int i=0; i<4; i++) {
@@ -4101,10 +3726,6 @@ public class EuchreBeta {
                     m23 = cardplay%10;
                     n23 = (cardplay/10)%10;
 
-                    second[cc2].setIcon(cardimg2[m23][n23]);
-                    contentPane.add(second[cc2]);
-                    SwingUtilities.updateComponentTreeUI(frame);
-
                     System.out.println("Player " + position[cc2] + " plays the " + cardname[m23][n23] + "." + "\n");
                     for (int i=0; i<4; i++) {
                         own[i][m23][n23] = -1;
@@ -4223,10 +3844,6 @@ public class EuchreBeta {
                     m24 = cardplay%10;
                     n24 = (cardplay/10)%10;
 
-                    second[dd2].setIcon(cardimg2[m24][n24]);
-                    contentPane.add(second[dd2]);
-                    SwingUtilities.updateComponentTreeUI(frame);
-
                     System.out.println("Player " + position[dd2] + " plays the " + cardname[m24][n24] + "." + "\n");
                     for (int i=0; i<4; i++) {
                         own[i][m24][n24] = -1;
@@ -4256,19 +3873,11 @@ public class EuchreBeta {
                 tricktally = wintrick(win2, wturn);
                 trick[tricktally]++;
                 trick[tricktally+2]++;
-                winner.setText(position[win2] + " wins the second trick.");
                 if (tricktally == 0) {
                     tns++;
                 } else {
                     tew++;
                 }
-                stns = String.valueOf(tns);
-                stew = String.valueOf(tew);
-                trns.setText(stns);
-                trew.setText(stew);
-                contentPane.add(winner);
-                contentPane.add(continu2);
-                SwingUtilities.updateComponentTreeUI(frame);
 
                 //  if defending against lone, modify priority of discards
                 if (lone > -1) {
@@ -4484,10 +4093,6 @@ public class EuchreBeta {
                 m31 = cardplay%10;
                 n31 = (cardplay/10)%10;
 
-                third[aa3].setIcon(cardimg2[m31][n31]);
-                contentPane.add(third[aa3]);
-                SwingUtilities.updateComponentTreeUI(frame);
-
                 System.out.println("Player " + position[aa3] + " leads the " + cardname[m31][n31] + "." + "\n");//
                 for (int i=0; i<4; i++) {
                     own[i][m31][n31] = -1;
@@ -4612,10 +4217,6 @@ public class EuchreBeta {
                                          worstr, bb3, playst[bb3][m31], cards);
                     m32 = cardplay%10;
                     n32 = (cardplay/10)%10;
-
-                    third[bb3].setIcon(cardimg2[m32][n32]);
-                    contentPane.add(third[bb3]);
-                    SwingUtilities.updateComponentTreeUI(frame);
 
                     System.out.println("Player " + position[bb3] + " plays the " + cardname[m32][n32] + "." + "\n");
                     for (int i=0; i<4; i++) {
@@ -4752,10 +4353,6 @@ public class EuchreBeta {
                     m33 = cardplay%10;
                     n33 = (cardplay/10)%10;
 
-                    third[cc3].setIcon(cardimg2[m33][n33]);
-                    contentPane.add(third[cc3]);
-                    SwingUtilities.updateComponentTreeUI(frame);
-
                     System.out.println("Player " + position[cc3] + " plays the " + cardname[m33][n33] + "." + "\n");
                     for (int i=0; i<4; i++) {
                         own[i][m33][n33] = -1;
@@ -4875,10 +4472,6 @@ public class EuchreBeta {
                     m34 = cardplay%10;
                     n34 = (cardplay/10)%10;
 
-                    third[dd3].setIcon(cardimg2[m34][n34]);
-                    contentPane.add(third[dd3]);
-                    SwingUtilities.updateComponentTreeUI(frame);
-
                     System.out.println("Player " + position[dd3] + " plays the " + cardname[m34][n34] + "." + "\n");
                     for (int i=0; i<4; i++) {
                         own[i][m34][n34] = -1;
@@ -4908,19 +4501,11 @@ public class EuchreBeta {
                 tricktally = wintrick(win3, wturn);
                 trick[tricktally]++;
                 trick[tricktally+2]++;
-                winner.setText(position[win3] + " wins the third trick.");
                 if (tricktally == 0) {
                     tns++;
                 } else {
                     tew++;
                 }
-                stns = String.valueOf(tns);
-                stew = String.valueOf(tew);
-                trns.setText(stns);
-                trew.setText(stew);
-                contentPane.add(winner);
-                contentPane.add(continu3);
-                SwingUtilities.updateComponentTreeUI(frame);
 
                 // calculate if any player is single suited
                 for (int i=0; i<4; i++) {
@@ -5133,10 +4718,6 @@ public class EuchreBeta {
                 m41 = cardplay%10;
                 n41 = (cardplay/10)%10;
 
-                fourth[aa4].setIcon(cardimg2[m41][n41]);
-                contentPane.add(fourth[aa4]);
-                SwingUtilities.updateComponentTreeUI(frame);
-
                 System.out.println("Player " + position[aa4] + " plays the " + cardname[m41][n41] + "." + "\n");//
                 for (int i=0; i<4; i++) {
                     own[i][m41][n41] = -1;
@@ -5241,10 +4822,6 @@ public class EuchreBeta {
                                          worstr, bb4, playst[bb4][m41], cards);
                     m42 = cardplay%10;
                     n42 = (cardplay/10)%10;
-
-                    fourth[bb4].setIcon(cardimg2[m42][n42]);
-                    contentPane.add(fourth[bb4]);
-                    SwingUtilities.updateComponentTreeUI(frame);
 
                     System.out.println("Player " + position[bb4] + " plays the " + cardname[m42][n42] + "." + "\n");
                     for (int i=0; i<4; i++) {
@@ -5360,10 +4937,6 @@ public class EuchreBeta {
                     m43 = cardplay%10;
                     n43 = (cardplay/10)%10;
 
-                    fourth[cc4].setIcon(cardimg2[m43][n43]);
-                    contentPane.add(fourth[cc4]);
-                    SwingUtilities.updateComponentTreeUI(frame);
-
                     System.out.println("Player " + position[cc4] + " plays the " + cardname[m43][n43] + "." + "\n");
                     for (int i=0; i<4; i++) {
                         own[i][m43][n43] = -1;
@@ -5470,10 +5043,6 @@ public class EuchreBeta {
                     m44 = cardplay%10;
                     n44 = (cardplay/10)%10;
 
-                    fourth[dd4].setIcon(cardimg2[m44][n44]);
-                    contentPane.add(fourth[dd4]);
-                    SwingUtilities.updateComponentTreeUI(frame);
-
                     System.out.println("Player " + position[dd4] + " plays the " + cardname[m44][n44] + "." + "\n");
                     for (int i=0; i<4; i++) {
                         own[i][m44][n44] = -1;
@@ -5503,19 +5072,11 @@ public class EuchreBeta {
                 tricktally = wintrick(win4, wturn);
                 trick[tricktally]++;
                 trick[tricktally+2]++;
-                winner.setText(position[win4] + " wins the fourth trick.");
                 if (tricktally == 0) {
                     tns++;
                 } else {
                     tew++;
                 }
-                stns = String.valueOf(tns);
-                stew = String.valueOf(tew);
-                trns.setText(stns);
-                trew.setText(stew);
-                contentPane.add(winner);
-                contentPane.add(continu4);
-                SwingUtilities.updateComponentTreeUI(frame);
 
                 // establish new final shortcuts for fourth trick
                 final int aa5 = win4; // 2nd trick lead
@@ -5538,10 +5099,6 @@ public class EuchreBeta {
                         }
                     }
                 }
-
-                fifth[aa5].setIcon(cardimg2[m51][n51]);
-                contentPane.add(fifth[aa5]);
-                SwingUtilities.updateComponentTreeUI(frame);
 
                 System.out.println("Player " + position[win4] + " leads the " + cardname[m51][n51] + "." + "\n");
                 suit[4][0] = m51;
@@ -5569,10 +5126,6 @@ public class EuchreBeta {
                             }
                         }
                     }
-
-                    fifth[bb5].setIcon(cardimg2[m52][n52]);
-                    contentPane.add(fifth[bb5]);
-                    SwingUtilities.updateComponentTreeUI(frame);
 
                     System.out.println("Player " + position[(win4+1)%4] + " plays the " + cardname[m52][n52] + "." + "\n");
                     suit[4][1] = m52;
@@ -5607,10 +5160,6 @@ public class EuchreBeta {
                         }
                     }
 
-                    fifth[cc5].setIcon(cardimg2[m53][n53]);
-                    contentPane.add(fifth[cc5]);
-                    SwingUtilities.updateComponentTreeUI(frame);
-
                     System.out.println("Player " + position[(win4+2)%4] + " plays the " + cardname[m53][n53] + "." + "\n");
                     suit[4][2] = m53;
                     rank[4][2] = n53;
@@ -5644,10 +5193,6 @@ public class EuchreBeta {
                         }
                     }
 
-                    fifth[dd5].setIcon(cardimg2[m54][n54]);
-                    contentPane.add(fifth[dd5]);
-                    SwingUtilities.updateComponentTreeUI(frame);
-
                     System.out.println("Player " + position[(win4+3)%4] + " plays the " + cardname[m54][n54] + "." + "\n");
                     suit[4][3] = m54;
                     rank[4][3] = n54;
@@ -5667,19 +5212,11 @@ public class EuchreBeta {
                 tricktally = wintrick(win5, wturn);
                 trick[tricktally]++;
                 trick[tricktally+2]++;
-                winner.setText(position[win5] + " wins the fifth trick.");
                 if (tricktally == 0) {
                     tns++;
                 } else {
                     tew++;
                 }
-                stns = String.valueOf(tns);
-                stew = String.valueOf(tew);
-                trns.setText(stns);
-                trew.setText(stew);
-                contentPane.add(winner);
-                contentPane.add(continu5);
-                SwingUtilities.updateComponentTreeUI(frame);
 
                 // calculate winner of round, and points
                 int pp = 0;
@@ -5688,8 +5225,6 @@ public class EuchreBeta {
                         points[i] = points[i] + 4;
                         points[(i+2)%4] = points[(i+2)%4] + 4;
                         System.out.println("Player " + position[i] + " wins the hand with a lone: 4 pts!" + "\n");
-                        rscore.setText("<html><div style = 'text-align: center'>" + position[i] + "<br>wins the hand"
-                                       + "<br>with a lone!</div></html>");
                         if ((i+2)%2 == 0) {
                             pns = pns+4;
                         } else {
@@ -5705,8 +5240,6 @@ public class EuchreBeta {
                             points[(i+2)%4] = points[(i+2)%4] + 2;
                             System.out.println("Players " + position[i] + " and " + position[(i+2)%4] + " win the hand with"
                                                + " 5 tricks: 2 pts!" + "\n");
-                            rscore.setText("<html><div style = 'text-align: center'>" + position[declarer] +
-                                           "<br>wins the hand<br>with 5 tricks</div></html>");
                             if (i == 0) {
                                 pns = pns+2;
                             } else {
@@ -5717,8 +5250,6 @@ public class EuchreBeta {
                             points[(i+2)%4] = points[(i+2)%4] + 1;
                             System.out.println("Players " + position[i] + " and " + position[(i+2)%4] + " win the hand: "
                                                + "1 pt." + "\n");
-                            rscore.setText("<html><div style = 'text-align: center'>" + position[declarer] +
-                                           "<br>wins the hand</div></html>");
                             if (i == 0) {
                                 pns++;
                             } else {
@@ -5729,8 +5260,6 @@ public class EuchreBeta {
                             points[(i+2)%4] = points[(i+2)%4] + 2;
                             System.out.println("Players " + position[i] + " and " + position[(i+2)%4] + " euchre: "
                                                + "2 pts!" + "\n");
-                            rscore.setText("<html><div style = 'text-align: center'>" + position[i] + " and " +
-                                           position[(i+2)%4] + "<br>euchre!</div></html>");
                             if (i == 0) {
                                 pns = pns+2;
                             } else {
@@ -5741,26 +5270,6 @@ public class EuchreBeta {
                 }
 
                 top = Math.max(points[0], points[1]);
-
-                spns = String.valueOf(pns);
-                spew = String.valueOf(pew);
-                ptns.setText(spns);
-                ptew.setText(spew);
-                SwingUtilities.updateComponentTreeUI(frame);
-
-                contentPane.remove(DS);
-                contentPane.remove(DW);
-                contentPane.remove(DN);
-                contentPane.remove(DE);
-                contentPane.remove(dec[0]);
-                contentPane.remove(dec[1]);
-                contentPane.remove(dec[2]);
-                contentPane.remove(dec[3]);
-                contentPane.remove(trns);
-                contentPane.remove(trew);
-                contentPane.remove(ptns);
-                contentPane.remove(ptew);
-                SwingUtilities.updateComponentTreeUI(frame);
 
                 System.out.println("Current score is " + points[0] + " for North and South and " + points[1] +
                                    " for East and West." + "\n");
