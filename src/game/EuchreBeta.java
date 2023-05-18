@@ -3,20 +3,11 @@ package game;
 import java.lang.Math;
 import java.util.*;
 
+
 public class EuchreBeta {
 
     // unified RNG for repeatability in testing (see main())
-    static final Random rgen = new Random();
-
-    // define strings for card ranks, suits and players
-    public static int[] cards = new int[28];        // 24 cards + 4 placeholders for suit images
-    public static String[] position = {"South", "West", "North", "East", "fifth"};
-    public static String[] suitx = {"spades", "hearts", "diamonds", "clubs"};
-    public static String[] rankx = {"9", "10", "Jack", "Queen", "King", "Ace", "Jack", "Jack"};
-    public static String cardname[][] = new String[4][8];
-
-    // define a few more global variables
-    public static int game = 10; // points needed to win a game (can modify this to extend play)
+    public static final Random rgen = new Random();
 
     // *** Method "naming" for assigning names to cards ***
     public static String[][] naming(String cardname[][], String suit[], String rank[]) {
@@ -116,9 +107,23 @@ public class EuchreBeta {
         return cards;
     }
 
+    // usage: java -jar EuchreBeta.java
+    public static void main(String args[]) throws InterruptedException {
+        if (args.length > 0) {
+            EuchreBeta.rgen.setSeed(Long.parseLong(args[0]));
+        }
+
+        Game game = new Game();
+        game.go();
+    }
+}
+
+
+class BidStrategy {
+
     // *** Method "bidder11" for determining 1st round bid of 1st player to bid ***
-    public static int bidder11(int psup, int psnx, int psnxnx, int right, int left, int acet, int aces, int uprk,
-                               int upst, double bsup, double bsnx, double sum, int vd, double bestc, int pts, int game) {
+    public int bidder11(int psup, int psnx, int psnxnx, int right, int left, int acet, int aces, int uprk,
+                        int upst, double bsup, double bsnx, double sum, int vd, double bestc, int pts, int game) {
         int call = 0; // value of docall returned: 0 = pass, 1 = bid with partner, 2 = bid alone
         if (psup == 5) { // have 5 trump
             call = 2;
@@ -209,8 +214,8 @@ public class EuchreBeta {
     }
 
     // *** Method "bidder12" for determining 1st round bid of 2nd player to bid ***
-    public static int bidder12(int psup, int psnx, int right, int left, int acet, int kingt, int uprk,
-                               int upst, double bsup, double sum, int vd, int pts, int game) {
+    public int bidder12(int psup, int psnx, int right, int left, int acet, int kingt, int uprk,
+                        int upst, double bsup, double sum, int vd, int pts, int game) {
         int call = 0; // value of docall returned: 0 = pass, 1 = bid with partner, 2 = bid alone
         if (psup == 5) { // have 5 trump, bid alone
             call = 2;
@@ -273,8 +278,8 @@ public class EuchreBeta {
     }
 
     // *** Method "bidder13" for determining 1st round bid of 3rd player to bid ***
-    public static int bidder13(int psup, int psnx, int right, int left, int acet, int uprk, int upst,
-                               double bsup, double sum, int vd, int pts, int game) {
+    public int bidder13(int psup, int psnx, int right, int left, int acet, int uprk, int upst,
+                        double bsup, double sum, int vd, int pts, int game) {
         int call = 0; // value of docall returned: 0 = pass, 1 = bid with partner, 2 = bid alone
         if (psup == 5) { // have 5 trump
             call = 2;
@@ -311,8 +316,8 @@ public class EuchreBeta {
     }
 
     // *** Method "bidder14" for determining 1st round bid of 4th player to bid ***
-    public static int bidder14(int psup, int psnx, int right, int left, int acet, int aces, int kingt, int uprk,
-                               int upst, double bsup, double sum, int vd, int pts, int game) {
+    public int bidder14(int psup, int psnx, int right, int left, int acet, int aces, int kingt, int uprk,
+                        int upst, double bsup, double sum, int vd, int pts, int game) {
         int call = 0; // value of docall returned: 0 = pass, 1 = bid with partner, 2 = bid alone
         if (psup == 5) { // have 5 trump
             call = 2;
@@ -359,30 +364,9 @@ public class EuchreBeta {
         return call;
     }
 
-    // *** Method "bid" for declaring bid, first bidding round ***
-    public static int[] bid(int docall, int dlr, String cname, int turns) {
-        int bidtest[] = {-1,-1,4,0}; // lone, declarer, trump suit, bid
-        if (docall == 2) {
-            System.out.println(position[dlr] + " calls " + cname + " as trump, going alone. " + "\n");
-            bidtest[0] = dlr;
-            bidtest[1] = dlr;
-            bidtest[2] = turns;
-            bidtest[3] = 2;
-        } else if (docall == 1) {
-            System.out.println(position[dlr] + " calls " + cname + " as trump. " + "\n");
-            bidtest[1] = dlr;
-            bidtest[2] = turns;
-            bidtest[3] = 1;
-        } else {
-            bidtest[3] = 0;
-            System.out.println(position[dlr] + " passes" + "\n");
-        }
-        return bidtest;
-    }
-
     // *** Method "bidder21" for determining 2nd round bid of 1st player to bid ***
-    public static int bidder21(int psup, int psnx, int right, int left, int acet, int aces, int kingt,
-                               int upst, double bsup, double sum, int bests, int pts, int game) {
+    public int bidder21(int psup, int psnx, int right, int left, int acet, int aces, int kingt,
+                        int upst, double bsup, double sum, int bests, int pts, int game) {
         int call = 0; // value of docall returned: 0 = pass, 1 = bid with partner, 2 = bid alone
         if (psup == 5) { // have 5 trump
             call = 2;
@@ -456,8 +440,8 @@ public class EuchreBeta {
     }
 
     // *** Method "bidder22" for determining 2nd round bid of 2nd player to bid ***
-    public static int bidder22(int psup, int psnx, int right, int left, int acet, int aces, int kingt,
-                               int upst, int uprk, double bsup, double sum, int bests, int pts, int game) {
+    public int bidder22(int psup, int psnx, int right, int left, int acet, int aces, int kingt,
+                        int upst, int uprk, double bsup, double sum, int bests, int pts, int game) {
         int call = 0; // value of docall returned: 0 = pass, 1 = bid with partner, 2 = bid alone
         if (psup == 5) { // have 5 trump
             call = 2;
@@ -566,8 +550,8 @@ public class EuchreBeta {
     }
 
     // *** Method "bidder23" for determining 2nd round bid of 3rd player to bid ***
-    public static int bidder23(int psup, int right, int left, int acet, int aces, int kingt, int upst,
-                               int uprk, double bsup, double sum, int bests, int pts, int game) {
+    public int bidder23(int psup, int right, int left, int acet, int aces, int kingt, int upst,
+                        int uprk, double bsup, double sum, int bests, int pts, int game) {
         int call = 0; // value of docall returned: 0 = pass, 1 = bid with partner, 2 = bid alone
         if (psup == 5) { // have 5 trump
             call = 2;
@@ -648,8 +632,8 @@ public class EuchreBeta {
     }
 
     // *** Method "bidder24" for determining 2nd round bid of 4th player to bid ***
-    public static int bidder24(int psup, int psnx, int right, int left, int acet, int upst,
-                               int uprk, double bsup, double sum, int bests, int pts, int game) {
+    public int bidder24(int psup, int psnx, int right, int left, int acet, int upst,
+                        int uprk, double bsup, double sum, int bests, int pts, int game) {
         int call = 0; // value of docall returned: 0 = pass, 1 = bid with partner, 2 = bid alone
         if (psup == 5) { // have 5 trump
             call = 2;
@@ -699,84 +683,8 @@ public class EuchreBeta {
         return call;
     }
 
-    // *** Method "bid" for declaring bid, second bidding round ***
-    public static int[] bid(int docall, int dlr, int dlrs) {
-        int[] bidtest = {-1,-1,4,0};
-        if (docall == 2) {
-            System.out.println(position[dlr] + " calls " + suitx[dlrs] + " as trump, going alone. " + "\n");
-            bidtest[0] = dlr;
-            bidtest[1] = dlr;
-            bidtest[2] = dlrs;
-            bidtest[3] = 2;
-        } else if (docall == 1) {
-            System.out.println(position[dlr] + " calls " + suitx[dlrs] + " as trump. " + "\n");
-            bidtest[1] = dlr;
-            bidtest[2] = dlrs;
-            bidtest[3] = 1;
-        } else {
-            bidtest[3] = 0;
-            System.out.println(position[dlr] + " passes" + "\n");
-        }
-        return bidtest;
-    }
-
-    // *** Method "playfirst" for play of cards ***
-    public static int playfirst(int play, int fintp, int hitrump, int sectrump, int lotrump, int lead,
-                                int maxsuit, int minsuit, int suitace, int worsts, int worstr, int who, int slength, int cards[]) {
-        int cardplay = -1;
-        int m = -1;
-        int n = -1;
-        // values of play1: 0 = high trump; 1 = second high trump; 2 = low trump;
-        // 3 = maxsuit; 4 = minsuit; 5 = best A; 6 = worst card (default)
-        if (play == 0) {
-            m = fintp;
-            n = hitrump;
-        } else if (play == 1) {
-            m = fintp;
-            n = sectrump;
-        } else if (play == 2) {
-            m = fintp;
-            n = lotrump;
-        } else if (play == 3) {
-            if (lead == -1) { // **can also mean lead same suit!
-                m = minsuit;
-            } else {
-                m = lead;
-            }
-            n = maxsuit;
-        } else if (play == 4) {
-            m = lead;
-            n = minsuit;
-        } else if (play == 5 && suitace != -1) {
-            if (slength == -1) {
-                n = sectrump;
-            } else {
-                n = 5;
-            }
-            m = suitace;
-        } else { // play worst card
-            m = worsts;
-            n = worstr;
-        }
-        cardplay = m + n*10;
-        return cardplay;
-    }
-
-    // *** Method "wintrick" to tally tricks won ***
-    public static int wintrick(int winner, int turn) {
-        System.out.println("Player " + position[winner] + " wins trick " + turn + "." + "\n");
-        System.out.println("----------------------------------------------------------");
-        int result = -1;
-        if (winner == 0 || winner == 2) {
-            result = 0;
-        } else {
-            result = 1;
-        }
-        return result;
-    }
-
     // *** Method "swapcard" to determine card dealer should swap, if 1st round bid ***
-    public static int swapcard(int cards[], int seat, int dealer) {
+    public int swapcard(int cards[], int seat, int dealer) {
         // seat 0 = dealer alone; seat 1 = dealer wp; seat 2 = 1st seat alone, ...
         int aced = 0; // number of off-suit aces held by dealer
         int kingd = 0; // number of off-suit kings held by dealer
@@ -873,7 +781,7 @@ public class EuchreBeta {
     }
 
     // *** Method "trump" to determine bidscore for each player / trump suit ***
-    public static double trump(int cards[], int post, int tsuit, int turns, int turnr) {
+    public double trump(int cards[], int post, int tsuit, int turns, int turnr) {
         // input player's cards and seat, trump suit, turn card suit and turn card rank
         double bscore = 0;
         double mx[] = new double[4]; // maxsuit for each suit
@@ -1116,10 +1024,14 @@ public class EuchreBeta {
         }
         return bscore;
     }
+}
+
+
+class PlayStrategy {
 
     // *** Method "calc" to calculate values of cv[lead][][] and cv[toss][][] ***
-    public static double[][][] calc(int cards[], int fintp, int own[][][], int playst[][], double max[][][],
-                                    double nax[][][], int lone, int dealer) {
+    double[][][] calc(int cards[], int fintp, int own[][][], int playst[][], double max[][][],
+                      double nax[][][], int lone, int dealer) {
         double[][] discard = new double[][] {{10,11,0,12,13,14,15,16},{.71,.82,0,.91,.93,1.15,0,0},
                                              {.7,.8,.84,.9,.92,1.2,0,0}};
         // assign set values for certain cards
@@ -1629,16 +1541,122 @@ public class EuchreBeta {
         }
         return cvtemp;
     }
+}
 
-    public static void main(String args[]) throws InterruptedException {
-        if (args.length > 0) {
-            rgen.setSeed(Long.parseLong(args[0]));
+
+class Game {
+
+    // define strings for card ranks, suits and players
+    static final String[] position = {"South", "West", "North", "East", "fifth"};
+    static final String[] suitx = {"spades", "hearts", "diamonds", "clubs"};
+    static final String[] rankx = {"9", "10", "Jack", "Queen", "King", "Ace", "Jack", "Jack"};
+
+    // define a few more global variables
+    static final int game = 10; // points needed to win a game (can modify this to extend play)
+
+    // allocate space for instance variables
+    int[] cards = new int[28];        // 24 cards + 4 placeholders for suit images
+    String cardname[][] = new String[4][8];
+
+    // *** Method "bid" for declaring bid, first bidding round ***
+    int[] bid(int docall, int dlr, String cname, int turns) {
+        int bidtest[] = {-1,-1,4,0}; // lone, declarer, trump suit, bid
+        if (docall == 2) {
+            System.out.println(position[dlr] + " calls " + cname + " as trump, going alone. " + "\n");
+            bidtest[0] = dlr;
+            bidtest[1] = dlr;
+            bidtest[2] = turns;
+            bidtest[3] = 2;
+        } else if (docall == 1) {
+            System.out.println(position[dlr] + " calls " + cname + " as trump. " + "\n");
+            bidtest[1] = dlr;
+            bidtest[2] = turns;
+            bidtest[3] = 1;
+        } else {
+            bidtest[3] = 0;
+            System.out.println(position[dlr] + " passes" + "\n");
         }
-
-        EuchreBeta.go();
+        return bidtest;
     }
 
-    public static void go() {
+    // *** Method "bid" for declaring bid, second bidding round ***
+    int[] bid(int docall, int dlr, int dlrs) {
+        int[] bidtest = {-1,-1,4,0};
+        if (docall == 2) {
+            System.out.println(position[dlr] + " calls " + suitx[dlrs] + " as trump, going alone. " + "\n");
+            bidtest[0] = dlr;
+            bidtest[1] = dlr;
+            bidtest[2] = dlrs;
+            bidtest[3] = 2;
+        } else if (docall == 1) {
+            System.out.println(position[dlr] + " calls " + suitx[dlrs] + " as trump. " + "\n");
+            bidtest[1] = dlr;
+            bidtest[2] = dlrs;
+            bidtest[3] = 1;
+        } else {
+            bidtest[3] = 0;
+            System.out.println(position[dlr] + " passes" + "\n");
+        }
+        return bidtest;
+    }
+
+    // *** Method "playfirst" for play of cards ***
+    int playfirst(int play, int fintp, int hitrump, int sectrump, int lotrump, int lead,
+                  int maxsuit, int minsuit, int suitace, int worsts, int worstr, int who,
+                  int slength, int cards[]) {
+        int cardplay = -1;
+        int m = -1;
+        int n = -1;
+        // values of play1: 0 = high trump; 1 = second high trump; 2 = low trump;
+        // 3 = maxsuit; 4 = minsuit; 5 = best A; 6 = worst card (default)
+        if (play == 0) {
+            m = fintp;
+            n = hitrump;
+        } else if (play == 1) {
+            m = fintp;
+            n = sectrump;
+        } else if (play == 2) {
+            m = fintp;
+            n = lotrump;
+        } else if (play == 3) {
+            if (lead == -1) { // **can also mean lead same suit!
+                m = minsuit;
+            } else {
+                m = lead;
+            }
+            n = maxsuit;
+        } else if (play == 4) {
+            m = lead;
+            n = minsuit;
+        } else if (play == 5 && suitace != -1) {
+            if (slength == -1) {
+                n = sectrump;
+            } else {
+                n = 5;
+            }
+            m = suitace;
+        } else { // play worst card
+            m = worsts;
+            n = worstr;
+        }
+        cardplay = m + n*10;
+        return cardplay;
+    }
+
+    // *** Method "wintrick" to tally tricks won ***
+    int wintrick(int winner, int turn) {
+        System.out.println("Player " + position[winner] + " wins trick " + turn + "." + "\n");
+        System.out.println("----------------------------------------------------------");
+        int result = -1;
+        if (winner == 0 || winner == 2) {
+            result = 0;
+        } else {
+            result = 1;
+        }
+        return result;
+    }
+
+    public void go() {
 
         // Variables for shell program
         int declarer = 0;  //  marker denoting which player is declarer (0 = South, 1 = West, 2 = North, 3 = East)
@@ -1653,8 +1671,11 @@ public class EuchreBeta {
         int fintp = 4;  //  marker denoting the suit which is declared trump (spades = 0, hearts = 1, diamonds = 2,
                         // clubs = 3, 4 = trump not declared)
 
+        BidStrategy bid = new BidStrategy();
+        PlayStrategy play = new PlayStrategy();
+
         // Assign random seat as first dealer
-        int randomDealer = rgen.nextInt(4);
+        int randomDealer = EuchreBeta.rgen.nextInt(4);
         dealer = randomDealer;
 
         // these variables don't reset when new hand is played (same game)
@@ -1682,7 +1703,7 @@ public class EuchreBeta {
             }
 
             // invoke method for shuffling cards
-            cards = shuffle(cards);
+            cards = EuchreBeta.shuffle(cards);
 
             // print out shuffled deck for diagnostic purposes
             for (int i=0; i<24; i++) {
@@ -1690,10 +1711,10 @@ public class EuchreBeta {
             }
 
             // invoke method for naming cards
-            cardname = naming(cardname,suitx,rankx);
+            cardname = EuchreBeta.naming(cardname, suitx, rankx);
 
             // invoke method to put cards in order
-            cards = order(cards, fintp);
+            cards = EuchreBeta.order(cards, fintp);
 
             // Create arrays to store cards for each player (value of 1 means player has the card)
             int[][][] own = new int[4][4][8]; // keeps track of where each card is, from [player]'s perspective
@@ -1752,7 +1773,7 @@ public class EuchreBeta {
 
             // New calculation of best card to discard
             seat = 8;
-            int cswap = swapcard(cards, seat, dealer); // determines # of card swapped by dealer for turn card
+            int cswap = bid.swapcard(cards, seat, dealer); // determines # of card swapped by dealer for turn card
             // only for purposes of creating bidding hand for dealer, with turn card as trump
 
             // New method for calculating bidscore (determining best bid for each player)
@@ -1767,7 +1788,7 @@ public class EuchreBeta {
                     }
                     int post = i; // position of player (relative to dealer)
                     int tsuit = j; // which suit is trump (turn card suit means round 1, else round 2)
-                    bidscore[i][j] = trump(cards, post, tsuit, upst, uprk);
+                    bidscore[i][j] = bid.trump(cards, post, tsuit, upst, uprk);
                     if (noteswap == 1) { // swap back turn card
                         int temp = cards[cswap];
                         cards[cswap] = cards[20];
@@ -1997,9 +2018,11 @@ public class EuchreBeta {
             // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
             // first bidder
-            docall = bidder11(playersuit[aa][upst][upst], playersuit[aa][upst][3-upst], playersuit[aa][3-upst][3-upst],
-                              right[aa][upst], left[aa][upst], acet[aa][upst], aces[aa][upst], uprk, upst, bidscore[aa][upst],
-                              bidscore[aa][3-upst], summins[aa][upst], vd[aa], bestc[aa], points[aa], game);
+            docall = bid.bidder11(playersuit[aa][upst][upst], playersuit[aa][upst][3-upst],
+                                  playersuit[aa][3-upst][3-upst], right[aa][upst],
+                                  left[aa][upst], acet[aa][upst], aces[aa][upst],
+                                  uprk, upst, bidscore[aa][upst], bidscore[aa][3-upst],
+                                  summins[aa][upst], vd[aa], bestc[aa], points[aa], game);
 
             bidx = bid(docall, aa, cardname[cards[20]%4][cards[20]/4], upst);
 
@@ -2034,9 +2057,10 @@ public class EuchreBeta {
             // second bidder
             // only need to proceed if previous players passed
             if (!bidyes) {
-                docall = bidder12(playersuit[bb][upst][upst], playersuit[bb][upst][3-upst], right[bb][upst],
-                                  left[bb][upst], acet[bb][upst], kingt[bb][upst], uprk, upst, bidscore[bb][upst],
-                                  summins[bb][upst], vd[bb], points[bb], game);
+                docall = bid.bidder12(playersuit[bb][upst][upst], playersuit[bb][upst][3-upst],
+                                      right[bb][upst], left[bb][upst], acet[bb][upst],
+                                      kingt[bb][upst], uprk, upst, bidscore[bb][upst],
+                                      summins[bb][upst], vd[bb], points[bb], game);
 
                 bidx = bid(docall, bb, cardname[cards[20]%4][cards[20]/4], upst);
 
@@ -2072,8 +2096,10 @@ public class EuchreBeta {
             // third bidder
             // only need to proceed if previous players passed
             if (!bidyes) {
-                docall = bidder13(playersuit[cc][upst][upst], playersuit[cc][upst][3-upst], right[cc][upst], left[cc][upst],
-                                  acet[cc][upst], uprk, upst, bidscore[cc][upst], summins[cc][upst], vd[cc], points[cc], game);
+                docall = bid.bidder13(playersuit[cc][upst][upst], playersuit[cc][upst][3-upst],
+                                      right[cc][upst], left[cc][upst], acet[cc][upst], uprk,
+                                      upst, bidscore[cc][upst], summins[cc][upst], vd[cc],
+                                      points[cc], game);
 
                 bidx = bid(docall, cc, cardname[cards[20]%4][cards[20]/4], upst);
 
@@ -2109,9 +2135,11 @@ public class EuchreBeta {
             // dealer
             // only need to proceed if previous players passed
             if (!bidyes) {
-                docall = bidder14(playersuit[dd][upst][upst], playersuit[dd][upst][3-upst], right[dd][upst], left[dd][upst],
-                                  acet[dd][upst], aces[dd][upst], kingt[dd][upst], uprk, upst, bidscore[dd][upst], summins[dd][upst],
-                                  vd[dd], points[dd], game);
+                docall = bid.bidder14(playersuit[dd][upst][upst], playersuit[dd][upst][3-upst],
+                                      right[dd][upst], left[dd][upst], acet[dd][upst],
+                                      aces[dd][upst], kingt[dd][upst], uprk, upst,
+                                      bidscore[dd][upst], summins[dd][upst], vd[dd],
+                                      points[dd], game);
 
                 bidx = bid(docall, dd, cardname[cards[20]%4][cards[20]/4], upst);
 
@@ -2154,7 +2182,7 @@ public class EuchreBeta {
             if (lone != bb && declarer != -1) {
                 // Re-calculate of best card to discard
                 seat = ((declarer-dealer+4)%4)*2 + 1 - (lone+6)/6; // see spreadsheet for meaning
-                cswap = swapcard(cards, seat, dealer); // determines # of card swapped by dealer for turn card
+                cswap = bid.swapcard(cards, seat, dealer); // determines # of card swapped by dealer for turn card
 
                 int temp = cards[cswap]; // dealer swaps cards
                 cards[cswap] = cards[20];
@@ -2167,10 +2195,13 @@ public class EuchreBeta {
             // first bidder
             // only need to proceed if previous players passed
             if (!bidyes) {
-                docall = bidder21(playersuit[aa][bests[aa]][bests[aa]], playersuit[aa][bests[aa]][3-bests[aa]],
-                                  right[aa][bests[aa]], left[aa][bests[aa]], acet[aa][bests[aa]], aces[aa][bests[aa]],
-                                  kingt[aa][bests[aa]], upst, bidscore[aa][bests[aa]], summins[aa][bests[aa]], bests[(dealer+1)%4],
-                                  points[aa], game);
+                docall = bid.bidder21(playersuit[aa][bests[aa]][bests[aa]],
+                                      playersuit[aa][bests[aa]][3-bests[aa]],
+                                      right[aa][bests[aa]], left[aa][bests[aa]],
+                                      acet[aa][bests[aa]], aces[aa][bests[aa]],
+                                      kingt[aa][bests[aa]], upst, bidscore[aa][bests[aa]],
+                                      summins[aa][bests[aa]], bests[(dealer+1)%4],
+                                      points[aa], game);
 
                 bidx = bid(docall, aa, bests[aa]);
 
@@ -2211,10 +2242,13 @@ public class EuchreBeta {
             // second bidder
             // only need to proceed if previous players passed
             if (!bidyes) {
-                docall = bidder22(playersuit[bb][bests[bb]][bests[bb]], playersuit[bb][bests[bb]][3-bests[bb]],
-                                  right[bb][bests[bb]], left[bb][bests[bb]], acet[bb][bests[bb]], aces[bb][bests[bb]],
-                                  kingt[bb][bests[bb]], upst, uprk,bidscore[bb][bests[bb]], summins[bb][bests[bb]],
-                                  bests[(dealer+1)%4], points[bb], game);
+                docall = bid.bidder22(playersuit[bb][bests[bb]][bests[bb]],
+                                      playersuit[bb][bests[bb]][3-bests[bb]],
+                                      right[bb][bests[bb]], left[bb][bests[bb]],
+                                      acet[bb][bests[bb]], aces[bb][bests[bb]],
+                                      kingt[bb][bests[bb]], upst, uprk,bidscore[bb][bests[bb]],
+                                      summins[bb][bests[bb]], bests[(dealer+1)%4], points[bb],
+                                      game);
 
                 bidx = bid(docall, bb, bests[bb]);
                 potbid[1][bb] = bidx[3];
@@ -2254,9 +2288,12 @@ public class EuchreBeta {
             // third bidder
             // only need to proceed if previous players passed
             if (!bidyes) {
-                docall = bidder23(playersuit[cc][bests[cc]][bests[cc]], right[cc][bests[cc]], left[cc][bests[cc]],
-                                  acet[cc][bests[cc]], aces[cc][bests[cc]], kingt[cc][bests[cc]], upst, uprk,
-                                  bidscore[cc][bests[cc]], summins[cc][bests[cc]], bests[(dealer+1)%4], points[cc], game);
+                docall = bid.bidder23(playersuit[cc][bests[cc]][bests[cc]],
+                                      right[cc][bests[cc]], left[cc][bests[cc]],
+                                      acet[cc][bests[cc]], aces[cc][bests[cc]],
+                                      kingt[cc][bests[cc]], upst, uprk,
+                                      bidscore[cc][bests[cc]], summins[cc][bests[cc]],
+                                      bests[(dealer+1)%4], points[cc], game);
 
                 bidx = bid(docall, cc, bests[cc]);
 
@@ -2297,9 +2334,12 @@ public class EuchreBeta {
             // last bidder (dealer)
             // only need to proceed if previous players passed
             if (!bidyes) {
-                docall = bidder24(playersuit[dd][bests[dd]][bests[dd]], playersuit[dd][bests[dd]][3-bests[dd]],
-                                  right[dd][bests[dd]], left[dd][bests[dd]], acet[dd][bests[dd]], upst, uprk,
-                                  bidscore[dd][bests[dd]], summins[dd][bests[dd]], bests[(dealer+1)%4], points[dd], game);
+                docall = bid.bidder24(playersuit[dd][bests[dd]][bests[dd]],
+                                      playersuit[dd][bests[dd]][3-bests[dd]],
+                                      right[dd][bests[dd]], left[dd][bests[dd]],
+                                      acet[dd][bests[dd]], upst, uprk,
+                                      bidscore[dd][bests[dd]], summins[dd][bests[dd]],
+                                      bests[(dealer+1)%4], points[dd], game);
 
                 bidx = bid(docall, dd, bests[dd]);
 
@@ -2474,7 +2514,7 @@ public class EuchreBeta {
                 }
 
                 //** invoke method calc to calculate values for cv[lead][][] and cv[toss][][]
-                cv = calc(cards, fintp, own, playst, max, nax, lone, dealer);
+                cv = play.calc(cards, fintp, own, playst, max, nax, lone, dealer);
 
                 // determine number of non-trump void suits for each player
                 for (int i=0; i<4; i++) {
@@ -2488,7 +2528,7 @@ public class EuchreBeta {
 
                 // put each players cards in order (trump suit first, then spades - hearts - diamond - clubs in that order;
                 // highest to lowest rank within each suit
-                cards = order(cards, fintp);
+                cards = EuchreBeta.order(cards, fintp);
 
                 // establish name of left bower
                 cardname[fintp][6] = "Jack of " + suitx[3-fintp];
