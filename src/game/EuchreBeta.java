@@ -5,9 +5,8 @@ import java.util.*;
 
 public class EuchreBeta {
 
-    // unified RNG for repeatability in testing
-    static final int RANDOM_SEED = 12345;
-    static final Random rgen = new Random(RANDOM_SEED);
+    // unified RNG for repeatability in testing (see main())
+    static final Random rgen = new Random();
 
     // define strings for card ranks, suits and players
     public static int[] cards = new int[28];        // 24 cards + 4 placeholders for suit images
@@ -1632,6 +1631,10 @@ public class EuchreBeta {
     }
 
     public static void main(String args[]) throws InterruptedException {
+        if (args.length > 0) {
+            rgen.setSeed(Long.parseLong(args[0]));
+        }
+
         EuchreBeta.go();
     }
 
