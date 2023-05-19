@@ -107,10 +107,10 @@ public class EuchreBeta {
         return cards;
     }
 
-    // usage: java -jar EuchreBeta.java
+    // *** Method "main", usage: java -cp . EuchreBeta.java [<randomSeed>]
     public static void main(String args[]) throws InterruptedException {
         if (args.length > 0) {
-            EuchreBeta.rgen.setSeed(Long.parseLong(args[0]));
+            rgen.setSeed(Long.parseLong(args[0]));
         }
 
         Game game = new Game();
@@ -1638,8 +1638,11 @@ class Game {
     int[] cards = new int[28];        // 24 cards + 4 placeholders for suit images
     String cardname[][] = new String[4][8];
 
+    BidStrategy bid = new BidStrategy();
+    PlayStrategy play = new PlayStrategy();
+
     // *** Method "bid" for declaring bid, first bidding round ***
-    int[] bid(int docall, int dlr, String cname, int turns) {
+    int[] bid1(int docall, int dlr, String cname, int turns) {
         int bidtest[] = {-1,-1,4,0}; // lone, declarer, trump suit, bid
         if (docall == 2) {
             System.out.println(position[dlr] + " calls " + cname + " as trump, going alone. " + "\n");
@@ -1660,7 +1663,7 @@ class Game {
     }
 
     // *** Method "bid" for declaring bid, second bidding round ***
-    int[] bid(int docall, int dlr, int dlrs) {
+    int[] bid2(int docall, int dlr, int dlrs) {
         int[] bidtest = {-1,-1,4,0};
         if (docall == 2) {
             System.out.println(position[dlr] + " calls " + suitx[dlrs] + " as trump, going alone. " + "\n");
@@ -1736,6 +1739,7 @@ class Game {
         return result;
     }
 
+    // *** Method "go" for running game ***
     public void go() {
 
         // Variables for shell program
@@ -1749,9 +1753,6 @@ class Game {
         int[] trick = new int[4]; // tricks won
         int fintp = 4;  //  marker denoting the suit which is declared trump (spades = 0, hearts = 1, diamonds = 2,
                         // clubs = 3, 4 = trump not declared)
-
-        BidStrategy bid = new BidStrategy();
-        PlayStrategy play = new PlayStrategy();
 
         // Assign random seat as first dealer
         int randomDealer = EuchreBeta.rgen.nextInt(4);
@@ -1805,41 +1806,25 @@ class Game {
             final int upst = cards[20]%4; // suit of turned card
             final int uprk = cards[20]/4; // rank of turned card
 
-            Deal deal = new Deal();
-            deal.initialize(bid, cards, dealer, upst, uprk);
+            Deal deal = new Deal(bid, play, cards, dealer);
+            deal.prepareBid();
 
-            int[][][] own = deal.own;
+            int[] bidx = new int[4]; // results of bidding method which gives lone, declarer and fintp for each bid
+            int[][] potbid = new int[2][4]; // bidding for [round][player; 0 = pass, 1 = wp, 2 = alone
+
             int[][] right = deal.right;
             int[][] left = deal.left;
             int[][] acet = deal.acet;
             int[][] kingt = deal.kingt;
-            int[][] ace = deal.ace;
-            int[][] king = deal.king;
-            int[][] queen = deal.queen;
             int[][] aces = deal.aces;
-            int[][] length = deal.length;
             int[][][] playersuit = deal.playersuit;
-            int[][] playst = deal.playst;
-            int[][] boss = deal.boss;
             double[][] bidscore = deal.bidscore;
-            double[][][] cv = deal.cv;
-            int[][] suit = deal.suit;
-            int[][] rank = deal.rank;
             double[][] summins = deal.summins;
             int[] bests = deal.bests;
             double[] bestc = deal.bestc;
-            int[] bidx = deal.bidx;
-            int[][] voids = deal.voids;
-            int[][] solo = deal.solo;
-            int[][] hint = deal.hint;
-            int[] sit = deal.sit;
             double[][][] max = deal.max;
             double[][][] nax = deal.nax;
             int[] vd = deal.vd;
-            int[] ss = deal.ss;
-            int[] cksuit = deal.cksuit;
-            int[][] potbid = deal.potbid;
-            int cswap = deal.cswap;
 
             //  List human player's cards
             System.out.println("\n" + "South's cards:");
@@ -1933,7 +1918,7 @@ class Game {
 
             // first bidder
             docall = bid.bidder11(deal, aa, uprk, upst, points[aa], game);
-            bidx = bid(docall, aa, cardname[cards[20]%4][cards[20]/4], upst);
+            bidx = bid1(docall, aa, cardname[cards[20]%4][cards[20]/4], upst);
 
             potbid[0][aa] = bidx[3];
             if (bidx[3] == 1) {
@@ -1967,7 +1952,7 @@ class Game {
             // only need to proceed if previous players passed
             if (!bidyes) {
                 docall = bid.bidder12(deal, bb, uprk, upst, points[bb], game);
-                bidx = bid(docall, bb, cardname[cards[20]%4][cards[20]/4], upst);
+                bidx = bid1(docall, bb, cardname[cards[20]%4][cards[20]/4], upst);
 
                 potbid[0][bb] = bidx[3];
                 if (bidx[3] == 1) {
@@ -2002,7 +1987,7 @@ class Game {
             // only need to proceed if previous players passed
             if (!bidyes) {
                 docall = bid.bidder13(deal, cc, uprk, upst, points[cc], game);
-                bidx = bid(docall, cc, cardname[cards[20]%4][cards[20]/4], upst);
+                bidx = bid1(docall, cc, cardname[cards[20]%4][cards[20]/4], upst);
 
                 potbid[0][cc] = bidx[3];
                 if (bidx[3] == 1) {
@@ -2037,7 +2022,7 @@ class Game {
             // only need to proceed if previous players passed
             if (!bidyes) {
                 docall = bid.bidder14(deal, dd, uprk, upst, points[dd], game);
-                bidx = bid(docall, dd, cardname[cards[20]%4][cards[20]/4], upst);
+                bidx = bid1(docall, dd, cardname[cards[20]%4][cards[20]/4], upst);
 
                 potbid[0][dd] = bidx[3];
                 if (bidx[3] == 1) {
@@ -2076,13 +2061,7 @@ class Game {
 
             //  if seat 2 didn't call lone AND some player declared, have dealer swap cards
             if (lone != bb && declarer != -1) {
-                // Re-calculate of best card to discard
-                int seat = ((declarer-dealer+4)%4)*2 + 1 - (lone+6)/6; // see spreadsheet for meaning
-                cswap = bid.swapcard(cards, seat, dealer); // determines # of card swapped by dealer for turn card
-
-                int temp = cards[cswap]; // dealer swaps cards
-                cards[cswap] = cards[20];
-                cards[20] = temp;
+                deal.doSwap(declarer, lone);
             }
 
             // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -2092,7 +2071,7 @@ class Game {
             // only need to proceed if previous players passed
             if (!bidyes) {
                 docall = bid.bidder21(deal, aa, upst, uprk, points[aa], game);
-                bidx = bid(docall, aa, deal.bests[aa]);
+                bidx = bid2(docall, aa, deal.bests[aa]);
 
                 potbid[1][aa] = bidx[3];
                 if (bidx[3] == 1) {
@@ -2132,7 +2111,7 @@ class Game {
             // only need to proceed if previous players passed
             if (!bidyes) {
                 docall = bid.bidder22(deal, bb, upst, uprk, points[bb], game);
-                bidx = bid(docall, bb, deal.bests[bb]);
+                bidx = bid2(docall, bb, deal.bests[bb]);
 
                 potbid[1][bb] = bidx[3];
                 if (bidx[3] == 1) {
@@ -2172,7 +2151,7 @@ class Game {
             // only need to proceed if previous players passed
             if (!bidyes) {
                 docall = bid.bidder23(deal, cc, upst, uprk, points[cc], game);
-                bidx = bid(docall, cc, deal.bests[cc]);
+                bidx = bid2(docall, cc, deal.bests[cc]);
 
                 potbid[1][cc] = bidx[3];
                 if (bidx[3] == 1) {
@@ -2212,7 +2191,7 @@ class Game {
             // only need to proceed if previous players passed
             if (!bidyes) {
                 docall = bid.bidder24(deal, dd, upst, uprk, points[dd], game);
-                bidx = bid(docall, dd, deal.bests[dd]);
+                bidx = bid2(docall, dd, deal.bests[dd]);
 
                 potbid[1][dd] = bidx[3];
                 if (bidx[3] == 1) {
@@ -2254,149 +2233,24 @@ class Game {
                 continue;
             }
 
-            // change value of bowers to reflect proper suit and hierarchy
-            for (int i=0; i<24; i++) {
-                if (fintp == 0) { // spades is trump
-                    if (cards[i] == 8) { // R
-                        cards[i] = 28;
-                    }
-                    if (cards[i] == 11) { // L
-                        cards[i] = 24;
-                    }
-                }
-                if (fintp == 1) { // hearts is trump
-                    if (cards[i] == 9) { // R
-                        cards[i] = 29;
-                    }
-                    if (cards[i] == 10) { // L
-                        cards[i] = 25;
-                    }
-                }
-                if (fintp == 2) { // diamonds is trump
-                    if (cards[i] == 10) { // R
-                        cards[i] = 30;
-                    }
-                    if (cards[i] == 9) { // L
-                        cards[i] = 26;
-                    }
-                }
-                if (fintp == 3) { // clubs is trump
-                    if (cards[i] == 11) { // R
-                        cards[i] = 31;
-                    }
-                    if (cards[i] == 8) { // L
-                        cards[i] = 27;
-                    }
-                }
-            }
+            deal.preparePlay(fintp, lone, round);
 
-            // initialize 'own' values to -1
-            for (int i=0; i<4; i++) { // players
-                for (int j=0; j<4; j++) { // suits
-                    for (int k=0; k<8; k++) { // ranks
-                        own[i][j][k] = -1;
-                    }
-                }
-            }
-
-            // identify where each card is
-            for (int i=0; i<4; i++) { // players
-                for (int j=0; j<24; j++) { // cards
-                    own[i][cards[j]%4][cards[j]/4] = j/5;
-                }
-            }
-            if (round == 0) { // dealer swapped a card; all players know turn card is in dealer's hand
-                // only dealer knows card discarded
-                own[dealer][cards[20]%4][cards[20]/4] = -1;
-                for (int i=0; i<4; i++) {
-                    own[i][cards[cswap]%4][cards[cswap]/4] = dealer;
-                }
-            }
-            if (round == 1) {
-                for (int i=0; i<4; i++) {
-                    own[i][cards[20]%4][cards[20]/4] = -1;
-                }
-            }
-
-            //** calculate suit lengths for each [player][suit]
-            for (int i=0; i<4; i++) { // player
-                for (int j=0; j<4; j++) { // suit
-                    for (int k=0; k<5; k++) { // cards
-                        if (cards[k+i*5]%4 == j) {
-                            playst[i][j]++; // increment count by 1
-                        }
-                    }
-                }
-            }
-
-            //  establish length of suits in play (varies from 4 to 7)
-            for (int i=0; i<4; i++) { // player
-                for (int j=0; j<4; j++) { // suit
-                    if (j == fintp) {
-                        length[i][j] = 7;
-                    } else if (j == 3-fintp) {
-                        length[i][j] = 5;
-                    } else {
-                        length[i][j] = 6;
-                    }
-                }
-                if (round == 1) {
-                    length[i][cards[20]%4]--;
-                }
-            }
-            if (round == 0) {
-                length[dd][cards[20]%4]--;
-            }
-
-            //  calculate values of ace / king / queen arrays (non-trump)
-            for (int i=0; i<4; i++) { // reset off-ace count to zero
-                aces[i][fintp] = 0;
-            }
-            for (int k=0; k<4; k++) { // player
-                for (int i=0; i<4; i++) { // suit
-                    if ((max[k][fintp][i] == 5 || max[k][fintp][i] == 4.7) && i != fintp) {
-                        ace[k][i] = playst[k][i]; // length of ace-led suit
-                        aces[k][fintp]++; // number of non-trump aces
-                    }
-                    if (max[k][fintp][i] == 4 && i != fintp) { // non-trump suit headed by K
-                        king[k][i] = playst[k][i]; // length of K-led suit
-                    }
-                    if (max[k][fintp][i] == 3 && i != fintp) { // non-trump suit headed by Q
-                        queen[k][i] = playst[k][i]; // length of Q-led suit
-                    }
-                }
-            }
-
-            // if a player going lone, assign voids to all partner's suits
-            if (lone > -1) {
-                for (int j=0; j<4; j++){
-                    voids[(lone+2)%4][j] = 1;
-                }
-            }
-
-            // calculate boss (highest) rank in each suit
-            for (int i=0; i<4; i++) { // player
-                for (int j=0; j<4; j++) { // suit
-                    for (int k=0; k<8; k++) { // rank
-                        if (own[i][j][k] > -1 && own[i][j][k] < 4 && k > boss[i][j]) {
-                            boss[i][j] = k;
-                        }
-                    }
-                }
-            }
-
-            //** invoke method calc to calculate values for cv[lead][][] and cv[toss][][]
-            cv = play.calc(cards, fintp, own, playst, max, nax, lone, dealer);
-
-            // determine number of non-trump void suits for each player
-            for (int i=0; i<4; i++) {
-                vd[i] = 0; // initialize vd value
-                for (int j=0; j<4; j++) {
-                    if (playst[i][j] == 0 && j != fintp) {
-                        vd[i]++;
-                    }
-                }
-            }
+            int[][][] own = deal.own;
+            int[][] ace = deal.ace;
+            int[][] king = deal.king;
+            int[][] queen = deal.queen;
+            int[][] length = deal.length;
+            int[][] playst = deal.playst;
+            int[][] boss = deal.boss;
+            double[][][] cv = deal.cv;
+            int[][] suit = deal.suit;
+            int[][] rank = deal.rank;
+            int[][] voids = deal.voids;
+            int[][] solo = deal.solo;
+            int[][] hint = deal.hint;
+            int[] sit = deal.sit;
+            int[] ss = deal.ss;
+            int[] cksuit = deal.cksuit;
 
             // put each players cards in order (trump suit first, then spades - hearts - diamond - clubs in that order;
             // highest to lowest rank within each suit
@@ -5202,6 +5056,14 @@ class Game {
 
 class Deal {
 
+    // Initialized in constructor
+    BidStrategy bid;
+    PlayStrategy play;
+    int[] cards;
+    int dealer;
+    int upst; // suit of turned card
+    int uprk; // rank of turned card
+
     // Create arrays to store cards for each player (value of 1 means player has the card)
     int[][][] own = new int[4][4][8]; // keeps track of where each card is, from [player]'s perspective
                                       // [player][suit][rank]
@@ -5227,7 +5089,7 @@ class Deal {
     //  Create variables to help calculate trump score for each player / suit (0 = spade, 1 = heart,
     //  2 = diamond, 3 = club)
     double bidscore[][] = new double[5][4];
-    double[][][] cv = new double[2][4][6]; // assign values to cards [lead or toss][suit][rank]
+    double[][][] cv = new double[2][4][8]; // assign values to cards [lead or toss][suit][rank]
 
     //  Create arrays to keep track of play of cards; [x][y], where x = trick and y = player
     int[][] suit = new int[5][4]; // track suit played [trick][player] = 0 - 3
@@ -5235,7 +5097,6 @@ class Deal {
     double summins[][] = new double[5][4]; // sum of highest ranking cards in each off-suit for [player][trumpsuit]
     int bests[] = new int[4]; // best suit to bid 2nd round for [player]
     double bestc[] = new double[4]; // point count of best suit to bid 2nd round for [player]
-    int[] bidx = new int[4]; // results of bidding method which gives lone, declarer and fintp for each bid
 
     //  Keep track of which suits other players are known to be void in
     int[][] voids = new int[4][4]; // [player][suit] = 1 if void
@@ -5247,11 +5108,21 @@ class Deal {
     int[] vd = new int[4]; // number of void suits for given [player] (trump suit already determined)
     int[] ss = new int[4]; // if [player] is single-suited, from round 3 on (value = suit, or -1 by default)
     int cksuit[] = new int[4]; // local variable used to help calculate ss[]
-    int[][] potbid = new int[2][4]; // bidding for [round][player; 0 = pass, 1 = wp, 2 = alone
+    int cswap = -1; // only known to dealer
 
-    int cswap = -1;
+    // *** Constructor, initializing deal parameters ***
+    public Deal(BidStrategy bid, PlayStrategy play, int[] cards, int dealer) {
+        this.bid = bid;
+        this.play = play;
+        this.cards = cards;
+        this.dealer = dealer;
+        this.upst = cards[20]%4;
+        this.uprk = cards[20]/4;
+    }
 
-    public void initialize(BidStrategy bid, int[] cards, int dealer, int upst, int uprk) {
+    // *** Method "prepareBid" for initializing variables used in bidding ***
+    public void prepareBid() {
+
         // New calculation of best card to discard
         int seat = 8; // see notes (pertains to bidding situation)
         cswap = bid.swapcard(cards, seat, dealer); // determines # of card swapped by dealer for turn card
@@ -5404,6 +5275,166 @@ class Deal {
                 if (j != upst && bestc[i] < bidscore[i][j]) { // can't bid turned suit 2nd round
                     bestc[i] = bidscore[i][j];
                     bests[i] = j;
+                }
+            }
+        }
+    }
+
+    // *** Method "doSwap" for executing dealer swap (for turn card) ***
+    public void doSwap(int declarer, int lone) {
+
+        // Re-calculate of best card to discard
+        int seat = ((declarer-dealer+4)%4)*2 + 1 - (lone+6)/6; // see spreadsheet for meaning
+        cswap = bid.swapcard(cards, seat, dealer); // determines # of card swapped by dealer for turn card
+
+        int temp = cards[cswap]; // dealer swaps cards
+        cards[cswap] = cards[20];
+        cards[20] = temp;
+    }
+
+    // *** Method "preparePlay" for initializing variables used in playing ***
+    public void preparePlay(int fintp, int lone, int round) {
+
+        // change value of bowers to reflect proper suit and hierarchy
+        for (int i=0; i<24; i++) {
+            if (fintp == 0) { // spades is trump
+                if (cards[i] == 8) { // R
+                    cards[i] = 28;
+                }
+                if (cards[i] == 11) { // L
+                    cards[i] = 24;
+                }
+            }
+            if (fintp == 1) { // hearts is trump
+                if (cards[i] == 9) { // R
+                    cards[i] = 29;
+                }
+                if (cards[i] == 10) { // L
+                    cards[i] = 25;
+                }
+            }
+            if (fintp == 2) { // diamonds is trump
+                if (cards[i] == 10) { // R
+                    cards[i] = 30;
+                }
+                if (cards[i] == 9) { // L
+                    cards[i] = 26;
+                }
+            }
+            if (fintp == 3) { // clubs is trump
+                if (cards[i] == 11) { // R
+                    cards[i] = 31;
+                }
+                if (cards[i] == 8) { // L
+                    cards[i] = 27;
+                }
+            }
+        }
+
+        // initialize 'own' values to -1
+        for (int i=0; i<4; i++) { // players
+            for (int j=0; j<4; j++) { // suits
+                for (int k=0; k<8; k++) { // ranks
+                    own[i][j][k] = -1;
+                }
+            }
+        }
+
+        // identify where each card is
+        for (int i=0; i<4; i++) { // players
+            for (int j=0; j<24; j++) { // cards
+                own[i][cards[j]%4][cards[j]/4] = j/5;
+            }
+        }
+        if (round == 0) { // dealer swapped a card; all players know turn card is in dealer's hand
+            // only dealer knows card discarded
+            own[dealer][cards[20]%4][cards[20]/4] = -1;
+            for (int i=0; i<4; i++) {
+                own[i][cards[cswap]%4][cards[cswap]/4] = dealer;
+            }
+        }
+        if (round == 1) {
+            for (int i=0; i<4; i++) {
+                own[i][cards[20]%4][cards[20]/4] = -1;
+            }
+        }
+
+        //** calculate suit lengths for each [player][suit]
+        for (int i=0; i<4; i++) { // player
+            for (int j=0; j<4; j++) { // suit
+                for (int k=0; k<5; k++) { // cards
+                    if (cards[k+i*5]%4 == j) {
+                        playst[i][j]++; // increment count by 1
+                    }
+                }
+            }
+        }
+
+        //  establish length of suits in play (varies from 4 to 7)
+        for (int i=0; i<4; i++) { // player
+            for (int j=0; j<4; j++) { // suit
+                if (j == fintp) {
+                    length[i][j] = 7;
+                } else if (j == 3-fintp) {
+                    length[i][j] = 5;
+                } else {
+                    length[i][j] = 6;
+                }
+            }
+            if (round == 1) {
+                length[i][cards[20]%4]--;
+            }
+        }
+        if (round == 0) {
+            length[dealer][cards[20]%4]--;
+        }
+
+        //  calculate values of ace / king / queen arrays (non-trump)
+        for (int i=0; i<4; i++) { // reset off-ace count to zero
+            aces[i][fintp] = 0;
+        }
+        for (int k=0; k<4; k++) { // player
+            for (int i=0; i<4; i++) { // suit
+                if ((max[k][fintp][i] == 5 || max[k][fintp][i] == 4.7) && i != fintp) {
+                    ace[k][i] = playst[k][i]; // length of ace-led suit
+                    aces[k][fintp]++; // number of non-trump aces
+                }
+                if (max[k][fintp][i] == 4 && i != fintp) { // non-trump suit headed by K
+                    king[k][i] = playst[k][i]; // length of K-led suit
+                }
+                if (max[k][fintp][i] == 3 && i != fintp) { // non-trump suit headed by Q
+                    queen[k][i] = playst[k][i]; // length of Q-led suit
+                }
+            }
+        }
+
+        // if a player going lone, assign voids to all partner's suits
+        if (lone > -1) {
+            for (int j=0; j<4; j++){
+                voids[(lone+2)%4][j] = 1;
+            }
+        }
+
+        // calculate boss (highest) rank in each suit
+        for (int i=0; i<4; i++) { // player
+            for (int j=0; j<4; j++) { // suit
+                for (int k=0; k<8; k++) { // rank
+                    if (own[i][j][k] > -1 && own[i][j][k] < 4 && k > boss[i][j]) {
+                        boss[i][j] = k;
+                    }
+                }
+            }
+        }
+
+        //** invoke method calc to calculate values for cv[lead][][] and cv[toss][][]
+        cv = play.calc(cards, fintp, own, playst, max, nax, lone, dealer);
+
+        // determine number of non-trump void suits for each player
+        for (int i=0; i<4; i++) {
+            vd[i] = 0; // initialize vd value
+            for (int j=0; j<4; j++) {
+                if (playst[i][j] == 0 && j != fintp) {
+                    vd[i]++;
                 }
             }
         }
