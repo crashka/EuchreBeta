@@ -1667,7 +1667,6 @@ class Game {
         int lone = -1; // will get value if a player goes lone (0 = South, etc.)
         int[] points = new int[4];  // points for each player
         int[] trick = new int[4]; // tricks won
-        int seat = -1; // see notes (pertains to bidding situation)
         int fintp = 4;  //  marker denoting the suit which is declared trump (spades = 0, hearts = 1, diamonds = 2,
                         // clubs = 3, 4 = trump not declared)
 
@@ -1716,32 +1715,6 @@ class Game {
             // invoke method to put cards in order
             cards = EuchreBeta.order(cards, fintp);
 
-            // Create arrays to store cards for each player (value of 1 means player has the card)
-            int[][][] own = new int[4][4][8]; // keeps track of where each card is, from [player]'s perspective
-            // [player][suit][rank]
-            int[][] right = new int[5][4]; // =1 if [player][trumpsuit] has the right bower
-            int[][] left = new int[5][4]; // =1 if [player][trumpsuit] has the left bower
-            int[][] acet = new int[5][4]; // =1 if [player][trumpsuit] has the ace of trump
-            int[][] kingt = new int[5][4]; // =1 if [player][trumpsuit] has the king of trump
-
-            int[][] ace = new int[4][4]; // length of suit headed by non-trump A for [player][suit]
-            int[][] king = new int[4][4]; // [player][suit], =0 if no king, =1 if singleton K, =2 if K-x, =3 if K-x-x+
-            int[][] queen = new int[4][4]; // [player][suit], =0 if no queen, =1 if singleton Q, =2 if Q-x, =3 if Q-x-x+
-            int[][] aces = new int[5][4]; // counts non-trump aces for each [player][trumpsuit]
-            int[][] length = new int[4][4]; // records length in play (potentially) of all [suits] once trump is declared
-            // (4 to 7)
-
-            //  Create arrays to show which suits each player has, and how many, for each potential trump suit
-            int[][][] playersuit = new int[5][4][4];  //  [player][trumpsuit][suit]
-            int[][] playst = new int[4][4]; // [player][suit] length of suits once trump has been established
-
-            //  Create array to keep track of the boss card in each suit (potentially remaining in play)
-            int[][] boss = new int[4][4]; // [player][suit] = rank of card which is potentially boss (0 - 7)
-            //  Create variables to help calculate trump score for each player / suit (0 = spade, 1 = heart,
-            // 2 = diamond, 3 = club)
-            double bidscore[][] = new double[5][4];
-            double[][][] cv = new double[2][4][6]; // assign values to cards [lead or toss][suit][rank]
-
             //  Initialize counter for who is dealer (starts with South player at 0) and bidding position
             int win1 = 5;  // winner of 1st trick
             int win2 = 5;  // winner of 2nd trick
@@ -1749,183 +1722,44 @@ class Game {
             int win4 = 5;  // winner of 4th trick
             int win5 = 5;  // winner of 5th trick
 
-            //  Create arrays to keep track of play of cards; [x][y], where x = trick and y = player
-            int[][] suit = new int[5][4]; // track suit played [trick][player] = 0 - 3
-            int[][] rank = new int[5][4]; // track rank of card played [trick][player] = 0 - 7
             final int upst = cards[20]%4; // suit of turned card
             final int uprk = cards[20]/4; // rank of turned card
-            double summins[][] = new double[5][4]; // sum of highest ranking cards in each off-suit for [player][trumpsuit]
-            int bests[] = new int[4]; // best suit to bid 2nd round for [player]
-            double bestc[] = new double[4]; // point count of best suit to bid 2nd round for [player]
-            int[] bidx = new int[4]; // results of bidding method which gives lone, declarer and fintp for each bid
 
-            //  Keep track of which suits other players are known to be void in
-            int[][] voids = new int[4][4]; // [player][suit] = 1 if void
-            int[][] solo = new int[4][4]; // [player][suit] = 1 if only player left with that suit
-            int[][] hint = new int[4][4]; // [player][suit] = 1 if player threw off that suit (signal?)
-            int[] sit = new int[10]; // 10 special situations
-            double [][][] max = new double[5][4][4]; // maximum rank for each [player][trumpsuit][suit]
-            double [][][] nax = new double[5][4][4]; // 2nd highest rank for each [player][trumpsuit][suit]
-            int[] vd = new int[4]; // number of void suits for given [player] (trump suit already determined)
-            int[] ss = new int[4]; // if [player] is single-suited, from round 3 on (value = suit, or -1 by default)
-            int cksuit[] = new int[4]; // local variable used to help calculate ss[]
-            int[][] potbid = new int[2][4]; // bidding for [round][player; 0 = pass, 1 = wp, 2 = alone
+            Deal deal = new Deal();
+            deal.initialize(bid, cards, dealer, upst, uprk);
 
-            // New calculation of best card to discard
-            seat = 8;
-            int cswap = bid.swapcard(cards, seat, dealer); // determines # of card swapped by dealer for turn card
-            // only for purposes of creating bidding hand for dealer, with turn card as trump
-
-            // New method for calculating bidscore (determining best bid for each player)
-            int noteswap = 0; // denotes if creating new hand for dealer (with swapped card)
-            for (int i=0; i<4; i++) { // don't need player 0/trump, or player 4/non-trump
-                for (int j=0; j<4; j++) {
-                    if (i == dealer && j == cards[20]%4) { // swap out turn card for dealer
-                        int temp = cards[cswap];
-                        cards[cswap] = cards[20];
-                        cards[20] = temp;
-                        noteswap = 1;
-                    }
-                    int post = i; // position of player (relative to dealer)
-                    int tsuit = j; // which suit is trump (turn card suit means round 1, else round 2)
-                    bidscore[i][j] = bid.trump(cards, post, tsuit, upst, uprk);
-                    if (noteswap == 1) { // swap back turn card
-                        int temp = cards[cswap];
-                        cards[cswap] = cards[20];
-                        cards[20] = temp;
-                        noteswap = 0;
-                    }
-                }
-            }
-
-            // calculate suit lengths for each [player][trumpsuit][suit]
-            for (int h=0; h<4; h++) { // player
-                for (int i=0; i<4; i++) { // trump
-                    if (h == dealer && i == cards[20]%4) { // swap out turn card for dealer
-                        int temp = cards[cswap];
-                        cards[cswap] = cards[20];
-                        cards[20] = temp;
-                        noteswap = 1;
-                    }
-                    for (int j=0; j<4; j++) { // suit
-                        for (int k=0; k<5; k++) { // cards
-                            if (cards[k+h*5]%4 == j) {
-                                playersuit[h][i][j]++; // increment count by 1
-                            }
-                            if (cards[k+h*5]/4 == 2 && cards[k+h*5]%4 == 3-i && j==0) {
-                                playersuit[h][i][i]++; // adjust for bowers, without double counting
-                                playersuit[h][i][3-i]--;
-                            }
-                        }
-                    }
-                    if (noteswap == 1) { // swap back turn card
-                        int temp = cards[cswap];
-                        cards[cswap] = cards[20];
-                        cards[20] = temp;
-                        noteswap = 0;
-                    }
-                }
-            }
-
-            // check for higher trump cards for each combination of player / suit
-            // also count off-suit aces
-            for (int i=0; i<24; i++) { // cards
-                if (cards[i]/4 == 2) {
-                    right[i/5][cards[i]%4]++; // have right bower
-                    left[i/5][3-cards[i]%4]++; // have left bower
-                }
-                if (cards[i]/4 == 5) {
-                    acet[i/5][cards[i]%4]++; // have ace of trump
-                    for (int j=0; j<4; j++) {
-                        if (j != cards[i]%4) {
-                            aces[i/5][j]++; // count off-suit aces
-                        }
-                    }
-                }
-                if (cards[i]/4 == 4) {
-                    kingt[i/5][cards[i]%4]++; // have king of trump
-                }
-            }
-            if (cards[20]/4 == 2) {
-                right[dealer][cards[20]%4] = 1; // dealer has right bower which is turned
-            }
-            if (cards[20]/4 == 5) {
-                acet[dealer][cards[20]%4] = 1; // dealer has ace of trump in suit of turned card
-            }
-            if (cards[20]/4 == 4) {
-                kingt[dealer][cards[20]%4] = 1; // dealer has king of trump in suit of turned card
-            }
-
-            // calculate maximum rank for each player/trumpsuit/suit, to then calculate summins
-            // initialize max value
-            for (int i=0; i<4; i++) { // player
-                for (int j=0; j<4; j++) { // trump suit
-                    for (int k=0; k<4; k++) { // suit
-                        max[i][j][k] = -1;
-                    }
-                }
-            }
-            // calculate max and nax values (nax is next highest)
-            for (int i=0; i<24; i++) { // cards
-                for (int j=0; j<4; j++) { // trump suit
-                    if (cards[i]/4 > max[i/5][j][cards[i]%4] && j != cards[i]%4 && (cards[i]/4 != 2 || cards[i]%4 != 3-j)) {
-                        nax[i/5][j][cards[i]%4] = max[i/5][j][cards[i]%4];
-                        max[i/5][j][cards[i]%4] = cards[i]/4;
-                    }
-                    else if (cards[i]/4 > nax[i/5][j][cards[i]%4] && j != cards[i]%4 && (cards[i]/4 != 2 ||
-                                                                                         cards[i]%4 != 3-j)) {
-                        nax[i/5][j][cards[i]%4] = cards[i]/4;
-                    }
-                }
-            }
-            // correct max values
-            for (int i=0; i<4; i++) { // player
-                for (int j=0; j<4; j++) { // trump suit
-                    for (int k=0; k<4; k++) { // suit
-                        if (max[i][j][k] == 5) {
-                            if (playersuit[i][j][k] > 1 && nax[i][j][k] != 4) {
-                                max[i][j][k] = 4.7;
-                            }
-                        }
-                        if (playersuit[i][j][k] == 0) {
-                            max[i][j][k] = 4.9;
-                        }
-                    }
-                }
-            }
-            // calculate number of void suits for each player (assuming turn card is trump)
-            for (int i=0; i<4; i++) { // player
-                for (int j=0; j<4; j++) { // suit
-                    if (playersuit[i][upst][j] == 0 && j != upst) {
-                        vd[i]++;
-                    }
-                }
-            }
-            // calculate summins
-            for (int i=0; i<4; i++) { // player
-                for (int j=0; j<4; j++) { // trump suit
-                    for (int k=0; k<4; k++) { // suit
-                        if (j != k) {
-                            summins[i][j] += max[i][j][k];
-                        }
-                    }
-                }
-            }
-            // Initialize values for best 2nd round suit
-            for (int i=0; i<4; i++) { // player
-                bestc[i] = -20;
-                bests[i] = 3-upst; // initially set best suit to next
-            }
-
-            // Determine best suit to bid 2nd round
-            for (int i=0; i<4; i++) { // player
-                for (int j=0; j<4; j++) { // trump suit
-                    if (j != upst && bestc[i] < bidscore[i][j]) { // can't bid turned suit 2nd round
-                        bestc[i] = bidscore[i][j];
-                        bests[i] = j;
-                    }
-                }
-            }
+            int[][][] own = deal.own;
+            int[][] right = deal.right;
+            int[][] left = deal.left;
+            int[][] acet = deal.acet;
+            int[][] kingt = deal.kingt;
+            int[][] ace = deal.ace;
+            int[][] king = deal.king;
+            int[][] queen = deal.queen;
+            int[][] aces = deal.aces;
+            int[][] length = deal.length;
+            int[][][] playersuit = deal.playersuit;
+            int[][] playst = deal.playst;
+            int[][] boss = deal.boss;
+            double[][] bidscore = deal.bidscore;
+            double[][][] cv = deal.cv;
+            int[][] suit = deal.suit;
+            int[][] rank = deal.rank;
+            double[][] summins = deal.summins;
+            int[] bests = deal.bests;
+            double[] bestc = deal.bestc;
+            int[] bidx = deal.bidx;
+            int[][] voids = deal.voids;
+            int[][] solo = deal.solo;
+            int[][] hint = deal.hint;
+            int[] sit = deal.sit;
+            double[][][] max = deal.max;
+            double[][][] nax = deal.nax;
+            int[] vd = deal.vd;
+            int[] ss = deal.ss;
+            int[] cksuit = deal.cksuit;
+            int[][] potbid = deal.potbid;
+            int cswap = deal.cswap;
 
             //  List human player's cards
             System.out.println("\n" + "South's cards:");
@@ -2181,7 +2015,7 @@ class Game {
             //  if seat 2 didn't call lone AND some player declared, have dealer swap cards
             if (lone != bb && declarer != -1) {
                 // Re-calculate of best card to discard
-                seat = ((declarer-dealer+4)%4)*2 + 1 - (lone+6)/6; // see spreadsheet for meaning
+                int seat = ((declarer-dealer+4)%4)*2 + 1 - (lone+6)/6; // see spreadsheet for meaning
                 cswap = bid.swapcard(cards, seat, dealer); // determines # of card swapped by dealer for turn card
 
                 int temp = cards[cswap]; // dealer swaps cards
@@ -2200,7 +2034,8 @@ class Game {
                                       right[aa][bests[aa]], left[aa][bests[aa]],
                                       acet[aa][bests[aa]], aces[aa][bests[aa]],
                                       kingt[aa][bests[aa]], upst, bidscore[aa][bests[aa]],
-                                      summins[aa][bests[aa]], bests[(dealer+1)%4],
+                                      //summins[aa][bests[aa]], bests[(dealer+1)%4],
+                                      summins[aa][bests[aa]], bests[aa],
                                       points[aa], game);
 
                 bidx = bid(docall, aa, bests[aa]);
@@ -2247,7 +2082,8 @@ class Game {
                                       right[bb][bests[bb]], left[bb][bests[bb]],
                                       acet[bb][bests[bb]], aces[bb][bests[bb]],
                                       kingt[bb][bests[bb]], upst, uprk,bidscore[bb][bests[bb]],
-                                      summins[bb][bests[bb]], bests[(dealer+1)%4], points[bb],
+                                      //summins[bb][bests[bb]], bests[(dealer+1)%4], points[bb],
+                                      summins[bb][bests[bb]], bests[bb], points[bb],
                                       game);
 
                 bidx = bid(docall, bb, bests[bb]);
@@ -2293,7 +2129,8 @@ class Game {
                                       acet[cc][bests[cc]], aces[cc][bests[cc]],
                                       kingt[cc][bests[cc]], upst, uprk,
                                       bidscore[cc][bests[cc]], summins[cc][bests[cc]],
-                                      bests[(dealer+1)%4], points[cc], game);
+                                      //bests[(dealer+1)%4], points[cc], game);
+                                      bests[cc], points[cc], game);
 
                 bidx = bid(docall, cc, bests[cc]);
 
@@ -2339,7 +2176,8 @@ class Game {
                                       right[dd][bests[dd]], left[dd][bests[dd]],
                                       acet[dd][bests[dd]], upst, uprk,
                                       bidscore[dd][bests[dd]], summins[dd][bests[dd]],
-                                      bests[(dealer+1)%4], points[dd], game);
+                                      //bests[(dealer+1)%4], points[dd], game);
+                                      bests[dd], points[dd], game);
 
                 bidx = bid(docall, dd, bests[dd]);
 
@@ -5328,6 +5166,216 @@ class Game {
             System.out.println("North and South win the game " + points[0] + " to " + points[1] + "\n");
         } else {
             System.out.println("East and West win the game " + points[1] + " to " + points[0] + "\n");
+        }
+    }
+}
+
+
+class Deal {
+
+    // Create arrays to store cards for each player (value of 1 means player has the card)
+    int[][][] own = new int[4][4][8]; // keeps track of where each card is, from [player]'s perspective
+    // [player][suit][rank]
+    int[][] right = new int[5][4]; // =1 if [player][trumpsuit] has the right bower
+    int[][] left = new int[5][4]; // =1 if [player][trumpsuit] has the left bower
+    int[][] acet = new int[5][4]; // =1 if [player][trumpsuit] has the ace of trump
+    int[][] kingt = new int[5][4]; // =1 if [player][trumpsuit] has the king of trump
+
+    int[][] ace = new int[4][4]; // length of suit headed by non-trump A for [player][suit]
+    int[][] king = new int[4][4]; // [player][suit], =0 if no king, =1 if singleton K, =2 if K-x, =3 if K-x-x+
+    int[][] queen = new int[4][4]; // [player][suit], =0 if no queen, =1 if singleton Q, =2 if Q-x, =3 if Q-x-x+
+    int[][] aces = new int[5][4]; // counts non-trump aces for each [player][trumpsuit]
+    int[][] length = new int[4][4]; // records length in play (potentially) of all [suits] once trump is declared
+    // (4 to 7)
+
+    //  Create arrays to show which suits each player has, and how many, for each potential trump suit
+    int[][][] playersuit = new int[5][4][4];  //  [player][trumpsuit][suit]
+    int[][] playst = new int[4][4]; // [player][suit] length of suits once trump has been established
+
+    //  Create array to keep track of the boss card in each suit (potentially remaining in play)
+    int[][] boss = new int[4][4]; // [player][suit] = rank of card which is potentially boss (0 - 7)
+    //  Create variables to help calculate trump score for each player / suit (0 = spade, 1 = heart,
+    // 2 = diamond, 3 = club)
+    double bidscore[][] = new double[5][4];
+    double[][][] cv = new double[2][4][6]; // assign values to cards [lead or toss][suit][rank]
+
+    //  Create arrays to keep track of play of cards; [x][y], where x = trick and y = player
+    int[][] suit = new int[5][4]; // track suit played [trick][player] = 0 - 3
+    int[][] rank = new int[5][4]; // track rank of card played [trick][player] = 0 - 7
+    double summins[][] = new double[5][4]; // sum of highest ranking cards in each off-suit for [player][trumpsuit]
+    int bests[] = new int[4]; // best suit to bid 2nd round for [player]
+    double bestc[] = new double[4]; // point count of best suit to bid 2nd round for [player]
+    int[] bidx = new int[4]; // results of bidding method which gives lone, declarer and fintp for each bid
+
+    //  Keep track of which suits other players are known to be void in
+    int[][] voids = new int[4][4]; // [player][suit] = 1 if void
+    int[][] solo = new int[4][4]; // [player][suit] = 1 if only player left with that suit
+    int[][] hint = new int[4][4]; // [player][suit] = 1 if player threw off that suit (signal?)
+    int[] sit = new int[10]; // 10 special situations
+    double [][][] max = new double[5][4][4]; // maximum rank for each [player][trumpsuit][suit]
+    double [][][] nax = new double[5][4][4]; // 2nd highest rank for each [player][trumpsuit][suit]
+    int[] vd = new int[4]; // number of void suits for given [player] (trump suit already determined)
+    int[] ss = new int[4]; // if [player] is single-suited, from round 3 on (value = suit, or -1 by default)
+    int cksuit[] = new int[4]; // local variable used to help calculate ss[]
+    int[][] potbid = new int[2][4]; // bidding for [round][player; 0 = pass, 1 = wp, 2 = alone
+
+    int cswap = -1;
+
+    public void initialize(BidStrategy bid, int[] cards, int dealer, int upst, int uprk) {
+        // New calculation of best card to discard
+        int seat = 8; // see notes (pertains to bidding situation)
+        cswap = bid.swapcard(cards, seat, dealer); // determines # of card swapped by dealer for turn card
+        // only for purposes of creating bidding hand for dealer, with turn card as trump
+
+        // New method for calculating bidscore (determining best bid for each player)
+        int noteswap = 0; // denotes if creating new hand for dealer (with swapped card)
+        for (int i=0; i<4; i++) { // don't need player 0/trump, or player 4/non-trump
+            for (int j=0; j<4; j++) {
+                if (i == dealer && j == cards[20]%4) { // swap out turn card for dealer
+                    int temp = cards[cswap];
+                    cards[cswap] = cards[20];
+                    cards[20] = temp;
+                    noteswap = 1;
+                }
+                int post = i; // position of player (relative to dealer)
+                int tsuit = j; // which suit is trump (turn card suit means round 1, else round 2)
+                bidscore[i][j] = bid.trump(cards, post, tsuit, upst, uprk);
+                if (noteswap == 1) { // swap back turn card
+                    int temp = cards[cswap];
+                    cards[cswap] = cards[20];
+                    cards[20] = temp;
+                    noteswap = 0;
+                }
+            }
+        }
+
+        // calculate suit lengths for each [player][trumpsuit][suit]
+        for (int h=0; h<4; h++) { // player
+            for (int i=0; i<4; i++) { // trump
+                if (h == dealer && i == cards[20]%4) { // swap out turn card for dealer
+                    int temp = cards[cswap];
+                    cards[cswap] = cards[20];
+                    cards[20] = temp;
+                    noteswap = 1;
+                }
+                for (int j=0; j<4; j++) { // suit
+                    for (int k=0; k<5; k++) { // cards
+                        if (cards[k+h*5]%4 == j) {
+                            playersuit[h][i][j]++; // increment count by 1
+                        }
+                        if (cards[k+h*5]/4 == 2 && cards[k+h*5]%4 == 3-i && j==0) {
+                            playersuit[h][i][i]++; // adjust for bowers, without double counting
+                            playersuit[h][i][3-i]--;
+                        }
+                    }
+                }
+                if (noteswap == 1) { // swap back turn card
+                    int temp = cards[cswap];
+                    cards[cswap] = cards[20];
+                    cards[20] = temp;
+                    noteswap = 0;
+                }
+            }
+        }
+
+        // check for higher trump cards for each combination of player / suit
+        // also count off-suit aces
+        for (int i=0; i<24; i++) { // cards
+            if (cards[i]/4 == 2) {
+                right[i/5][cards[i]%4]++; // have right bower
+                left[i/5][3-cards[i]%4]++; // have left bower
+            }
+            if (cards[i]/4 == 5) {
+                acet[i/5][cards[i]%4]++; // have ace of trump
+                for (int j=0; j<4; j++) {
+                    if (j != cards[i]%4) {
+                        aces[i/5][j]++; // count off-suit aces
+                    }
+                }
+            }
+            if (cards[i]/4 == 4) {
+                kingt[i/5][cards[i]%4]++; // have king of trump
+            }
+        }
+        if (cards[20]/4 == 2) {
+            right[dealer][cards[20]%4] = 1; // dealer has right bower which is turned
+        }
+        if (cards[20]/4 == 5) {
+            acet[dealer][cards[20]%4] = 1; // dealer has ace of trump in suit of turned card
+        }
+        if (cards[20]/4 == 4) {
+            kingt[dealer][cards[20]%4] = 1; // dealer has king of trump in suit of turned card
+        }
+
+        // calculate maximum rank for each player/trumpsuit/suit, to then calculate summins
+        // initialize max value
+        for (int i=0; i<4; i++) { // player
+            for (int j=0; j<4; j++) { // trump suit
+                for (int k=0; k<4; k++) { // suit
+                    max[i][j][k] = -1;
+                }
+            }
+        }
+        // calculate max and nax values (nax is next highest)
+        for (int i=0; i<24; i++) { // cards
+            for (int j=0; j<4; j++) { // trump suit
+                if (cards[i]/4 > max[i/5][j][cards[i]%4] && j != cards[i]%4 && (cards[i]/4 != 2 || cards[i]%4 != 3-j)) {
+                    nax[i/5][j][cards[i]%4] = max[i/5][j][cards[i]%4];
+                    max[i/5][j][cards[i]%4] = cards[i]/4;
+                }
+                else if (cards[i]/4 > nax[i/5][j][cards[i]%4] && j != cards[i]%4 && (cards[i]/4 != 2 ||
+                                                                                     cards[i]%4 != 3-j)) {
+                    nax[i/5][j][cards[i]%4] = cards[i]/4;
+                }
+            }
+        }
+        // correct max values
+        for (int i=0; i<4; i++) { // player
+            for (int j=0; j<4; j++) { // trump suit
+                for (int k=0; k<4; k++) { // suit
+                    if (max[i][j][k] == 5) {
+                        if (playersuit[i][j][k] > 1 && nax[i][j][k] != 4) {
+                            max[i][j][k] = 4.7;
+                        }
+                    }
+                    if (playersuit[i][j][k] == 0) {
+                        max[i][j][k] = 4.9;
+                    }
+                }
+            }
+        }
+        // calculate number of void suits for each player (assuming turn card is trump)
+        for (int i=0; i<4; i++) { // player
+            for (int j=0; j<4; j++) { // suit
+                if (playersuit[i][upst][j] == 0 && j != upst) {
+                    vd[i]++;
+                }
+            }
+        }
+        // calculate summins
+        for (int i=0; i<4; i++) { // player
+            for (int j=0; j<4; j++) { // trump suit
+                for (int k=0; k<4; k++) { // suit
+                    if (j != k) {
+                        summins[i][j] += max[i][j][k];
+                    }
+                }
+            }
+        }
+        // Initialize values for best 2nd round suit
+        for (int i=0; i<4; i++) { // player
+            bestc[i] = -20;
+            bests[i] = 3-upst; // initially set best suit to next
+        }
+
+        // Determine best suit to bid 2nd round
+        for (int i=0; i<4; i++) { // player
+            for (int j=0; j<4; j++) { // trump suit
+                if (j != upst && bestc[i] < bidscore[i][j]) { // can't bid turned suit 2nd round
+                    bestc[i] = bidscore[i][j];
+                    bests[i] = j;
+                }
+            }
         }
     }
 }
