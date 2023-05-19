@@ -122,8 +122,20 @@ public class EuchreBeta {
 class BidStrategy {
 
     // *** Method "bidder11" for determining 1st round bid of 1st player to bid ***
-    public int bidder11(int psup, int psnx, int psnxnx, int right, int left, int acet, int aces, int uprk,
-                        int upst, double bsup, double bsnx, double sum, int vd, double bestc, int pts, int game) {
+    public int bidder11(Deal deal, int aa, int uprk, int upst, int pts, int game) {
+        int psup     = deal.playersuit[aa][upst][upst];
+        int psnx     = deal.playersuit[aa][upst][3-upst];
+        int psnxnx   = deal.playersuit[aa][3-upst][3-upst];
+        int right    = deal.right[aa][upst];
+        int left     = deal.left[aa][upst];
+        int acet     = deal.acet[aa][upst];
+        int aces     = deal.aces[aa][upst];
+        double bsup  = deal.bidscore[aa][upst];
+        double bsnx  = deal.bidscore[aa][3-upst];
+        double sum   = deal.summins[aa][upst];
+        int vd       = deal.vd[aa];
+        double bestc = deal.bestc[aa];
+
         int call = 0; // value of docall returned: 0 = pass, 1 = bid with partner, 2 = bid alone
         if (psup == 5) { // have 5 trump
             call = 2;
@@ -214,8 +226,17 @@ class BidStrategy {
     }
 
     // *** Method "bidder12" for determining 1st round bid of 2nd player to bid ***
-    public int bidder12(int psup, int psnx, int right, int left, int acet, int kingt, int uprk,
-                        int upst, double bsup, double sum, int vd, int pts, int game) {
+    public int bidder12(Deal deal, int bb, int uprk, int upst, int pts, int game) {
+        int psup    = deal.playersuit[bb][upst][upst];
+        int psnx    = deal.playersuit[bb][upst][3-upst];
+        int right   = deal.right[bb][upst];
+        int left    = deal.left[bb][upst];
+        int acet    = deal.acet[bb][upst];
+        int kingt   = deal.kingt[bb][upst];
+        double bsup = deal.bidscore[bb][upst];
+        double sum  = deal.summins[bb][upst];
+        int vd      = deal.vd[bb];
+
         int call = 0; // value of docall returned: 0 = pass, 1 = bid with partner, 2 = bid alone
         if (psup == 5) { // have 5 trump, bid alone
             call = 2;
@@ -278,8 +299,16 @@ class BidStrategy {
     }
 
     // *** Method "bidder13" for determining 1st round bid of 3rd player to bid ***
-    public int bidder13(int psup, int psnx, int right, int left, int acet, int uprk, int upst,
-                        double bsup, double sum, int vd, int pts, int game) {
+    public int bidder13(Deal deal, int cc, int uprk, int upst, int pts, int game) {
+        int psup    = deal.playersuit[cc][upst][upst];
+        int psnx    = deal.playersuit[cc][upst][3-upst];
+        int right   = deal.right[cc][upst];
+        int left    = deal.left[cc][upst];
+        int acet    = deal.acet[cc][upst];
+        double bsup = deal.bidscore[cc][upst];
+        double sum  = deal.summins[cc][upst];
+        int vd      = deal.vd[cc];
+
         int call = 0; // value of docall returned: 0 = pass, 1 = bid with partner, 2 = bid alone
         if (psup == 5) { // have 5 trump
             call = 2;
@@ -316,8 +345,18 @@ class BidStrategy {
     }
 
     // *** Method "bidder14" for determining 1st round bid of 4th player to bid ***
-    public int bidder14(int psup, int psnx, int right, int left, int acet, int aces, int kingt, int uprk,
-                        int upst, double bsup, double sum, int vd, int pts, int game) {
+    public int bidder14(Deal deal, int dd, int uprk, int upst, int pts, int game) {
+        int psup    = deal.playersuit[dd][upst][upst];
+        int psnx    = deal.playersuit[dd][upst][3-upst];
+        int right   = deal.right[dd][upst];
+        int left    = deal.left[dd][upst];
+        int acet    = deal.acet[dd][upst];
+        int aces    = deal.aces[dd][upst];
+        int kingt   = deal.kingt[dd][upst];
+        double bsup = deal.bidscore[dd][upst];
+        double sum  = deal.summins[dd][upst];
+        int vd      = deal.vd[dd];
+
         int call = 0; // value of docall returned: 0 = pass, 1 = bid with partner, 2 = bid alone
         if (psup == 5) { // have 5 trump
             call = 2;
@@ -365,8 +404,19 @@ class BidStrategy {
     }
 
     // *** Method "bidder21" for determining 2nd round bid of 1st player to bid ***
-    public int bidder21(int psup, int psnx, int right, int left, int acet, int aces, int kingt,
-                        int upst, double bsup, double sum, int bests, int pts, int game) {
+    public int bidder21(Deal deal, int aa, int upst, int uprk, int pts, int game) {
+        //int bests   = deal.bests[(dealer+1)%4];
+        int bests   = deal.bests[aa];
+        int psup    = deal.playersuit[aa][bests][bests];
+        int psnx    = deal.playersuit[aa][bests][3-bests];
+        int right   = deal.right[aa][bests];
+        int left    = deal.left[aa][bests];
+        int acet    = deal.acet[aa][bests];
+        int aces    = deal.aces[aa][bests];
+        int kingt   = deal.kingt[aa][bests];
+        double bsup = deal.bidscore[aa][bests];
+        double sum  = deal.summins[aa][bests];
+
         int call = 0; // value of docall returned: 0 = pass, 1 = bid with partner, 2 = bid alone
         if (psup == 5) { // have 5 trump
             call = 2;
@@ -440,8 +490,19 @@ class BidStrategy {
     }
 
     // *** Method "bidder22" for determining 2nd round bid of 2nd player to bid ***
-    public int bidder22(int psup, int psnx, int right, int left, int acet, int aces, int kingt,
-                        int upst, int uprk, double bsup, double sum, int bests, int pts, int game) {
+    public int bidder22(Deal deal, int bb, int upst, int uprk, int pts, int game) {
+        //int bests   = deal.bests[(dealer+1)%4];
+        int bests   = deal.bests[bb];
+        int psup    = deal.playersuit[bb][bests][bests];
+        int psnx    = deal.playersuit[bb][bests][3-bests];
+        int right   = deal.right[bb][bests];
+        int left    = deal.left[bb][bests];
+        int acet    = deal.acet[bb][bests];
+        int aces    = deal.aces[bb][bests];
+        int kingt   = deal.kingt[bb][bests];
+        double bsup = deal.bidscore[bb][bests];
+        double sum  = deal.summins[bb][bests];
+
         int call = 0; // value of docall returned: 0 = pass, 1 = bid with partner, 2 = bid alone
         if (psup == 5) { // have 5 trump
             call = 2;
@@ -550,8 +611,18 @@ class BidStrategy {
     }
 
     // *** Method "bidder23" for determining 2nd round bid of 3rd player to bid ***
-    public int bidder23(int psup, int right, int left, int acet, int aces, int kingt, int upst,
-                        int uprk, double bsup, double sum, int bests, int pts, int game) {
+    public int bidder23(Deal deal, int cc, int upst, int uprk, int pts, int game) {
+        //int bests   = deal.bests[(dealer+1)%4];
+        int bests   = deal.bests[cc];
+        int psup    = deal.playersuit[cc][bests][bests];
+        int right   = deal.right[cc][bests];
+        int left    = deal.left[cc][bests];
+        int acet    = deal.acet[cc][bests];
+        int aces    = deal.aces[cc][bests];
+        int kingt   = deal.kingt[cc][bests];
+        double bsup = deal.bidscore[cc][bests];
+        double sum  = deal.summins[cc][bests];
+
         int call = 0; // value of docall returned: 0 = pass, 1 = bid with partner, 2 = bid alone
         if (psup == 5) { // have 5 trump
             call = 2;
@@ -632,8 +703,17 @@ class BidStrategy {
     }
 
     // *** Method "bidder24" for determining 2nd round bid of 4th player to bid ***
-    public int bidder24(int psup, int psnx, int right, int left, int acet, int upst,
-                        int uprk, double bsup, double sum, int bests, int pts, int game) {
+    public int bidder24(Deal deal, int dd, int upst, int uprk, int pts, int game) {
+        //int bests   = deal.bests[(dealer+1)%4];
+        int bests   = deal.bests[dd];
+        int psup    = deal.playersuit[dd][bests][bests];
+        int psnx    = deal.playersuit[dd][bests][3-bests];
+        int right   = deal.right[dd][bests];
+        int left    = deal.left[dd][bests];
+        int acet    = deal.acet[dd][bests];
+        double bsup = deal.bidscore[dd][bests];
+        double sum  = deal.summins[dd][bests];
+
         int call = 0; // value of docall returned: 0 = pass, 1 = bid with partner, 2 = bid alone
         if (psup == 5) { // have 5 trump
             call = 2;
@@ -1852,12 +1932,7 @@ class Game {
             // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
             // first bidder
-            docall = bid.bidder11(playersuit[aa][upst][upst], playersuit[aa][upst][3-upst],
-                                  playersuit[aa][3-upst][3-upst], right[aa][upst],
-                                  left[aa][upst], acet[aa][upst], aces[aa][upst],
-                                  uprk, upst, bidscore[aa][upst], bidscore[aa][3-upst],
-                                  summins[aa][upst], vd[aa], bestc[aa], points[aa], game);
-
+            docall = bid.bidder11(deal, aa, uprk, upst, points[aa], game);
             bidx = bid(docall, aa, cardname[cards[20]%4][cards[20]/4], upst);
 
             potbid[0][aa] = bidx[3];
@@ -1891,11 +1966,7 @@ class Game {
             // second bidder
             // only need to proceed if previous players passed
             if (!bidyes) {
-                docall = bid.bidder12(playersuit[bb][upst][upst], playersuit[bb][upst][3-upst],
-                                      right[bb][upst], left[bb][upst], acet[bb][upst],
-                                      kingt[bb][upst], uprk, upst, bidscore[bb][upst],
-                                      summins[bb][upst], vd[bb], points[bb], game);
-
+                docall = bid.bidder12(deal, bb, uprk, upst, points[bb], game);
                 bidx = bid(docall, bb, cardname[cards[20]%4][cards[20]/4], upst);
 
                 potbid[0][bb] = bidx[3];
@@ -1930,11 +2001,7 @@ class Game {
             // third bidder
             // only need to proceed if previous players passed
             if (!bidyes) {
-                docall = bid.bidder13(playersuit[cc][upst][upst], playersuit[cc][upst][3-upst],
-                                      right[cc][upst], left[cc][upst], acet[cc][upst], uprk,
-                                      upst, bidscore[cc][upst], summins[cc][upst], vd[cc],
-                                      points[cc], game);
-
+                docall = bid.bidder13(deal, cc, uprk, upst, points[cc], game);
                 bidx = bid(docall, cc, cardname[cards[20]%4][cards[20]/4], upst);
 
                 potbid[0][cc] = bidx[3];
@@ -1969,12 +2036,7 @@ class Game {
             // dealer
             // only need to proceed if previous players passed
             if (!bidyes) {
-                docall = bid.bidder14(playersuit[dd][upst][upst], playersuit[dd][upst][3-upst],
-                                      right[dd][upst], left[dd][upst], acet[dd][upst],
-                                      aces[dd][upst], kingt[dd][upst], uprk, upst,
-                                      bidscore[dd][upst], summins[dd][upst], vd[dd],
-                                      points[dd], game);
-
+                docall = bid.bidder14(deal, dd, uprk, upst, points[dd], game);
                 bidx = bid(docall, dd, cardname[cards[20]%4][cards[20]/4], upst);
 
                 potbid[0][dd] = bidx[3];
@@ -2029,16 +2091,8 @@ class Game {
             // first bidder
             // only need to proceed if previous players passed
             if (!bidyes) {
-                docall = bid.bidder21(playersuit[aa][bests[aa]][bests[aa]],
-                                      playersuit[aa][bests[aa]][3-bests[aa]],
-                                      right[aa][bests[aa]], left[aa][bests[aa]],
-                                      acet[aa][bests[aa]], aces[aa][bests[aa]],
-                                      kingt[aa][bests[aa]], upst, bidscore[aa][bests[aa]],
-                                      //summins[aa][bests[aa]], bests[(dealer+1)%4],
-                                      summins[aa][bests[aa]], bests[aa],
-                                      points[aa], game);
-
-                bidx = bid(docall, aa, bests[aa]);
+                docall = bid.bidder21(deal, aa, upst, uprk, points[aa], game);
+                bidx = bid(docall, aa, deal.bests[aa]);
 
                 potbid[1][aa] = bidx[3];
                 if (bidx[3] == 1) {
@@ -2077,16 +2131,9 @@ class Game {
             // second bidder
             // only need to proceed if previous players passed
             if (!bidyes) {
-                docall = bid.bidder22(playersuit[bb][bests[bb]][bests[bb]],
-                                      playersuit[bb][bests[bb]][3-bests[bb]],
-                                      right[bb][bests[bb]], left[bb][bests[bb]],
-                                      acet[bb][bests[bb]], aces[bb][bests[bb]],
-                                      kingt[bb][bests[bb]], upst, uprk,bidscore[bb][bests[bb]],
-                                      //summins[bb][bests[bb]], bests[(dealer+1)%4], points[bb],
-                                      summins[bb][bests[bb]], bests[bb], points[bb],
-                                      game);
+                docall = bid.bidder22(deal, bb, upst, uprk, points[bb], game);
+                bidx = bid(docall, bb, deal.bests[bb]);
 
-                bidx = bid(docall, bb, bests[bb]);
                 potbid[1][bb] = bidx[3];
                 if (bidx[3] == 1) {
                     bidwp[bb] = true;
@@ -2124,15 +2171,8 @@ class Game {
             // third bidder
             // only need to proceed if previous players passed
             if (!bidyes) {
-                docall = bid.bidder23(playersuit[cc][bests[cc]][bests[cc]],
-                                      right[cc][bests[cc]], left[cc][bests[cc]],
-                                      acet[cc][bests[cc]], aces[cc][bests[cc]],
-                                      kingt[cc][bests[cc]], upst, uprk,
-                                      bidscore[cc][bests[cc]], summins[cc][bests[cc]],
-                                      //bests[(dealer+1)%4], points[cc], game);
-                                      bests[cc], points[cc], game);
-
-                bidx = bid(docall, cc, bests[cc]);
+                docall = bid.bidder23(deal, cc, upst, uprk, points[cc], game);
+                bidx = bid(docall, cc, deal.bests[cc]);
 
                 potbid[1][cc] = bidx[3];
                 if (bidx[3] == 1) {
@@ -2171,15 +2211,8 @@ class Game {
             // last bidder (dealer)
             // only need to proceed if previous players passed
             if (!bidyes) {
-                docall = bid.bidder24(playersuit[dd][bests[dd]][bests[dd]],
-                                      playersuit[dd][bests[dd]][3-bests[dd]],
-                                      right[dd][bests[dd]], left[dd][bests[dd]],
-                                      acet[dd][bests[dd]], upst, uprk,
-                                      bidscore[dd][bests[dd]], summins[dd][bests[dd]],
-                                      //bests[(dealer+1)%4], points[dd], game);
-                                      bests[dd], points[dd], game);
-
-                bidx = bid(docall, dd, bests[dd]);
+                docall = bid.bidder24(deal, dd, upst, uprk, points[dd], game);
+                bidx = bid(docall, dd, deal.bests[dd]);
 
                 potbid[1][dd] = bidx[3];
                 if (bidx[3] == 1) {
