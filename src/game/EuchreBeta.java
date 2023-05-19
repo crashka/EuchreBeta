@@ -1812,20 +1812,6 @@ class Game {
             int[] bidx = new int[4]; // results of bidding method which gives lone, declarer and fintp for each bid
             int[][] potbid = new int[2][4]; // bidding for [round][player; 0 = pass, 1 = wp, 2 = alone
 
-            int[][] right = deal.right;
-            int[][] left = deal.left;
-            int[][] acet = deal.acet;
-            int[][] kingt = deal.kingt;
-            int[][] aces = deal.aces;
-            int[][][] playersuit = deal.playersuit;
-            double[][] bidscore = deal.bidscore;
-            double[][] summins = deal.summins;
-            int[] bests = deal.bests;
-            double[] bestc = deal.bestc;
-            double[][][] max = deal.max;
-            double[][][] nax = deal.nax;
-            int[] vd = deal.vd;
-
             //  List human player's cards
             System.out.println("\n" + "South's cards:");
             for (int i=0; i<5; i++) {
@@ -2236,9 +2222,14 @@ class Game {
             deal.preparePlay(fintp, lone, round);
 
             int[][][] own = deal.own;
+            int[][] right = deal.right;
+            int[][] left = deal.left;
+            int[][] acet = deal.acet;
+            int[][] kingt = deal.kingt;
             int[][] ace = deal.ace;
             int[][] king = deal.king;
             int[][] queen = deal.queen;
+            int[][] aces = deal.aces;
             int[][] length = deal.length;
             int[][] playst = deal.playst;
             int[][] boss = deal.boss;
@@ -2249,6 +2240,7 @@ class Game {
             int[][] solo = deal.solo;
             int[][] hint = deal.hint;
             int[] sit = deal.sit;
+            int[] vd = deal.vd;
             int[] ss = deal.ss;
             int[] cksuit = deal.cksuit;
 
