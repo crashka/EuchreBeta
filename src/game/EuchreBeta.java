@@ -107,14 +107,21 @@ public class EuchreBeta {
         return cards;
     }
 
-    // *** Method "main", usage: java -cp . EuchreBeta.java [<randomSeed>]
+    // *** Method "main", usage: java -cp . EuchreBeta.java [<randomSeed> [<nGames>]]
     public static void main(String args[]) throws InterruptedException {
+        int nGames = 1;
         if (args.length > 0) {
             rgen.setSeed(Long.parseLong(args[0]));
+
+            if (args.length > 1) {
+                nGames = Integer.parseInt(args[1]);
+            }
         }
 
-        Game game = new Game();
-        game.go();
+        for (int i=0; i<nGames; i++) {
+            Game game = new Game();
+            game.go();
+        }
     }
 }
 
@@ -405,7 +412,6 @@ class BidStrategy {
 
     // *** Method "bidder21" for determining 2nd round bid of 1st player to bid ***
     public int bidder21(Deal deal, int aa, int upst, int uprk, int pts, int game) {
-        //int bests   = deal.bests[(dealer+1)%4];
         int bests   = deal.bests[aa];
         int psup    = deal.playersuit[aa][bests][bests];
         int psnx    = deal.playersuit[aa][bests][3-bests];
@@ -491,7 +497,6 @@ class BidStrategy {
 
     // *** Method "bidder22" for determining 2nd round bid of 2nd player to bid ***
     public int bidder22(Deal deal, int bb, int upst, int uprk, int pts, int game) {
-        //int bests   = deal.bests[(dealer+1)%4];
         int bests   = deal.bests[bb];
         int psup    = deal.playersuit[bb][bests][bests];
         int psnx    = deal.playersuit[bb][bests][3-bests];
@@ -612,7 +617,6 @@ class BidStrategy {
 
     // *** Method "bidder23" for determining 2nd round bid of 3rd player to bid ***
     public int bidder23(Deal deal, int cc, int upst, int uprk, int pts, int game) {
-        //int bests   = deal.bests[(dealer+1)%4];
         int bests   = deal.bests[cc];
         int psup    = deal.playersuit[cc][bests][bests];
         int right   = deal.right[cc][bests];
@@ -704,7 +708,6 @@ class BidStrategy {
 
     // *** Method "bidder24" for determining 2nd round bid of 4th player to bid ***
     public int bidder24(Deal deal, int dd, int upst, int uprk, int pts, int game) {
-        //int bests   = deal.bests[(dealer+1)%4];
         int bests   = deal.bests[dd];
         int psup    = deal.playersuit[dd][bests][bests];
         int psnx    = deal.playersuit[dd][bests][3-bests];
@@ -843,7 +846,7 @@ class BidStrategy {
         }
         if (seat == 6 && psuit[3-cards[20]%4] == 1) {
             // 3rd seat going alone, dealer has just one card in next suit
-            for (int i=0; i<5; i++) {
+            for (int i=0+dealer*5; i<5+dealer*5; i++) {
                 if (cards[i]%4 == 3-cards[20]%4 && cards[i]/4 != 2) { // next suit but NOT L
                     swap = i; // void dealer in next suit; partner will lead next suit if can
                 }
@@ -851,7 +854,7 @@ class BidStrategy {
         }
         if (seat == 0 && psuit[cards[20]%4] == 2 && aced == 2 && kingd == 1) {
             // dealer bidding alone with 3 trump, holding A and A-K off-suit
-            for (int i=0; i<5; i++) { // dealer's cards
+            for (int i=0+dealer*5; i<5+dealer*5; i++) { // dealer's cards
                 if (cards[i]/4 == 5 && psuit[cards[i]%4] == 1) {
                     swap = i; // discard singleton ace
                 }
@@ -1913,6 +1916,7 @@ class Game {
             }
             if (bidx[3] == 2) {
                 bidalone[aa] = true;
+                bidyes = true;
                 wpalone = true;
             }
             if (bidx[3] > 0) { // some bid made
@@ -1947,6 +1951,7 @@ class Game {
                 }
                 if (bidx[3] == 2) {
                     bidalone[bb] = true;
+                    bidyes = true;
                     wpalone = true;
                 }
                 if (bidx[3] > 0) { // some bid made
@@ -1982,6 +1987,7 @@ class Game {
                 }
                 if (bidx[3] == 2) {
                     bidalone[cc] = true;
+                    bidyes = true;
                     wpalone = true;
                 }
                 if (bidx[3] > 0) { // some bid made
@@ -2017,6 +2023,7 @@ class Game {
                 }
                 if (bidx[3] == 2) {
                     bidalone[dd] = true;
+                    bidyes = true;
                     wpalone = true;
                 }
                 if (bidx[3] > 0) { // some bid made
@@ -2066,6 +2073,7 @@ class Game {
                 }
                 if (bidx[3] == 2) {
                     bidalone[aa] = true;
+                    bidyes = true;
                     wpalone = true;
                 }
                 if (bidx[3] > 0) { // some bid made
@@ -2106,6 +2114,7 @@ class Game {
                 }
                 if (bidx[3] == 2) {
                     bidalone[bb] = true;
+                    bidyes = true;
                     wpalone = true;
                 }
                 if (bidx[3] > 0) { // some bid made
@@ -2146,6 +2155,7 @@ class Game {
                 }
                 if (bidx[3] == 2) {
                     bidalone[cc] = true;
+                    bidyes = true;
                     wpalone = true;
                 }
                 if (bidx[3] > 0) { // some bid made
@@ -2186,6 +2196,7 @@ class Game {
                 }
                 if (bidx[3] == 2) {
                     bidalone[dd] = true;
+                    bidyes = true;
                     wpalone = true;
                 }
                 if (bidx[3] > 0) { // some bid made
