@@ -855,7 +855,7 @@ public class EuchreBeta {
         }
         if (seat == 6 && psuit[3-cards[20]%4] == 1) {
             // 3rd seat going alone, dealer has just one card in next suit
-            for (int i=0; i<5; i++) {
+            for (int i=0+dealer*5; i<5+dealer*5; i++) {
                 if (cards[i]%4 == 3-cards[20]%4 && cards[i]/4 != 2) { // next suit but NOT L
                     swap = i; // void dealer in next suit; partner will lead next suit if can
                 }
@@ -863,7 +863,7 @@ public class EuchreBeta {
         }
         if (seat == 0 && psuit[cards[20]%4] == 2 && aced == 2 && kingd == 1) {
             // dealer bidding alone with 3 trump, holding A and A-K off-suit
-            for (int i=0; i<5; i++) { // dealer's cards
+            for (int i=0+dealer*5; i<5+dealer*5; i++) { // dealer's cards
                 if (cards[i]/4 == 5 && psuit[cards[i]%4] == 1) {
                     swap = i; // discard singleton ace
                 }
@@ -1631,11 +1631,18 @@ public class EuchreBeta {
     }
 
     public static void main(String args[]) throws InterruptedException {
+        int nGames = 1;
         if (args.length > 0) {
             rgen.setSeed(Long.parseLong(args[0]));
+
+            if (args.length > 1) {
+                nGames = Integer.parseInt(args[1]);
+            }
         }
 
-        EuchreBeta.go();
+        for (int i=0; i<nGames; i++) {
+            EuchreBeta.go();
+        }
     }
 
     public static void go() {
@@ -1719,7 +1726,7 @@ public class EuchreBeta {
             //  Create variables to help calculate trump score for each player / suit (0 = spade, 1 = heart,
             // 2 = diamond, 3 = club)
             double bidscore[][] = new double[5][4];
-            double[][][] cv = new double[2][4][6]; // assign values to cards [lead or toss][suit][rank]
+            double[][][] cv = new double[2][4][8]; // assign values to cards [lead or toss][suit][rank]
 
             //  Initialize counter for who is dealer (starts with South player at 0) and bidding position
             int win1 = 5;  // winner of 1st trick
@@ -2010,6 +2017,7 @@ public class EuchreBeta {
             }
             if (bidx[3] == 2) {
                 bidalone[aa] = true;
+                bidyes = true;
                 wpalone = true;
             }
             if (bidx[3] > 0) { // some bid made
@@ -2047,6 +2055,7 @@ public class EuchreBeta {
                 }
                 if (bidx[3] == 2) {
                     bidalone[bb] = true;
+                    bidyes = true;
                     wpalone = true;
                 }
                 if (bidx[3] > 0) { // some bid made
@@ -2084,6 +2093,7 @@ public class EuchreBeta {
                 }
                 if (bidx[3] == 2) {
                     bidalone[cc] = true;
+                    bidyes = true;
                     wpalone = true;
                 }
                 if (bidx[3] > 0) { // some bid made
@@ -2122,6 +2132,7 @@ public class EuchreBeta {
                 }
                 if (bidx[3] == 2) {
                     bidalone[dd] = true;
+                    bidyes = true;
                     wpalone = true;
                 }
                 if (bidx[3] > 0) { // some bid made
@@ -2169,7 +2180,8 @@ public class EuchreBeta {
             if (!bidyes) {
                 docall = bidder21(playersuit[aa][bests[aa]][bests[aa]], playersuit[aa][bests[aa]][3-bests[aa]],
                                   right[aa][bests[aa]], left[aa][bests[aa]], acet[aa][bests[aa]], aces[aa][bests[aa]],
-                                  kingt[aa][bests[aa]], upst, bidscore[aa][bests[aa]], summins[aa][bests[aa]], bests[(dealer+1)%4],
+                                  //kingt[aa][bests[aa]], upst, bidscore[aa][bests[aa]], summins[aa][bests[aa]], bests[(dealer+1)%4],
+                                  kingt[aa][bests[aa]], upst, bidscore[aa][bests[aa]], summins[aa][bests[aa]], bests[aa],
                                   points[aa], game);
 
                 bidx = bid(docall, aa, bests[aa]);
@@ -2181,6 +2193,7 @@ public class EuchreBeta {
                 }
                 if (bidx[3] == 2) {
                     bidalone[aa] = true;
+                    bidyes = true;
                     wpalone = true;
                 }
                 if (bidx[3] > 0) { // some bid made
@@ -2214,7 +2227,8 @@ public class EuchreBeta {
                 docall = bidder22(playersuit[bb][bests[bb]][bests[bb]], playersuit[bb][bests[bb]][3-bests[bb]],
                                   right[bb][bests[bb]], left[bb][bests[bb]], acet[bb][bests[bb]], aces[bb][bests[bb]],
                                   kingt[bb][bests[bb]], upst, uprk,bidscore[bb][bests[bb]], summins[bb][bests[bb]],
-                                  bests[(dealer+1)%4], points[bb], game);
+                                  //bests[(dealer+1)%4], points[bb], game);
+                                  bests[bb], points[bb], game);
 
                 bidx = bid(docall, bb, bests[bb]);
                 potbid[1][bb] = bidx[3];
@@ -2224,6 +2238,7 @@ public class EuchreBeta {
                 }
                 if (bidx[3] == 2) {
                     bidalone[bb] = true;
+                    bidyes = true;
                     wpalone = true;
                 }
                 if (bidx[3] > 0) { // some bid made
@@ -2256,7 +2271,8 @@ public class EuchreBeta {
             if (!bidyes) {
                 docall = bidder23(playersuit[cc][bests[cc]][bests[cc]], right[cc][bests[cc]], left[cc][bests[cc]],
                                   acet[cc][bests[cc]], aces[cc][bests[cc]], kingt[cc][bests[cc]], upst, uprk,
-                                  bidscore[cc][bests[cc]], summins[cc][bests[cc]], bests[(dealer+1)%4], points[cc], game);
+                                  //bidscore[cc][bests[cc]], summins[cc][bests[cc]], bests[(dealer+1)%4], points[cc], game);
+                                  bidscore[cc][bests[cc]], summins[cc][bests[cc]], bests[cc], points[cc], game);
 
                 bidx = bid(docall, cc, bests[cc]);
 
@@ -2267,6 +2283,7 @@ public class EuchreBeta {
                 }
                 if (bidx[3] == 2) {
                     bidalone[cc] = true;
+                    bidyes = true;
                     wpalone = true;
                 }
                 if (bidx[3] > 0) { // some bid made
@@ -2299,7 +2316,8 @@ public class EuchreBeta {
             if (!bidyes) {
                 docall = bidder24(playersuit[dd][bests[dd]][bests[dd]], playersuit[dd][bests[dd]][3-bests[dd]],
                                   right[dd][bests[dd]], left[dd][bests[dd]], acet[dd][bests[dd]], upst, uprk,
-                                  bidscore[dd][bests[dd]], summins[dd][bests[dd]], bests[(dealer+1)%4], points[dd], game);
+                                  //bidscore[dd][bests[dd]], summins[dd][bests[dd]], bests[(dealer+1)%4], points[dd], game);
+                                  bidscore[dd][bests[dd]], summins[dd][bests[dd]], bests[dd], points[dd], game);
 
                 bidx = bid(docall, dd, bests[dd]);
 
@@ -2310,6 +2328,7 @@ public class EuchreBeta {
                 }
                 if (bidx[3] == 2) {
                     bidalone[dd] = true;
+                    bidyes = true;
                     wpalone = true;
                 }
                 if (bidx[3] > 0) { // some bid made
@@ -3029,7 +3048,7 @@ public class EuchreBeta {
 
                 if (lone == bb) { // if 2nd seat going alone (dealer skipped), pretend dealer played 9 of led suit
                     m14 = m11;
-                    n14 = 9;
+                    n14 = 0;
                     v14 = v13-1;
                 } else {
                     if (playst[dd][m11] == 0) { // void in led suit
@@ -3769,7 +3788,7 @@ public class EuchreBeta {
 
                 if (lone == bb2) {
                     m24 = m22;  // if partner going alone, skip me, pretend I played 9 of led suit
-                    n24 = 9;
+                    n24 = 0;
                     v24 = v23-1;
                 } else { // partner not going alone
                     if (playst[dd2][m21] == 0) { // void in led suit
@@ -4394,7 +4413,7 @@ public class EuchreBeta {
 
                 if (lone == bb3) {
                     m34 = m32;  // if partner going alone, skip me, pretend I played 9 of led suit
-                    n34 = 9;
+                    n34 = 0;
                     v34 = v33-1;
                 } else { // partner not going alone
                     if (playst[dd3][m31] == 0) { // void in led suit
