@@ -128,14 +128,8 @@ public class EuchreBeta {
 
 class BidStrategy {
 
-    Deal deal;
-
-    public BidStrategy(Deal deal) {
-        this.deal = deal;
-    }
-
     // *** Method "bidder11" for determining 1st round bid of 1st player to bid ***
-    public int bidder11(Deal deal, int aa, int uprk, int upst, int pts, int game) {
+    static public int bidder11(Deal deal, int aa, int upst, int uprk, int pts, int game) {
         int psup     = deal.playersuit[aa][upst][upst];
         int psnx     = deal.playersuit[aa][upst][3-upst];
         int psnxnx   = deal.playersuit[aa][3-upst][3-upst];
@@ -239,7 +233,7 @@ class BidStrategy {
     }
 
     // *** Method "bidder12" for determining 1st round bid of 2nd player to bid ***
-    public int bidder12(Deal deal, int bb, int uprk, int upst, int pts, int game) {
+    static public int bidder12(Deal deal, int bb, int upst, int uprk, int pts, int game) {
         int psup    = deal.playersuit[bb][upst][upst];
         int psnx    = deal.playersuit[bb][upst][3-upst];
         int right   = deal.right[bb][upst];
@@ -312,7 +306,7 @@ class BidStrategy {
     }
 
     // *** Method "bidder13" for determining 1st round bid of 3rd player to bid ***
-    public int bidder13(Deal deal, int cc, int uprk, int upst, int pts, int game) {
+    static public int bidder13(Deal deal, int cc, int upst, int uprk, int pts, int game) {
         int psup    = deal.playersuit[cc][upst][upst];
         int psnx    = deal.playersuit[cc][upst][3-upst];
         int right   = deal.right[cc][upst];
@@ -358,7 +352,7 @@ class BidStrategy {
     }
 
     // *** Method "bidder14" for determining 1st round bid of 4th player to bid ***
-    public int bidder14(Deal deal, int dd, int uprk, int upst, int pts, int game) {
+    static public int bidder14(Deal deal, int dd, int upst, int uprk, int pts, int game) {
         int psup    = deal.playersuit[dd][upst][upst];
         int psnx    = deal.playersuit[dd][upst][3-upst];
         int right   = deal.right[dd][upst];
@@ -417,7 +411,7 @@ class BidStrategy {
     }
 
     // *** Method "bidder21" for determining 2nd round bid of 1st player to bid ***
-    public int bidder21(Deal deal, int aa, int upst, int uprk, int pts, int game) {
+    static public int bidder21(Deal deal, int aa, int upst, int uprk, int pts, int game) {
         int bests   = deal.bests[aa];
         int psup    = deal.playersuit[aa][bests][bests];
         int psnx    = deal.playersuit[aa][bests][3-bests];
@@ -502,7 +496,7 @@ class BidStrategy {
     }
 
     // *** Method "bidder22" for determining 2nd round bid of 2nd player to bid ***
-    public int bidder22(Deal deal, int bb, int upst, int uprk, int pts, int game) {
+    static public int bidder22(Deal deal, int bb, int upst, int uprk, int pts, int game) {
         int bests   = deal.bests[bb];
         int psup    = deal.playersuit[bb][bests][bests];
         int psnx    = deal.playersuit[bb][bests][3-bests];
@@ -622,7 +616,7 @@ class BidStrategy {
     }
 
     // *** Method "bidder23" for determining 2nd round bid of 3rd player to bid ***
-    public int bidder23(Deal deal, int cc, int upst, int uprk, int pts, int game) {
+    static public int bidder23(Deal deal, int cc, int upst, int uprk, int pts, int game) {
         int bests   = deal.bests[cc];
         int psup    = deal.playersuit[cc][bests][bests];
         int right   = deal.right[cc][bests];
@@ -713,7 +707,7 @@ class BidStrategy {
     }
 
     // *** Method "bidder24" for determining 2nd round bid of 4th player to bid ***
-    public int bidder24(Deal deal, int dd, int upst, int uprk, int pts, int game) {
+    static public int bidder24(Deal deal, int dd, int upst, int uprk, int pts, int game) {
         int bests   = deal.bests[dd];
         int psup    = deal.playersuit[dd][bests][bests];
         int psnx    = deal.playersuit[dd][bests][3-bests];
@@ -1780,9 +1774,6 @@ class Game {
             Deal deal = new Deal(cards, dealer);
             deal.prepareBid();
 
-            BidStrategy bid = new BidStrategy(deal);
-            PlayStrategy play = new PlayStrategy(deal);
-
             int[] bidx = new int[4]; // results of bidding method which gives lone, declarer and fintp for each bid
             int[][] potbid = new int[2][4]; // bidding for [round][player; 0 = pass, 1 = wp, 2 = alone
 
@@ -1824,52 +1815,6 @@ class Game {
                 bidalone[i] = false;
             }
 
-            // use booleans to see if human bidder selects trump, round 2
-            boolean picks = false;
-            boolean pickh = false;
-            boolean pickd = false;
-            boolean pickc = false;
-
-            // use booleans to see if human dealer has swapped a card with turn
-            boolean swap0 = false;
-            boolean swap1 = false;
-            boolean swap2 = false;
-            boolean swap3 = false;
-            boolean swap4 = false;
-            boolean swapper = false;
-
-            // use booleans to see if thread 5 has finished each trick
-            boolean trick1 = false;
-            boolean trick2 = false;
-            boolean trick3 = false;
-            boolean trick4 = false;
-            boolean trick5 = false;
-            boolean stk1 = false; // don't update trick score until everyone has played
-            boolean stk2 = false;
-            boolean stk3 = false;
-            boolean stk4 = false;
-            boolean stk5 = false;
-
-            // use booleans to show which card human has played
-            boolean pc11 = false;
-            boolean pc12 = false;
-            boolean pc13 = false;
-            boolean pc14 = false;
-            boolean pc15 = false;
-            boolean pc21 = false;
-            boolean pc22 = false;
-            boolean pc23 = false;
-            boolean pc24 = false;
-            boolean pc31 = false;
-            boolean pc32 = false;
-            boolean pc33 = false;
-            boolean pc41 = false;
-            boolean pc42 = false;
-            boolean pcdone1 = false;
-            boolean pcdone2 = false;
-            boolean pcdone3 = false;
-            boolean pcdone4 = false;
-
             // game and trick tally table
             int tns = 0; // N/S tricks
             int tew = 0; // E/W tricks
@@ -1877,8 +1822,8 @@ class Game {
             // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
             // first bidder
-            docall = bid.bidder11(deal, aa, uprk, upst, points[aa], game);
-            bidx = bid1(docall, aa, cardname[cards[20]%4][cards[20]/4], upst);
+            docall = deal.bidder11(points[aa], game);
+            bidx = bid1(docall%10, aa, cardname[upst][uprk], upst);
 
             potbid[0][aa] = bidx[3];
             if (bidx[3] == 1) {
@@ -1912,8 +1857,8 @@ class Game {
             // second bidder
             // only need to proceed if previous players passed
             if (!bidyes) {
-                docall = bid.bidder12(deal, bb, uprk, upst, points[bb], game);
-                bidx = bid1(docall, bb, cardname[cards[20]%4][cards[20]/4], upst);
+                docall = deal.bidder12(points[bb], game);
+                bidx = bid1(docall%10, bb, cardname[upst][uprk], upst);
 
                 potbid[0][bb] = bidx[3];
                 if (bidx[3] == 1) {
@@ -1948,8 +1893,8 @@ class Game {
             // third bidder
             // only need to proceed if previous players passed
             if (!bidyes) {
-                docall = bid.bidder13(deal, cc, uprk, upst, points[cc], game);
-                bidx = bid1(docall, cc, cardname[cards[20]%4][cards[20]/4], upst);
+                docall = deal.bidder13(points[cc], game);
+                bidx = bid1(docall%10, cc, cardname[upst][uprk], upst);
 
                 potbid[0][cc] = bidx[3];
                 if (bidx[3] == 1) {
@@ -1984,8 +1929,8 @@ class Game {
             // dealer
             // only need to proceed if previous players passed
             if (!bidyes) {
-                docall = bid.bidder14(deal, dd, uprk, upst, points[dd], game);
-                bidx = bid1(docall, dd, cardname[cards[20]%4][cards[20]/4], upst);
+                docall = deal.bidder14(points[dd], game);
+                bidx = bid1(docall%10, dd, cardname[upst][uprk], upst);
 
                 potbid[0][dd] = bidx[3];
                 if (bidx[3] == 1) {
@@ -2029,8 +1974,8 @@ class Game {
             // first bidder
             // only need to proceed if previous players passed
             if (!bidyes) {
-                docall = bid.bidder21(deal, aa, upst, uprk, points[aa], game);
-                bidx = bid2(docall, aa, deal.bests[aa]);
+                docall = deal.bidder21(points[aa], game);
+                bidx = bid2(docall%10, aa, docall/10);
 
                 potbid[1][aa] = bidx[3];
                 if (bidx[3] == 1) {
@@ -2070,8 +2015,8 @@ class Game {
             // second bidder
             // only need to proceed if previous players passed
             if (!bidyes) {
-                docall = bid.bidder22(deal, bb, upst, uprk, points[bb], game);
-                bidx = bid2(docall, bb, deal.bests[bb]);
+                docall = deal.bidder22(points[bb], game);
+                bidx = bid2(docall%10, bb, docall/10);
 
                 potbid[1][bb] = bidx[3];
                 if (bidx[3] == 1) {
@@ -2111,8 +2056,8 @@ class Game {
             // third bidder
             // only need to proceed if previous players passed
             if (!bidyes) {
-                docall = bid.bidder23(deal, cc, upst, uprk, points[cc], game);
-                bidx = bid2(docall, cc, deal.bests[cc]);
+                docall = deal.bidder23(points[cc], game);
+                bidx = bid2(docall%10, cc, docall/10);
 
                 potbid[1][cc] = bidx[3];
                 if (bidx[3] == 1) {
@@ -2152,8 +2097,8 @@ class Game {
             // last bidder (dealer)
             // only need to proceed if previous players passed
             if (!bidyes) {
-                docall = bid.bidder24(deal, dd, upst, uprk, points[dd], game);
-                bidx = bid2(docall, dd, deal.bests[dd]);
+                docall = deal.bidder24(points[dd], game);
+                bidx = bid2(docall%10, dd, docall/10);
 
                 potbid[1][dd] = bidx[3];
                 if (bidx[3] == 1) {
@@ -3537,6 +3482,54 @@ class Deal {
         }
     }
 
+    public int bidder11(int pts, int game) {
+        int call = BidStrategy.bidder11(this, aa, upst, uprk, pts, game);
+        int suit = upst;
+        return call + suit*10;
+    }
+
+    public int bidder12(int pts, int game) {
+        int call = BidStrategy.bidder12(this, bb, upst, uprk, pts, game);
+        int suit = upst;
+        return call + suit*10;
+    }
+
+    public int bidder13(int pts, int game) {
+        int call = BidStrategy.bidder13(this, cc, upst, uprk, pts, game);
+        int suit = upst;
+        return call + suit*10;
+    }
+
+    public int bidder14(int pts, int game) {
+        int call = BidStrategy.bidder14(this, dd, upst, uprk, pts, game);
+        int suit = upst;
+        return call + suit*10;
+    }
+
+    public int bidder21(int pts, int game) {
+        int call = BidStrategy.bidder21(this, aa, upst, uprk, pts, game);
+        int suit = bests[aa];
+        return call + suit*10;
+    }
+
+    public int bidder22(int pts, int game) {
+        int call = BidStrategy.bidder22(this, bb, upst, uprk, pts, game);
+        int suit = bests[bb];
+        return call + suit*10;
+    }
+
+    public int bidder23(int pts, int game) {
+        int call = BidStrategy.bidder23(this, cc, upst, uprk, pts, game);
+        int suit = bests[cc];
+        return call + suit*10;
+    }
+
+    public int bidder24(int pts, int game) {
+        int call = BidStrategy.bidder24(this, dd, upst, uprk, pts, game);
+        int suit = bests[dd];
+        return call + suit*10;
+    }
+
     // *** Method "preparePlay" for initializing variables used in playing ***
     public void preparePlay(int declarer, int fintp, int lone, int round) {
 
@@ -3702,9 +3695,9 @@ class Deal {
     }
 
     // *** Method "playfirst" for play of cards ***
-    int playfirst(int play, int fintp, int hitrump, int sectrump, int lotrump, int lead,
-                  int maxsuit, int minsuit, int suitace, int worsts, int worstr, int who,
-                  int slength, int cards[]) {
+    static int playfirst(int play, int fintp, int hitrump, int sectrump, int lotrump, int lead,
+                         int maxsuit, int minsuit, int suitace, int worsts, int worstr, int who,
+                         int slength, int cards[]) {
         int cardplay = -1;
         int m = -1;
         int n = -1;
