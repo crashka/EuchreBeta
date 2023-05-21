@@ -128,6 +128,12 @@ public class EuchreBeta {
 
 class BidStrategy {
 
+    Deal deal;
+
+    public BidStrategy(Deal deal) {
+        this.deal = deal;
+    }
+
     // *** Method "bidder11" for determining 1st round bid of 1st player to bid ***
     public int bidder11(Deal deal, int aa, int uprk, int upst, int pts, int game) {
         int psup     = deal.playersuit[aa][upst][upst];
@@ -767,7 +773,7 @@ class BidStrategy {
     }
 
     // *** Method "swapcard" to determine card dealer should swap, if 1st round bid ***
-    public int swapcard(int cards[], int seat, int dealer) {
+    public static int swapcard(int cards[], int seat, int dealer) {
         // seat 0 = dealer alone; seat 1 = dealer wp; seat 2 = 1st seat alone, ...
         int aced = 0; // number of off-suit aces held by dealer
         int kingd = 0; // number of off-suit kings held by dealer
@@ -864,7 +870,7 @@ class BidStrategy {
     }
 
     // *** Method "trump" to determine bidscore for each player / trump suit ***
-    public double trump(int cards[], int post, int tsuit, int turns, int turnr) {
+    public static double trump(int cards[], int post, int tsuit, int turns, int turnr) {
         // input player's cards and seat, trump suit, turn card suit and turn card rank
         double bscore = 0;
         double mx[] = new double[4]; // maxsuit for each suit
@@ -1112,10 +1118,17 @@ class BidStrategy {
 
 class PlayStrategy {
 
+    Deal deal;
+
+    public PlayStrategy(Deal deal) {
+        this.deal = deal;
+    }
+
     // *** Method "calc" to calculate values of cv[lead][][] and cv[toss][][] ***
-    double[][][] calc(int cards[], int fintp, int own[][][], int playst[][], double max[][][],
-                      double nax[][][], int lone, int dealer) {
-        double[][] discard = new double[][] {{10,11,0,12,13,14,15,16},{.71,.82,0,.91,.93,1.15,0,0},
+    static double[][][] calc(int cards[], int fintp, int own[][][], int playst[][],
+                             double max[][][], double nax[][][], int lone, int dealer) {
+        double[][] discard = new double[][] {{10,11,0,12,13,14,15,16},
+                                             {.71,.82,0,.91,.93,1.15,0,0},
                                              {.7,.8,.84,.9,.92,1.2,0,0}};
         // assign set values for certain cards
         double[][][] cvtemp = new double[2][4][8];
@@ -1641,9 +1654,6 @@ class Game {
     int[] cards = new int[28];        // 24 cards + 4 placeholders for suit images
     String cardname[][] = new String[4][8];
 
-    BidStrategy bid = new BidStrategy();
-    PlayStrategy play = new PlayStrategy();
-
     // *** Method "bid" for declaring bid, first bidding round ***
     int[] bid1(int docall, int dlr, String cname, int turns) {
         int bidtest[] = {-1,-1,4,0}; // lone, declarer, trump suit, bid
@@ -1684,49 +1694,6 @@ class Game {
             System.out.println(position[dlr] + " passes" + "\n");
         }
         return bidtest;
-    }
-
-    // *** Method "playfirst" for play of cards ***
-    int playfirst(int play, int fintp, int hitrump, int sectrump, int lotrump, int lead,
-                  int maxsuit, int minsuit, int suitace, int worsts, int worstr, int who,
-                  int slength, int cards[]) {
-        int cardplay = -1;
-        int m = -1;
-        int n = -1;
-        // values of play1: 0 = high trump; 1 = second high trump; 2 = low trump;
-        // 3 = maxsuit; 4 = minsuit; 5 = best A; 6 = worst card (default)
-        if (play == 0) {
-            m = fintp;
-            n = hitrump;
-        } else if (play == 1) {
-            m = fintp;
-            n = sectrump;
-        } else if (play == 2) {
-            m = fintp;
-            n = lotrump;
-        } else if (play == 3) {
-            if (lead == -1) { // **can also mean lead same suit!
-                m = minsuit;
-            } else {
-                m = lead;
-            }
-            n = maxsuit;
-        } else if (play == 4) {
-            m = lead;
-            n = minsuit;
-        } else if (play == 5 && suitace != -1) {
-            if (slength == -1) {
-                n = sectrump;
-            } else {
-                n = 5;
-            }
-            m = suitace;
-        } else { // play worst card
-            m = worsts;
-            n = worstr;
-        }
-        cardplay = m + n*10;
-        return cardplay;
     }
 
     // *** Method "wintrick" to tally tricks won ***
@@ -1774,6 +1741,7 @@ class Game {
             final int bb = (dealer+2)%4; // position of dealer's partner
             final int cc = (dealer+3)%4; // position before dealer
             final int dd = dealer; // dealer
+            final int[] pos = {aa, bb, cc, dd};
 
             // Reset trick count to zero
             for (int i=0; i<4; i++) {
@@ -1809,8 +1777,11 @@ class Game {
             final int upst = cards[20]%4; // suit of turned card
             final int uprk = cards[20]/4; // rank of turned card
 
-            Deal deal = new Deal(bid, play, cards, dealer);
+            Deal deal = new Deal(cards, dealer);
             deal.prepareBid();
+
+            BidStrategy bid = new BidStrategy(deal);
+            PlayStrategy play = new PlayStrategy(deal);
 
             int[] bidx = new int[4]; // results of bidding method which gives lone, declarer and fintp for each bid
             int[][] potbid = new int[2][4]; // bidding for [round][player; 0 = pass, 1 = wp, 2 = alone
@@ -2052,11 +2023,6 @@ class Game {
                 round = 1;
             }
 
-            //  if seat 2 didn't call lone AND some player declared, have dealer swap cards
-            if (lone != bb && declarer != -1) {
-                deal.doSwap(declarer, lone);
-            }
-
             // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
             //  second round of bidding, if necessary
 
@@ -2230,7 +2196,7 @@ class Game {
                 continue;
             }
 
-            deal.preparePlay(fintp, lone, round);
+            deal.preparePlay(declarer, fintp, lone, round);
 
             int[][][] own = deal.own;
             int[][] right = deal.right;
@@ -2266,180 +2232,44 @@ class Game {
             //  play out the hand
             // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
+            int m11 = -1, m12 = -1, m13 = -1, m14 = -1;
+            int n11 = -1, n12 = -1, n13 = -1, n14 = -1;
+            int v11 = -1, v12 = -1, v13 = -1, v14 = -1;
+            int m21 = -1, m22 = -1, m23 = -1, m24 = -1;
+            int n21 = -1, n22 = -1, n23 = -1, n24 = -1;
+            int v21 = -1, v22 = -1, v23 = -1, v24 = -1;
+            int m31 = -1, m32 = -1, m33 = -1, m34 = -1;
+            int n31 = -1, n32 = -1, n33 = -1, n34 = -1;
+            int v31 = -1, v32 = -1, v33 = -1, v34 = -1;
+            int m41 = -1, m42 = -1, m43 = -1, m44 = -1;
+            int n41 = -1, n42 = -1, n43 = -1, n44 = -1;
+            int v41 = -1, v42 = -1, v43 = -1, v44 = -1;
+            int m51 = -1, m52 = -1, m53 = -1, m54 = -1;
+            int n51 = -1, n52 = -1, n53 = -1, n54 = -1;
+            int v51 = -1, v52 = -1, v53 = -1, v54 = -1;
+
+            // one-based indexing for subscript match
+            int[] m1 = {-1, m11, m12, m13, m14};
+            int[] n1 = {-1, n11, n12, n13, n14};
+            int[] m2 = {-1, m21, m22, m23, m24};
+            int[] n2 = {-1, n21, n22, n23, n24};
+            int[] m3 = {-1, m31, m32, m33, m34};
+            int[] n3 = {-1, n31, n32, n33, n34};
+            int[] m4 = {-1, m41, m42, m43, m44};
+            int[] n4 = {-1, n41, n42, n43, n44};
+            int[] m5 = {-1, m51, m52, m53, m54};
+            int[] n5 = {-1, n51, n52, n53, n54};
+            int[] win = {-1, win1, win2, win3, win4, win5};
+
+            int cardplay;
+
             //  first to play is left of the dealer
             int wturn = 1; // trick 1
-            double p11 = 20;
-            double p11a = 20;
-            int m11 = -1;
-            int n11 = -1;
-            int v11 = -1;
-            int maxsuit = -1;
-            int minsuit = 20;
-            double playace = 0; // value of A played
-            int suitace = -1; // suit of A played
-            int hitrump = -1;
-            int sectrump = -1;
-            int lotrump = 8;
-            int worsts = -1; // worst suit
-            int worstr = -1; // worst rank
-            int worstsa = -1; // alternate worst suit
-            int worstra = -1; // alternate worst rank
-            int play1 = -1;
 
             if (lone != cc) { // partner in 3rd seat NOT going alone
-                win1 = aa;
-                for (int i=0; i<4; i++) { // establishes best ace to lead; not trump AND 5+ length suit
-                    if (own[aa][i][5] == aa && cv[0][i][5] > playace && i != fintp && length[aa][i] > 4 &&
-                        (i != cards[20]%4 || round == 0)) {
-                        playace = cv[0][i][5];
-                        suitace = i;
-                    }
-                }
-                for (int i=0; i<8; i++) {
-                    if (own[aa][fintp][i] == aa) {
-                        if (i > hitrump) {
-                            hitrump = i; // calculates rank of highest trump (0 - 7)
-                        }
-                        if (i < lotrump) {
-                            lotrump = i; // calculates rank of lowest trump (0 - 7)
-                        }
-                    }
-                }
-                for (int i=0; i<4; i++) {  // find lowest card from shortest suit (lowest cv[0] value)
-                    for (int j=0; j<6; j++) {
-                        if (p11 > cv[0][i][j] && cv[0][i][j] > 0 && own[aa][i][j] == aa) {
-                            p11 = cv[0][i][j];
-                            worsts = i;
-                            worstr = j;
-                        }
-                    }
-                }
-                for (int i=0; i<4; i++) {  // find 2nd lowest card from shortest suit (alternate cv[0])
-                    for (int j=0; j<8; j++) {
-                        if (p11a > cv[0][i][j] && cv[0][i][j] > 0 && own[aa][i][j] == aa && p11 < cv[0][i][j]) {
-                            p11a = cv[0][i][j];
-                            worstsa = i;
-                            worstra = j;
-                        }
-                    }
-                }
-                // if worst card in hand is in turned suit, and bid was made 2nd round, assign next worst card as worst card
-                if (worsts == upst && round == 1 && worsts != worstsa) {
-                    worsts = worstsa;
-                    worstr = worstra;
-                }
-
-                if (lone == aa && playst[aa][fintp] > 0) { // if going lone, lead highest trump (if have trump)
-                    play1 = 0;
-                } else if (lone == dd || lone == bb) { // if defending against lone
-                    if (aces[aa][fintp] > 1) { // if have more than one A, play one
-                        play1 = 5;
-                    } else { // else play worst card
-                        play1 = 6;
-                    }
-                } else if (declarer == cc) { // partner in 3rd seat is declarer
-                    if (hitrump > 5 || playst[aa][fintp] > 2) {
-                        // if have bower or 3+ trump, lead best trump
-                        play1 = 0;
-                    } else if (playst[aa][fintp] > 0) { // else lead worst trump
-                        play1 = 2;
-                    } else if (playace > 1.195) { // else lead a 'good A'
-                        play1 = 5;
-                    } else { // else lead worst card
-                        play1 = 6;
-                    }
-                } else if (declarer == aa) { // if declared w/ partner
-                    if (right[aa][fintp] + left[aa][fintp] == 2 &&
-                        (aces[aa][fintp] > 0 || playst[aa][fintp] > 2)) {
-                        // if have both bowers AND (an off-suit A OR 3+ trump), lead R
-                        play1 = 0;
-                    } else if (right[aa][fintp] == 1 && acet[aa][fintp] == 1 && kingt[aa][fintp] == 1) {
-                        // if have R + A + K of trump, lead R
-                        play1 = 0;
-                    } else if (left[aa][fintp] == 1 && acet[aa][fintp] == 1 && (aces[aa][fintp] > 0 ||
-                                                                                playst[aa][fintp] > 2)) { // if have L + A of trump AND (an off-A OR 3+ trump), lead L
-                        play1 = 0;
-                    } else if (left[aa][fintp] == 1 && playst[aa][fintp] == 2 && aces[aa][fintp] > 0 &&
-                               vd[aa] == 2 && round == 1) { // if have L-x of trump AND an off-A AND 2-suited, lead L
-                        play1 = 0;
-                    } else if (suitace != -1) {
-                        if (round == 0 && declarer == aa && right[aa][fintp] == 1 && playst[aa][fintp] == 2 &&
-                            (ace[aa][suitace] == 3 || (ace[aa][suitace] == 2 && own[aa][suitace][4] == aa))) {
-                            play1 = 0; // if round 1 AND declarer AND have R + another trump AND either (have A-x-x or A-K
-                            // off-suit), lead R, then A 2nd trick
-                            sit[0] = 1; // 1st special situation: will win this trick, should lead off-suit A 2nd trick
-                        }
-                    } else if (playst[aa][fintp] == 3 && round == 1 && right[aa][fintp] == 0) {
-                        // bid 2nd round with 3 trump AND don't have R
-                        if (playace > 0) { // lead an off-suit A if have one
-                            play1 = 5;
-                        } else if (uprk == 2) { // if R turned, lead high trump
-                            play1 = 0;
-                        } else { // else lead low trump
-                            play1 = 2;
-                        }
-                    } else if (aces[aa][fintp] > 0 && ((hitrump < 6 && playst[aa][fintp] > 1) || (fintp == 3-upst &&
-                                                                                                  (right[aa][fintp] + left[aa][fintp] == 1) && playst[aa][fintp] > 2))) {
-                        // if have an off-suit A AND (have 2+ non-bower trump OR [next is trump AND have at least three trump
-                        // headed by only one bower]), lead low trump
-                        play1 = 2;
-                    } else if (playst[aa][fintp] == 4) { // if have 4 trump, lead low trump
-                        play1 = 2;
-                    } else {
-                        play1 = 6;
-                    }
-                } else if (declarer == bb) { // if 2nd seat declared
-                    if (right[aa][fintp] + left[aa][fintp] == 2) {
-                        // if have both bowers, lead R
-                        play1 = 0;
-                        // if have 3+ trump AND R not turned, lead low trump
-                    } else if (uprk != 2 && playst[aa][fintp] > 2) {
-                        play1 = 2;
-                    } else if (uprk == 2 && vd[aa] == 0 && aces[aa][fintp] == 0 && hitrump < 4 &&
-                               playst[aa][fintp] == 1) { // if R is turn card AND are 4-suited AND have no aces AND
-                        // a single trump Q-, lead trump
-                        play1 = 0;
-                    } else if (playst[aa][fintp] == 2 && vd[aa] > 0 && aces[aa][fintp] > 0 &&
-                               suitace > -1) {
-                        // if have 2 trump AND are 2- or 3-suited AND have an off-suit Ace
-                        if (hitrump > 5) { // if have a bower, lead best Ace
-                            play1 = 5;
-                        } else { // else lead low trump
-                            play1 = 2;
-                        }
-                    } else if (playst[aa][fintp] == 2 && vd[aa] > 0 && aces[aa][fintp] == 0) {
-                        // if have 2 trump AND are 2- or 3-suited AND no off-suit Ace
-                        if (uprk == 2 || right[aa][fintp] == 1) { // if R turned OR have R, lead worst card
-                            play1 = 6;
-                        } else { // else lead low trump
-                            play1 = 2;
-                        }
-                    } else if (playace > 1.195) { // else lead a 'good A'
-                        play1 = 5;
-                    } else { // else lead worst card
-                        play1 = 6;
-                    }
-                } else if (declarer == dd) { // dealer declared
-                    if (playst[aa][fintp] == 2 && vd[aa] > 0 &&
-                        aces[aa][fintp] == 0 && hitrump < 4) { // have 2 trump AND 2- or 3-suited AND
-                        // have no Ace AND Q- is best trump, lead low trump
-                        play1 = 2;
-                    } else if (playace > 1.195) { // else lead a 'good A'
-                        play1 = 5;
-                    } else { // else lead worst card
-                        play1 = 6;
-                    }
-                }
-
-                // if leading a non-trump non-ace and have the A of that suit as well, lead the A instead
-                if (worsts == suitace && play1 == 6) {
-                    play1 = 5;
-                }
-
-                int cardplay = playfirst(play1, fintp, hitrump, sectrump, lotrump, m11, maxsuit, minsuit, suitace,
-                                         worsts, worstr, aa, 0, cards);
-                m11 = cardplay%10;
-                n11 = (cardplay/10)%10;
+                cardplay = deal.player11(m1, n1, null, null, pos, win, trick);
+                m1[1] = m11 = cardplay%10;
+                n1[1] = n11 = (cardplay/10)%10;
 
                 System.out.println("Player " + position[aa] + " leads the " + cardname[m11][n11] + "\n");
                 for (int i=0; i<4; i++) {
@@ -2462,144 +2292,24 @@ class Game {
                 } else {
                     v11 = n11;
                 }
+                win[1] = win1 = aa;
             }
 
             //  second to play, 1st trick
-            double p12 = 20;
-            play1 = -1;
-            int m12 = -1;
-            int n12 = -1;
-            int v12 = -1;
-            playace = 0;
-            suitace = -1;
-            maxsuit = -1; // highest
-            minsuit = 20; // lowest
-            hitrump = -1;
-            sectrump = -1;
-            lotrump = 8;
-            worsts = -1; // worst suit
-            worstr = -1; // worst rank
-
             if (lone == cc) {// 3rd seat going alone, assign m11 a temp value to avoid errors
-                m11 = 0;
+                m1[1] = m11 = 0;
             }
             if (lone == dd) {
-                m12 = m11;  // if dealer going alone, skip North, so assign same value to their 'play' as West
-                n12 = n11;
+                m1[2] = m12 = m11;  // if dealer going alone, skip North, so assign same value to their 'play' as West
+                n1[2] = n12 = n11;
                 v12 = v11-1;
             } else { // dealer NOT going alone
-                if (lone != cc && playst[bb][m11] == 0) { // void in led suit
-                    voids[bb][m11] = 1;
-                }
-                for (int i=0; i<4; i++) { // identify best ace
-                    if (own[bb][i][5] == bb && cv[0][i][5] > playace && i != fintp) {
-                        playace = cv[0][i][5];
-                        suitace = i;
-                    }
-                }
-                for (int i=0; i<4; i++) { // identify worst card
-                    for (int j=0; j<8; j++) {
-                        if (playst[bb][fintp] > 0) { // if have trump use cv[0][][] to determine worst card
-                            if (p12 > cv[0][i][j] && cv[0][i][j] > 0 && own[bb][i][j] == bb) {
-                                p12 = cv[0][i][j];
-                                worsts = i;
-                                worstr = j;
-                            }
-                        } else { // if void in trump, use 'cvtoss' to determine worst card
-                            if (p12 > cv[1][i][j] && cv[1][i][j] > 0 && own[bb][i][j] == bb) {
-                                p12 = cv[1][i][j];
-                                worsts = i;
-                                worstr = j;
-                            }
-                        }
-                    }
-                }
-                if (lone != cc) { // only do calculation if 3rd seat not going lone
-                    for (int j=0; j<8; j++) { // calculate highest and lowest of led suit
-                        if (own[bb][m11][j] == bb) {
-                            if (j > maxsuit) {
-                                maxsuit = j;
-                            }
-                            if (j < minsuit) {
-                                minsuit = j;
-                            }
-                        }
-                    }
-                }
-                for (int j=0; j<8; j++) { // calculate highest, second highest, and lowest trump
-                    if (own[bb][fintp][j] == bb) {
-                        if (hitrump == -1) {
-                            hitrump = j;
-                            sectrump = j;
-                        } else if (j > hitrump) {
-                            sectrump = hitrump;
-                            hitrump = j;
-                        }
-                        if (j < lotrump) {
-                            lotrump = j;
-                        }
-                    }
-                }
-
-                if (lone == bb && playst[bb][m11] == 0 && playst[bb][fintp] > 0) { // 2nd seat going alone
-                    // and can't follow suit but have trump
-                    play1 = 1;
-                } else if (lone == cc) { // 3rd seat going alone, so 2nd seat is first lead
-                    if (playst[bb][3-fintp] > 0) {
-                        worsts = 3-fintp;
-                        for (int i=0; i<8; i++) { // play highest of next suit (hopefully partner [dealer] is void and not declarer)
-                            if (own[bb][3-fintp][i] == bb) {
-                                worstr = i;
-                                play1 = 6; // special case: play 'worst card' but assign proper values
-                            }
-                        }
-                    } else if (aces[bb][fintp] > 1) { // have 2+ aces, then play one
-                        play1 = 5;
-                    } else { // otherwise play worst card
-                        play1 = 6;
-                    }
-                    m11 = worsts; // pretend West played North's worst suit (irrelevant)
-                    n11 = 0; // pretend West played a 9
-                } else if (playst[bb][m11] > 0) { // can follow suit
-                    if (fintp == upst && uprk == 2 && m11 == upst) { // trump led and know partner has R
-                        play1 = 4;
-                    } else if (maxsuit > n11) { // can beat lead
-                        play1 = 3;
-                    } else {
-                        play1 = 4;
-                    }
-                } else if (m11 != fintp && playst[bb][fintp] > 0) { // can't follow suit but can trump
-                    if (n11 < 4 && declarer == cc) { // if Q- led AND 3rd seat declarer, trump with 2nd highest
-                        play1 = 1;
-                    } else if (declarer == dd && hitrump == 7 && playst[bb][fintp] == 1 && rank[0][0] < 5) {
-                        play1 = 6; // if dealer declared AND have only one trump, R, AND lead was not an A, throw off [trying for 5 tricks]
-                    } else if (declarer == dd && hitrump > 5 ) { // trump with bower if partner (dealer) declared AND have a bower
-                        play1 = 0;
-                    } else if (declarer == bb) { // play low trump if declared
-                        play1 = 2;
-                    } else if (declarer != bb && n11 > 3 && lotrump != 7) {
-                        // trump low if not declarer AND K or A led (but not w/ R)
-                        play1 = 2;
-                    } else { // play worst card
-                        play1 = 6;
-                        if (worsts != fintp) {
-                            hint[bb][worsts] = 1;
-                        }
-                    }
-                } else { // play worst card
-                    play1 = 6;
-                    if (worsts != fintp) {
-                        hint[bb][worsts] = 1;
-                    }
-                }
-
-                int cardplay = playfirst(play1, fintp, hitrump, sectrump, lotrump, m11, maxsuit, minsuit, suitace, worsts,
-                                         worstr, bb, playst[bb][m11], cards);
-                m12 = cardplay%10;
-                n12 = (cardplay/10)%10;
+                cardplay = deal.player12(m1, n1, null, null, pos, win, trick);
+                m1[2] = m12 = cardplay%10;
+                n1[2] = n12 = (cardplay/10)%10;
 
                 if (lone == cc) { // if 3rd seat going alone, assign m11 the value of m12, the true lead
-                    m11 = m12;
+                    m1[1] = m11 = m12;
                 }
 
                 System.out.println("Player " + position[bb] + " plays the " + cardname[m12][n12] + "." + "\n");
@@ -2626,131 +2336,19 @@ class Game {
                     v12 = -1;
                 }
                 if (v12 > v11) {
-                    win1 = bb;
+                    win[1] = win1 = bb;
                 }
             }
 
             //  third to play, 1st trick
-            double p13 = 20;
-            play1 = 6;
-            int m13 = -1;
-            int n13 = -1;
-            int v13 = -1;
-            maxsuit = -1;
-            minsuit = 20;
-            hitrump = -1;
-            lotrump = 8;
-            sectrump = -1;
-            int lowtrump = 0; // lowest trump that beats 2nd seat if 2nd seat trumped
-            worsts = -1; // worst suit
-            worstr = -1; // worst rank
-
             if (lone == aa) { // if 1st seat going alone (3rd seat skipped), pretend both played same cards
-                m13 = m11;
-                n13 = n11;
+                m1[3] = m13 = m11;
+                n1[3] = n13 = n11;
                 v13 = v12-1;
             } else {
-                if (playst[cc][m11] == 0) { // void in led suit
-                    voids[cc][m11] = 1;
-                }
-                for (int i=0; i<4; i++) {  // identify worst card
-                    for (int j=0; j<8; j++) {
-                        if (playst[cc][fintp] > 0) {
-                            if (p13 > cv[0][i][j] && cv[0][i][j] > 0 && own[cc][i][j] == cc) {
-                                p13 = cv[0][i][j];
-                                worsts = i;
-                                worstr = j;
-                            }
-                        } else {
-                            if (p13 > cv[1][i][j] && cv[1][i][j] > 0 && own[cc][i][j] == cc) {
-                                p13 = cv[1][i][j];
-                                worsts = i;
-                                worstr = j;
-                            }
-                        }
-                    }
-                }
-                for (int j=0; j<8; j++) {
-                    if (own[cc][m11][j] == cc) { // find best and worst card if following suit
-                        if (j > maxsuit) {
-                            maxsuit = j;
-                        }
-                        if (j < minsuit) {
-                            minsuit = j;
-                        }
-                    }
-                }
-                for (int j=0; j<8; j++) { // calculate highest, second highest, and lowest trump
-                    if (own[cc][fintp][j] == cc) {
-                        if (hitrump == -1) {
-                            hitrump = j;
-                            sectrump = j;
-                        } else if (j > hitrump) {
-                            sectrump = hitrump;
-                            hitrump = j;
-                        }
-                        if (j < lotrump) {
-                            lotrump = j;
-                        }
-                    }
-                }
-
-                if (playst[cc][m11] > 0) { // can follow suit
-                    if ((maxsuit > n11+1 && win1 == aa) || (win1 == bb && maxsuit > n12 && m12 == m11)) {
-                        play1 = 3; // play highest card of suit to take lead if:
-                        // partner winning AND can beat by 2 ranks, OR opponent winning and can beat (and they followed suit)
-                    } else {
-                        play1 = 4; // play lowest card of suit
-                    }
-                } else if (m11 != fintp && playst[cc][fintp] > 0) { // void in suit led but able to trump
-                    for (int j=7; j>=0; j--) { // determine lowest trump to take lead IF 2nd player trumped
-                        if (own[cc][fintp][j] == cc && j > n12 && m12 == fintp) {
-                            lowtrump = j;
-                        }
-                    }
-                    if (lone == cc) { // 3rd seat going lone: trump with second highest (if not bower), else lowest
-                        if (sectrump < 6) {
-                            play1 = 1;
-                        } else {
-                            play1 = 2;
-                        }
-                    } else if (lone == dd) { // dealer going lone: trump with highest, unless have R or protected L or A,
-                        // in which case play worst card
-                        if (right[cc][fintp] == 1 || (left[cc][fintp] == 1 && playst[cc][fintp] > 1) ||
-                            (acet[cc][fintp] == 1 && playst[cc][fintp] > 2)) {
-                            play1 = 6;
-                            if (worsts != fintp) {
-                                hint[cc][worsts] = 1;
-                            }
-                        } else {
-                            play1 = 0;
-                        }
-
-                    } else if (m12 != fintp && (win1 == bb || (n11 < boss[cc][m11] && lotrump != 7))) { // if 2nd seat winning
-                        // w/o trump OR 1st seat (partner) played lower than boss card, play lowest trump (but play worst
-                        // card if only R)
-                        play1 = 2;
-                    } else if (m12 == fintp && lowtrump > n12) { // if 2nd seat trumped but can overtrump, do so with lowest
-                        // trump that takes lead
-                        lotrump = lowtrump;
-                        play1 = 2;
-                    } else {
-                        play1 = 6;
-                        if (worsts != fintp) {
-                            hint[cc][worsts] = 1;
-                        }
-                    }
-                } else { // throw off
-                    play1 = 6;
-                    if (worsts != fintp) {
-                        hint[cc][worsts] = 1;
-                    }
-                }
-
-                int cardplay = playfirst(play1, fintp, hitrump, sectrump, lotrump, m11, maxsuit, minsuit, suitace, worsts,
-                                         worstr, cc, playst[cc][m11], cards);
-                m13 = cardplay%10;
-                n13 = (cardplay/10)%10;
+                cardplay = deal.player13(m1, n1, null, null, pos, win, trick);
+                m1[3] = m13 = cardplay%10;
+                n1[3] = n13 = (cardplay/10)%10;
 
                 System.out.println("Player " + position[cc] + " plays the " + cardname[m13][n13] + "." + "\n");
                 for (int i=0; i<4; i++) {
@@ -2776,139 +2374,19 @@ class Game {
                     v13 = -1;
                 }
                 if (v13 > v11 && v13 > v12) {
-                    win1 = cc;
+                    win[1] = win1 = cc;
                 }
             }
 
             //  fourth to play (dealer), 1st trick
-            double p14 = 20;
-            play1 = 6;
-            int m14 = -1;
-            int n14 = -1;
-            int v14 = -1;
-            maxsuit = -1;
-            minsuit = 20;
-            hitrump = -1; // overtrump 3rd seat in this instance
-            sectrump = -1;
-            lotrump = 8;
-            worsts = -1; // worst suit
-            worstr = -1; // worst rank
-
             if (lone == bb) { // if 2nd seat going alone (dealer skipped), pretend dealer played 9 of led suit
-                m14 = m11;
-                n14 = 9;
+                m1[4] = m14 = m11;
+                n1[4] = n14 = 0;
                 v14 = v13-1;
             } else {
-                if (playst[dd][m11] == 0) { // void in led suit
-                    voids[dd][m11] = 1;
-                }
-                for (int i=0; i<4; i++) { // identify worst card
-                    for (int j=0; j<8; j++) {
-                        if (playst[dd][fintp] > 0) {
-                            if (p14 > cv[0][i][j] && cv[0][i][j] > 0 && own[dd][i][j] == dd) {
-                                p14 = cv[0][i][j];
-                                worsts = i;
-                                worstr = j;
-                            }
-                        } else {
-                            if (p14 > cv[1][i][j] && cv[1][i][j] > 0 && own[dd][i][j] == dd) {
-                                p14 = cv[1][i][j];
-                                worsts = i;
-                                worstr = j;
-                            }
-                        }
-                    }
-                }
-
-                if (win1 == aa) { // first seat is winning
-                    if (playst[dd][m11] > 0) { // can follow suit
-                        for (int j=7; j>=0; j--) { // calculate lowest card which beats 1st seat, and lowest card in suit
-                            if (own[dd][m11][j] == dd) {
-                                if (j > n11) { // maxsuit given a value IF can win
-                                    maxsuit = j;
-                                    play1 = 3;
-                                } else if (j < minsuit && maxsuit == -1) { // minsuit is default to use if maxsuit still = -1
-                                    minsuit = j;
-                                    play1 = 4;
-                                }
-                            }
-                        }
-                    } else if (playst[dd][fintp] > 0) { // if can't follow suit, but can trump
-                        if (declarer == dd && (right[dd][fintp] + left[dd][fintp] == 2) && playst[dd][fintp] == 2) {
-                            // default to playing worst card if declared as dealer and only have both bowers
-                            play1 = 6;
-                        } else if (declarer == bb && playst[dd][fintp] == 4 && worstr == 5 && (right[dd][fintp] +
-                                                                                               left[dd][fintp] == 2)) {
-                            hitrump = 7;
-                            play1 = 0; // partner declared AND have 4 trump (including both bowers) AND off-suit is an Ace,
-                            // win w/ R
-                        } else {
-                            for (int j=7; j>=0; j--) {
-                                if (own[dd][fintp][j] == dd && j < lotrump) { // lotrump given a value IF can trump for win
-                                    lotrump = j;
-                                    play1 = 2;
-                                }
-                            }
-                        }
-                    } else {
-                        play1 = 6;
-                    }
-                }
-                if (win1 == bb) { // partner in 2nd seat is winning
-                    if (playst[dd][m11] > 0) { // can follow suit (if can't follow suit, default will be to throw off worst card)
-                        for (int j=7; j>=0; j--) { // calculate lowest card which beats partner, and lowest card in suit
-                            if (own[dd][m11][j] == dd) {
-                                if (j > n12) {
-                                    maxsuit = j; // maxsuit given a value IF beats partner
-                                }
-                                if (j < minsuit) {
-                                    minsuit = j; // minsuit is default lowest card to follow suit
-                                }
-                            }
-                        }
-                        if (m12 != fintp && declarer == bb && (right[dd][fintp] + left[dd][fintp] > 0) && maxsuit > -1) {
-                            // if 2nd seat declared AND is winning
-                            // w/o trump AND I can beat him AND I have a bower, player higher card (to lead bower next trick)
-                            play1 = 3;
-                        } else {
-                            play1 = 4;
-                        }
-                    } else {
-                        play1 = 6;
-                    }
-                }
-                if (win1 == cc) { // 3rd seat winning
-                    if (playst[dd][m11] > 0) { // can follow suit
-                        for (int j=7; j>=0; j--) {
-                            if (own[dd][m11][j] == dd) {
-                                if (j > n13 && m13 == m11) {
-                                    maxsuit = j; // lowest card which beats 3rd seat, if they followed lead
-                                    play1 = 3;
-                                } else if (j < minsuit && maxsuit == -1) {
-                                    minsuit = j;
-                                    play1 = 4;
-                                }
-                            }
-                        }
-                    } else if (playst[dd][fintp] > 0 ) { // can't follow suit but can trump
-                        for (int j=7; j>=0; j--) {
-                            if (own[dd][fintp][j] == dd) {
-                                if (j > n13 && m13 == fintp) { // trump card which takes lead (beating 3rd seat if they also trumped)
-                                    hitrump = j;
-                                    play1 = 0;
-                                } else if (j < minsuit && m13 != fintp) {
-                                    lotrump = j;
-                                    play1 = 2;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                int cardplay = playfirst(play1, fintp, hitrump, sectrump, lotrump, m11, maxsuit, minsuit, suitace, worsts,
-                                         worstr, dd, playst[dd][m11], cards);
-                m14 = cardplay%10;
-                n14 = (cardplay/10)%10;
+                cardplay = deal.player14(m1, n1, null, null, pos, win, trick);
+                m1[4] = m14 = cardplay%10;
+                n1[4] = n14 = (cardplay/10)%10;
 
                 System.out.println("Player " + position[dd] + " plays the " + cardname[m14][n14] + "." + "\n");
                 for (int i=0; i<4; i++) {
@@ -2934,7 +2412,7 @@ class Game {
                     v14 = -1;
                 }
                 if (v14 > v11 && v14 > v12 && v14 > v13) {
-                    win1 = dd;
+                    win[1] = win1 = dd;
                 }
             }
 
@@ -3019,199 +2497,15 @@ class Game {
             final int bb2 = (win1+1)%4; // second to play
             final int cc2 = (win1+2)%4; // third to play
             final int dd2 = (win1+3)%4; // fourth to play
+            final int[] pos2 = {aa2, bb2, cc2, dd2};
 
             // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
             // play out second trick; first to play is winner of first trick
             wturn = 2; // trick 2
-            double p21 = 20;
-            int m21 = -1;
-            int n21 = -1;
-            int v21 = -1;
-            hitrump = -1;
-            lotrump = 20;
-            maxsuit = -1;
-            minsuit = suit[0][aa];
-            playace = 1.05;
-            suitace = -1;
-            worsts = -1;
-            worstr = -1;
-            play1 = -1;
-            win2 = win1;
 
-            for (int i=0; i<4; i++) { // establishes best ace to led; not trump AND 5+ length suit
-                if (own[win1][i][5] == win1 && cv[0][i][5] > playace && i != fintp && length[win1][i] > 4) {
-                    playace = cv[0][i][5];
-                    suitace = i;
-                }
-            }
-            for (int i=0; i<8; i++) {
-                if (own[win1][fintp][i] == win1) {
-                    if (i > hitrump) {
-                        hitrump = i; // calculates rank of highest trump (0 - 7)
-                    }
-                    if (i < lotrump) {
-                        lotrump = i; // calculates rank of lowest trump (0 - 7)
-                    }
-                }
-            }
-            for (int j=0; j<6; j++) { // find max rank of same suit to re-play
-                if (own[win1][suit[0][aa]][j] == win1) { // find highest of same suit to lead
-                    maxsuit = j;
-                    minsuit = suit[0][aa]; // suit that win1 played on 1st trick
-                }
-            }
-            for (int i=0; i<4; i++) {  // find lowest card from shortest suit (lowest cv[0] value)
-                for (int j=0; j<6; j++) {
-                    if (p21 > cv[0][i][j] && cv[0][i][j] > 0 && own[win1][i][j] == win1) {
-                        p21 = cv[0][i][j];
-                        worsts = i;
-                        worstr = j;
-                    }
-                }
-            }
-            if (lone == win1) { // if going lone
-                if (playst[win1][fintp] > 1 || hitrump == boss[win1][fintp]) { // if have 2+ trump or boss trump, play highest
-                    play1 = 0;
-                } else if (suitace != -1) { // if have a good A to play
-                    play1 = 5;
-                }
-            } else if (lone == bb2 || lone == dd2) { // if opponent going lone
-                if (suit[0][aa] != fintp && playst[win1][suit[0][aa]] > 0) { // if won against lone w/o trump AND
-                    //  have another of the same suit, play it (highest)
-                    play1 = 3;
-                } else if (aces[win1][fintp] > 1) { // else if have 2 or more aces, play one
-                    play1 = 5;
-                }
-            } else if (win1 == declarer) { // I declared and get to lead
-                if (sit[0] == 1) {
-                    play1 = 5; // 1st special situation: won 1st trick with R, should lead A 2nd trick
-                } else if (win1 == aa) { // win from 1st seat
-                    if (rank[0][0] == 7 && (hitrump == boss[win1][fintp] || solo[win1][fintp] == 1) &&
-                        playst[win1][fintp] > 1) { // if won with
-                        // R and still have boss trump (or only trump) AND 2+ trump, play highest trump
-                        play1 = 0;
-                    } else if (rank[0][0] == 6 && own[win1][fintp][5] == win1 && playst[win1][fintp] > 1) { // if won with
-                        // L AND have A of trump AND 2+ trump, play hi trump
-                        play1 = 0;
-                    } else if (rank[0][0] == 5 && suit[0][0] != fintp) { // won with non-trump A
-                        if (playst[win1][fintp] > 1) { // if have 2+ trump, play lo trump
-                            play1 = 2;
-                        } else if (playst[win1][suit[0][aa]] > 0) { // else play same suit if possible
-                            play1 = 3;
-                        }
-                    }
-                } else if (win1 == dealer || win1 == (dealer+2)%4) { // win from 2nd seat or as dealer
-                    if (win1 == (dealer+2)%4 && uprk == 2 && round == 0 && playst[win1][fintp] > 0 && lotrump < 6 &&
-                        aces[win1][fintp] > 0) {
-                        // if in 2nd seat AND made dealer pick up R AND have A- trump AND at least one off-suit A,
-                        // lead lo trump
-                        play1 = 2;
-                    } else if (win1 == (dealer+2)%4 && uprk == 5 && round == 0 && left[win1][fintp] == 1 && lotrump < 5) {
-                        play1 = 2; // if in 2nd seat AND made dealer pick up A AND have L + a lower trump, lead lo trump
-                    } else if (suit[0][aa] != fintp) { // if won w/o trump
-                        if ((right[win1][fintp] + left[win1][fintp] > 0) && playst[win1][fintp] > 1) {
-                            // if have a bower AND 2+ trump, lead hi trump
-                            play1 = 0;
-                        } else if (playst[win1][fintp] < 3 && playst[win1][suit[0][aa]] > 0 && (win1 == dealer || m12 != m14)) {
-                            // repeat suit if possible AND have 2- trump, unless partner (dealer) followed suit
-                            play1 = 3;
-                        } else if (playst[win1][fintp] > 0) { // else play hi trump if have 3+ trump
-                            play1 = 0;
-                        }
-                    } else if (suit[0][aa] == fintp) { // if won with trump
-                        if (hitrump == boss[win1][fintp] && (aces[win1][fintp] > 0 || playst[win1][fintp] > 1)) { // if have
-                            // boss trump AND (an off A OR
-                            // 2+ trump), lead hi trump
-                            play1 = 0;
-                        } else if (aces[win1][fintp] > 0 && suit[0][0] == fintp) { // if have an off A AND trump led, lead A
-                            play1 = 5;
-                        }
-                    }
-                } else if (win1 == ((dealer+3)%4) && suit[0][0] == fintp) { // win from 3rd seat, partner led trump
-                    if (hitrump == boss[win1][fintp] && aces[win1][fintp] > 0) {
-                        // if have boss trump AND an off A, lead hi trump
-                        play1 = 0;
-                    } else if (aces[win1][fintp] > 0) { // if have off A, lead it
-                        play1 = 5;
-                    }
-                } else if (win1 == (dealer+3)%4) { // win from 3rd seat, partner void in trump (would have led trump if
-                    // had any)
-                    if (suit[0][2] != fintp && hitrump == boss[win1][fintp] && playst[win1][fintp] > 1) {
-                        // if won w/o trump AND have boss trump AND 2+ trump, play hi trump
-                        play1 = 0;
-                    } else if (suit[0][2] == fintp && playst[win1][fintp] > 0) { // won with trump, and have more trump
-                        if (hitrump == boss[win1][fintp] || (left[win1][fintp] + acet[win1][fintp] == 2)) {
-                            play1 = 0; // have boss trump OR L/A, play hi trump
-                        } else if (playst[win1][fintp] > 1) { // else play lo trump (if have trump)
-                            play1 = 2;
-                        }
-                    }
-                }
-            } else if (declarer == cc2) { // partner declared
-                if (right[win1][fintp] + left[win1][fintp] > 0) { // if have bower, lead it
-                    play1 = 0;
-                } else if (suit[0][aa] != fintp && playst[win1][suit[0][aa]] > 0 &&
-                           suit[0][(win1-dealer+5)%4] != suit[0][aa]) {
-                    // if won w/o trump AND partner threw off AND have another of same suit, repeat suit
-                    play1 = 3;
-                } else if (win1 == aa) { // won from 1st seat
-                    if (playst[win1][fintp] > 0 && aces[win1][fintp] > 0) { // if have trump AND an off-A, play lo trump
-                        play1 = 2;
-                    } else if (aces[win1][fintp] > 0) { // if have no trump but off-A, play off-A
-                        play1 = 5;
-                    }
-                } else if (win1 == (dealer+2)%4) { // won from 2nd seat
-                    if (suit[0][1] != fintp) { // 1st trick won w/o trump
-                        if ((playst[win1][fintp] + aces[win1][fintp] > 2) && playst[(dealer+2)%4][fintp] > 0) {
-                            // if # of trump + # of off-Aces > 2, AND have trump, lead lo trump
-                            play1 = 2;
-                        }
-                    } else { // 1st trick won w/ trump
-                        if (suit[0][0] == fintp && aces[win1][fintp] > 0) { // if trump led AND have an off-A, lead off-A
-                            play1 = 5;
-                        } else if (aces[win1][fintp] > 0 && playst[win1][fintp] > 0) { // if trump not led AND have an off-A,
-                            // lead lo trump
-                            play1 = 2;
-                        }
-                    }
-                } else if (win1 == (dealer+3)%4) { // won from 3rd seat
-                    if (playst[win1][fintp] > 0 && aces[win1][fintp] > 0) { // if have trump AND an off-A, lead lo trump
-                        play1 = 2;
-                    } else if (suit[0][0] == fintp && aces[win1][fintp] > 0) { // if trump led AND have an off-A, lead off-A
-                        play1 = 5;
-                    } else if (aces[win1][fintp] > 1) { // if have no trump AND 2+ off-Aces, lead off-A
-                        play1 = 5;
-                    }
-                } else if (win1 == dealer) { // win as dealer
-                    if ((right[win1][fintp] + left[win1][fintp] > 0) && suit[0][1] != fintp) {
-                        // have a bower AND partner didn't play trump 1st trick, lead lo trump
-                        play1 = 0;
-                    } else if (playst[win1][fintp] > 0 && suit[0][win1] != fintp) {
-                        play1 = 2; // if have trump and didn't win first trick with trump, play low trump
-                    } else if (aces[win1][fintp] > 0) {
-                        play1 = 5; // if have an A, play one
-                    }
-                }
-            } else if (bb2 == declarer || dd2 == declarer) { // defending
-                if (suit[0][aa] != fintp && playst[win1][suit[0][aa]] > 0) {
-                    // if won w/o trump, re-lead same suit if possible
-                    play1 = 3;
-                } else if (aces[win1][fintp] > 0) { // if have an off-A, play it
-                    play1 = 5;
-                }
-            }
-            if (play1 == -1) {
-                play1 = 6;
-            }
-            //if leading a non-trump non-ace and have the A of that suit as well, lead the A instead
-            if (worsts == suitace && play1 == 6) {
-                play1 = 5;
-            }
-
-            int cardplay = playfirst(play1, fintp, hitrump, sectrump, lotrump, m21, maxsuit, minsuit, suitace, worsts,
-                                     worstr, win1, 0, cards);
-            m21 = cardplay%10;
-            n21 = (cardplay/10)%10;
+            cardplay = deal.player21(m2, n2, m1, n1, pos2, win, trick);
+            m2[1] = m21 = cardplay%10;
+            n2[1] = n21 = (cardplay/10)%10;
 
             System.out.println("Player " + position[win1] + " leads the " + cardname[m21][n21] + "." + "\n");
             for (int i=0; i<4; i++) {
@@ -3231,110 +2525,17 @@ class Game {
             } else {
                 v21 = n21;
             }
+            win[2] = win2 = win1;
 
             // second to play, 2nd trick
-            double p22 = 20;
-            play1 = -1;
-            int m22 = -1;
-            int n22 = -1;
-            int v22 = -1;
-            hitrump = -1;
-            sectrump = -1;
-            lotrump = 20;
-            maxsuit = -1; // highest trump
-            minsuit = 20; // lowest trump
-            worsts = -1; // worst suit
-            worstr = -1; // worst rank
-
             if (lone == dd2) {
-                m22 = m21;  // if partner going alone, skip me, so assign same value to my 'play' as win1
-                n22 = n21;
+                m2[2] = m22 = m21;  // if partner going alone, skip me, so assign same value to my 'play' as win1
+                n2[2] = n22 = n21;
                 v22 = v21-1;
             } else {  // partner not going alone
-                if (playst[bb2][m21] == 0) { // void in led suit
-                    voids[bb2][m21] = 1;
-                }
-                for (int i=0; i<4; i++) {  // identify worst card
-                    for (int j=0; j<8; j++) {
-                        if (playst[bb2][fintp] > 0) {
-                            if (p22 > cv[0][i][j] && cv[0][i][j] > 0 && own[bb2][i][j] == bb2) {
-                                p22 = cv[0][i][j];
-                                worsts = i;
-                                worstr = j;
-                            }
-                        } else {
-                            if (p22 > cv[1][i][j] && cv[1][i][j] > 0 && own[bb2][i][j] == bb2) {
-                                p22 = cv[1][i][j];
-                                worsts = i;
-                                worstr = j;
-                            }
-                        }
-                    }
-                }
-
-                if (playst[bb2][m21] > 0) { // can follow suit
-                    for (int j=0; j<8; j++) {
-                        if (own[bb2][m21][j] == bb2) {
-                            if (j > maxsuit) {
-                                maxsuit = j;
-                            }
-                            if (j < minsuit) {
-                                minsuit = j;
-                            }
-                        }
-                    }
-                    if (maxsuit > n21) {
-                        play1 = 3;
-                    } else {
-                        play1 = 4;
-                    }
-                } else if (m21 != fintp && playst[bb2][fintp] > 0) { // can't follow suit but can trump
-                    for (int j=0; j<8; j++) {
-                        if (own[bb2][fintp][j] == bb2) { // determine best and worst cards in trump suit
-                            if (hitrump == -1) {
-                                hitrump = j;
-                                sectrump = j;
-                            } else if (j > hitrump) {
-                                sectrump = hitrump;
-                                hitrump = j;
-                            }
-                            if (j < lotrump) {
-                                lotrump = j;
-                            }
-                        }
-                    }
-                    if (lone == win1) { // opponent going alone, trump with lowest
-                        play1 = 2;
-                    } else if (lone == bb2) { // if going lone, trump with second highest
-                        play1 = 1;
-                    } else if (declarer == dd2 && (right[bb2][fintp] + left[bb2][fintp] > 0) &&
-                               (dealer != bb2 || (uprk != 2 || round != 0))) {
-                        // if partner declared AND have bower AND did not pick up R as dealer, trump w/ bower
-                        play1 = 0;
-                    } else if (declarer == dd2 && lotrump < 7) { // if partner declared and have non-R trump, play lo trump
-                        play1 = 2;
-                    } else if (rank[1][0] > 3 || (declarer == bb2 && playst[bb2][fintp] > 2) || ((declarer == win1 ||
-                                                                                                  declarer == cc2)
-                                                                                                 && playst[bb2][fintp] > 1)) { // if A or K led OR have 3+ trump as declarer OR have 2+ trump
-                        // as defender, play lo trump
-                        play1 = 2;
-                    } else {
-                        play1 = 6;
-                        if (worsts != fintp) {
-                            hint[bb2][worsts] = 1;
-                        }
-                    }
-                } else { // throw off
-                    play1 = 6;
-                    if (worsts != fintp) {
-                        hint[bb2][worsts] = 1;
-                    }
-                }
-
-                cardplay = playfirst(play1, fintp, hitrump, sectrump, lotrump, m21, maxsuit, minsuit, suitace, worsts,
-                                     worstr, bb2, playst[bb2][m21], cards);
-                m22 = cardplay%10;
-                n22 = (cardplay/10)%10;
+                cardplay = deal.player22(m2, n2, m1, n1, pos2, win, trick);
+                m2[2] = m22 = cardplay%10;
+                n2[2] = n22 = (cardplay/10)%10;
 
                 System.out.println("Player " + position[bb2] + " plays the " + cardname[m22][n22] + "." + "\n");
                 for (int i=0; i<4; i++) {
@@ -3357,144 +2558,19 @@ class Game {
                     v22 = -1;
                 }
                 if (v22 > v21) {
-                    win2 = bb2;
+                    win[2] = win2 = bb2;
                 }
             }
 
             // third to play, 2nd trick
-            double p23 = 20;
-            play1 = -1;
-            int m23 = -1;
-            int n23 = -1;
-            int v23 = -1;
-            maxsuit = -1; // highest trump
-            minsuit = 20; // lowest trump
-            hitrump = -1;
-            sectrump = -1;
-            lotrump = 20;
-            worsts = -1; // worst suit
-            worstr = -1; // worst rank
-
             if (lone == win1) {
-                m23 = m21;  // if partner going alone, skip me, so assign same value to my 'play' as win1
-                n23 = n21;
+                m2[3] = m23 = m21;  // if partner going alone, skip me, so assign same value to my 'play' as win1
+                n2[3] = n23 = n21;
                 v23 = v22-1;
             } else { // partner not going alone
-                if (playst[cc2][m21] == 0) { // void in led suit
-                    voids[cc2][m21] = 1;
-                }
-                for (int i=0; i<4; i++) {  // identify worst card
-                    for (int j=0; j<8; j++) {
-                        if (playst[cc2][fintp] > 0) {
-                            if (p23 > cv[0][i][j] && cv[0][i][j] > 0 && own[cc2][i][j] == cc2) {
-                                p23 = cv[0][i][j];
-                                worsts = i;
-                                worstr = j;
-                            }
-                        } else {
-                            if (p23 > cv[1][i][j] && own[cc2][i][j] == cc2) {
-                                p23 = cv[1][i][j];
-                                worsts = i;
-                                worstr = j;
-                            }
-                        }
-                    }
-                }
-
-                if (playst[cc2][m21] > 0) { // can follow suit
-                    for (int j=0; j<8; j++) {
-                        if (own[cc2][m21][j] == cc2) {
-                            if (j > maxsuit) {
-                                maxsuit = j;
-                            }
-                            if (j < minsuit) {
-                                minsuit = j;
-                            }
-                        }
-                    }
-                    if (maxsuit > n21+1 && win2 == win1) { // if partner winning AND can beat them by 2+ ranks, play hi
-                        // card and take lead
-                        play1 = 3;
-                    } else if (maxsuit > n22 && win2 == bb2 && m21 == m22) { // if opponent winning w/o trump AND can beat
-                        // them, play hi card
-                        play1 = 3;
-                    } else { // if can't take lead, throw off
-                        play1 = 4;
-                    }
-                } else if (m21 != fintp && playst[cc2][fintp] > 0) { // can't follow suit but can trump (and trump not led)
-                    for (int j=0; j<8; j++) {
-                        if (own[cc2][fintp][j] == cc2) {
-                            if (hitrump == -1) {
-                                hitrump = j;
-                                sectrump = j;
-                            } else if (j > hitrump) {
-                                sectrump = hitrump;
-                                hitrump = j;
-                            }
-                            if (j < lotrump) {
-                                lotrump = j;
-                            }
-                        }
-                    }
-                    if (lone == dd2) { // opponent playing after me is going lone
-                        if (n21 == boss[cc2][m21] && playst[cc2][fintp] > 1 && left[cc2][fintp] == 1) {
-                            // if p led boss card (so won 1st trick) AND I have guarded L, play off (hope for euchre)
-                            play1 = 6;
-                            if (worsts != fintp) {
-                                hint[cc2][worsts] = 1;
-                            }
-                        } else { // else play high trump
-                            play1 = 0;
-                        }
-                    } else if (lone == bb2 && win2 == bb2 && m22 != fintp) {
-                        // if opponent playing before me is going lone and is winning w/o trump, play lo trump
-                        play1 = 2;
-                    } else if (lone == bb2 && win2 == win1) {
-                        // if opponent playing before me is going alone and followed suit and p is winning, play off
-                        play1 = 6;
-                        if (worsts != fintp) {
-                            hint[cc2][worsts] = 1;
-                        }
-                    } else if (m22 != fintp) { // opponent followed suit (non-trump) or played off
-                        if (n21 == boss[cc2][m21] && length[cc2][m21] > 2) {
-                            // if p leading with boss card AND 3+ left in that suit, play off
-                            play1 = 6;
-                            if (worsts != fintp) {
-                                hint[cc2][worsts] = 1;
-                            }
-                        } else if (m21 == m11 || playst[cc2][fintp] > 2) { // if p re-led same suit OR have 3+ trump,
-                            // play second highest trump
-                            play1 = 1;
-                        } else if (declarer == win1 && (right[cc2][fintp] + left[cc2][fintp] > 0)) {
-                            play1 = 0;
-                        } else {
-                            play1 = 2;
-                        }
-                    } else if (m22 == fintp) { // opponent (2nd player) trumped
-                        if (lotrump > n22) {
-                            play1 = 2;
-                        } else if (sectrump > n22) {
-                            play1 = 1;
-                        } else if (hitrump > n22) {
-                            play1 = 0;
-                        } else {
-                            play1 = 6;
-                            if (worsts != fintp) {
-                                hint[cc2][worsts] = 1;
-                            }
-                        }
-                    }
-                } else { //throw off
-                    play1 = 6;
-                    if (worsts != fintp) {
-                        hint[cc2][worsts] = 1;
-                    }
-                }
-
-                cardplay = playfirst(play1, fintp, hitrump, sectrump, lotrump, m21, maxsuit, minsuit, suitace, worsts,
-                                     worstr, cc2, playst[cc2][m21], cards);
-                m23 = cardplay%10;
-                n23 = (cardplay/10)%10;
+                cardplay = deal.player23(m2, n2, m1, n1, pos2, win, trick);
+                m2[3] = m23 = cardplay%10;
+                n2[3] = n23 = (cardplay/10)%10;
 
                 System.out.println("Player " + position[cc2] + " plays the " + cardname[m23][n23] + "." + "\n");
                 for (int i=0; i<4; i++) {
@@ -3517,102 +2593,19 @@ class Game {
                     v23 = -1;
                 }
                 if (v23 > v21 && v23 > v22) {
-                    win2 = cc2;
+                    win[2] = win2 = cc2;
                 }
             }
 
             // fourth to play, 2nd trick
-            double p24 = 20;
-            play1 = -1;
-            int m24 = -1;
-            int n24 = -1;
-            int v24 = -1;
-            maxsuit = -1; // highest card following suit
-            minsuit = 20; // lowest card following suit
-            hitrump = 20;
-            lotrump = 20;
-            worsts = -1;
-            worstr = -1;
-
             if (lone == bb2) {
-                m24 = m22;  // if partner going alone, skip me, pretend I played 9 of led suit
-                n24 = 9;
+                m2[4] = m24 = m22;  // if partner going alone, skip me, pretend I played 9 of led suit
+                n2[4] = n24 = 0;
                 v24 = v23-1;
             } else { // partner not going alone
-                if (playst[dd2][m21] == 0) { // void in led suit
-                    voids[dd2][m21] = 1;
-                }
-                for (int i=0; i<4; i++) {
-                    for (int j=0; j<8; j++) {
-                        if (playst[dd2][fintp] > 0) {
-                            if (p24 > cv[0][i][j] && cv[0][i][j] > 0 && own[dd2][i][j] == dd2) {
-                                p24 = cv[0][i][j];
-                                worsts = i;
-                                worstr = j;
-                                if (worsts != fintp) {
-                                    hint[dd2][worsts] = 1;
-                                }
-                            }
-                        } else {
-                            if (p24 > cv[1][i][j] && cv[1][i][j] > 0 && own[dd2][i][j] == dd2) {
-                                p24 = cv[1][i][j];
-                                worsts = i;
-                                worstr = j;
-                                if (worsts != fintp) {
-                                    hint[dd2][worsts] = 1;
-                                }
-                            }
-                        }
-                    }
-                }
-                for (int j=7; j>=0; j--) { // calculate lowest trump which beats 3rd player (if trumped and winning)
-                    if (own[dd2][fintp][j] == dd2 && j < hitrump && m23 == fintp && j > n23) {
-                        hitrump = j;
-                    }
-                    if (own[dd2][fintp][j] == dd2 && j < lotrump) { // calculate lowest trump if can win trick and first
-                        // to trump
-                        lotrump = j;
-                    }
-                }
-                for (int j=7; j>=0; j--) { // calculate maxsuit and minsuit
-                    if (own[dd2][m21][j] == dd2) { // have this card in hand
-                        if (win2 == win1 && j > n21) { // 1st seat winning, identify lowest card which wins trick
-                            maxsuit = j;
-                        } else if (win2 == bb2 && declarer == bb2 && m22 != fintp &&
-                                   (own[dd2][fintp][7] == dd2 || own[dd2][fintp][6] == dd2) && j > n22) {
-                            // 2nd seat winning, identify lowest card which wins trick IF partner declared and have a
-                            // bower to lead next round
-                            maxsuit = j;
-                        } else if (win2 == cc2 && j > n23) { // 3rd seat winning, identify lowest card which wins trick
-                            maxsuit = j;
-                        } else { // else identify worst card in suit to play
-                            minsuit = j;
-                        }
-                    }
-                }
-
-                if (playst[dd2][m21] > 0) { // can follow suit
-                    if (maxsuit != -1) {
-                        play1 = 3;
-                    } else {
-                        play1 = 4;
-                    }
-                } else if (playst[dd2][fintp] > 0) { // can't follow suit but can trump
-                    if (win2 == win1) { // player who led trick is winning, play lowest trump
-                        play1 = 2;
-                    } else if (win2 == cc2) { // 3rd to play winning
-                        if (m23 == fintp && hitrump != 20) { // overtrump if possible
-                            play1 = 0;
-                        } else if (m23 != fintp) { // play lowest trump if first to trump
-                            play1 = 2;
-                        }
-                    }
-                }
-
-                cardplay = playfirst(play1, fintp, hitrump, sectrump, lotrump, m21, maxsuit, minsuit, suitace, worsts,
-                                     worstr, dd2, playst[dd2][m21], cards);
-                m24 = cardplay%10;
-                n24 = (cardplay/10)%10;
+                cardplay = deal.player24(m2, n2, m1, n1, pos2, win, trick);
+                m2[4] = m24 = cardplay%10;
+                n2[4] = n24 = (cardplay/10)%10;
 
                 System.out.println("Player " + position[dd2] + " plays the " + cardname[m24][n24] + "." + "\n");
                 for (int i=0; i<4; i++) {
@@ -3635,7 +2628,7 @@ class Game {
                     v24 = -1;
                 }
                 if (v24 > v21 && v24 > v22 && v24 > v23) {
-                    win2 = dd2;
+                    win[2] = win2 = dd2;
                 }
             }
 
@@ -3739,129 +2732,15 @@ class Game {
             final int bb3 = (win2+1)%4; // second to play
             final int cc3 = (win2+2)%4; // third to play
             final int dd3 = (win2+3)%4; // fourth to play
+            final int[] pos3 = {aa3, bb3, cc3, dd3};
 
             // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
             // play out third trick; first to play is winner of second trick
             wturn = 3; // trick 3
-            play1 = -1;
-            double p31 = 20;
-            double p32 = -1;
-            int m31 = -1;
-            int n31 = -1;
-            int v31 = -1;
-            hitrump = -1;
-            sectrump = -1;
-            lotrump = 20;
-            maxsuit = -1;
-            minsuit = suit[1][(win2-win1+4)%4];
-            int bos = -1;
-            suitace = -1;
-            win3 = win2;
 
-            for (int j=0; j<8; j++) { // calculate highest and lowest trump
-                if (own[aa3][fintp][j] == aa3) {
-                    if (j > hitrump) {
-                        hitrump = j;
-                    }
-                    if (j < lotrump) {
-                        lotrump = j;
-                    }
-                }
-            }
-            for (int i=0; i<4; i++) { // calculate if have boss card in any non-trump suit
-                if (own[aa3][i][boss[aa3][i]] == aa3 && i != fintp) {
-                    bos = i;
-                    cv[0][i][boss[aa3][i]] = .95; // make this boss card the best one to lead
-                }
-            }
-            for (int j=0; j<6; j++) { // find max rank of same suit to re-play
-                if (own[aa3][suit[1][(win2-win1+4)%4]][j] == aa3) { // find highest of same suit to lead
-                    maxsuit = j; // actually the rank
-                    minsuit = suit[1][(win2-win1+4)%4]; // the suit
-                }
-            }
-            for (int i=0; i<4; i++) { // determine best card to lead
-                for (int j=0; j<8; j++) {
-                    if (cv[0][i][j] > p32 && own[aa3][i][j] == aa3 && i != fintp) {
-                        p32 = cv[0][i][j];
-                        suitace = i; // suit
-                        sectrump = j; // rank
-                    }
-                }
-            }
-            for (int i=0; i<4; i++) { // determine worst card to lead
-                for (int j=0; j<8; j++) {
-                    if (cv[0][i][j] < p31 && cv[0][i][j] != 0 && own[aa3][i][j] == aa3 && i != fintp) {
-                        p31 = cv[0][i][j];
-                        worsts = i;
-                        worstr = j;
-                    }
-                }
-            }
-
-            // if single-suited, play highest
-            if (playst[aa3][fintp] == 3) { // have 3 trump left, lead highest
-                play1 = 0;
-            } else if (ss[aa3] < 4 && ss[aa3] > -1) {
-                play1 = 5;
-            } else if (lone == aa3) { // if going lone
-                if (own[aa3][fintp][boss[aa3][fintp]] == aa3 || solo[aa3][fintp] == 1 || playst[aa3][fintp] > 1) {
-                    // if have boss trump or 2+ trump or only player with trump, lead highest trump
-                    play1 = 0;
-                } else if (voids[bb3][fintp] == 1 && voids[dd3][fintp] == 1 && playst[aa3][fintp] > 1) {
-                    //if know both opponents are void in trump, lead highest trump
-                    play1 = 0;
-                } else { // lead best non-trump
-                    play1 = 5;
-                }
-            } else if (lone == bb3 || lone == dd3) { // if opponent going lone
-                if (suit[1][(win2-win1+4)%4] != fintp && playst[aa3][suit[1][(win2-win1+4)%4]] > 0) { // if won w/o trump
-                    // lead same suit if have it
-                    play1 = 3;
-                } else { // lead best non-trump
-                    play1 = 5;
-                }
-            } else if (declarer == aa3) { // I am declarer
-                if (solo[aa3][fintp] == 1) { // if have all the remaining trump, lead highest
-                    play1 = 0;
-                } else if (playst[aa3][fintp] > 1 && ((fintp == upst && uprk == 2 && dealer == cc3) ||
-                                                      (fintp == 3-upst && uprk == 2 && length[aa3][fintp] > 5))) {
-                    // if partner (dealer) picked up R OR bid next 2nd round and bower was buried, lead low trump
-                    play1 = 2;
-                } else if ((own[aa3][fintp][boss[aa3][fintp]] == aa3 || solo[aa3][fintp] == 1 || playst[aa3][fintp] > 1) &&
-                           (voids[bb3][fintp] + voids[dd3][fintp] != 2) && trick[aa3] != 1) {
-                    // if have boss trump or only player left with trump or have 2+ trump,
-                    // AND opponents may still have trump AND have won 2 tricks
-                    play1 = 0; // lead high trump
-                } else {
-                    play1 = 5; // lead best non-trump
-                }
-            } else if (declarer == cc3) { // partner is declarer
-                if (solo[aa3][fintp] == 1) { // if have all remaining trump, lead highest
-                    play1 = 0;
-                } else if ((right[aa3][fintp] + left[aa3][fintp]) > 0 && bos > -1) {
-                    // if have a bower AND a boss off-suit, lead highest trump
-                    play1 = 0;
-                } else { // lead best non-trump
-                    play1 = 5;
-                }
-            } else if ((declarer == bb3 || declarer == dd3) && playst[aa3][fintp] > 1 && length[aa3][fintp] < 6 &&
-                       bos != -1) {
-                // defending AND have 2 trump AND round of trump already played AND have a boss off-suit, lead low trump
-                play1 = 2;
-            } else {
-                play1 = 6;
-            }
-
-            // if leading a non-trump non-ace and have the A of that suit as well, lead the A instead
-            if (worsts == suitace && play1 == 6) {
-                play1 = 5;
-            }
-
-            cardplay = playfirst(play1, fintp, hitrump, sectrump, lotrump, m31, maxsuit, minsuit, suitace, worsts,
-                                 worstr, aa3, -1, cards);
-            m31 = cardplay%10;
-            n31 = (cardplay/10)%10;
+            cardplay = deal.player31(m3, n3, m2, n2, pos3, win, trick);
+            m3[1] = m31 = cardplay%10;
+            n3[1] = n31 = (cardplay/10)%10;
 
             System.out.println("Player " + position[aa3] + " leads the " + cardname[m31][n31] + "." + "\n");//
             for (int i=0; i<4; i++) {
@@ -3881,112 +2760,17 @@ class Game {
             } else {
                 v31 = n31;
             }
+            win[3] = win3 = win2;
 
             // second to play, 3rd trick
-            p32 = 20;
-            play1 = -1;
-            int m32 = -1;
-            int n32 = -1;
-            int v32 = -1;
-            maxsuit = -1;
-            sectrump = -1;
-            minsuit = 20;
-            hitrump = -1;
-            lotrump = 20;
-            playace = 1.195;
-            suitace = -1;
-            worsts = -1; // worst suit
-            worstr = -1; // worst rank
-            //            int keep = 0; // if have 2 trump AND a boss card off-suit, trump low if can ??
-
             if (lone == dd3) {
-                m32 = m31;  // if partner going alone, skip me, so assign same value to my 'play' as win1
-                n32 = n31;
+                m3[2] = m32 = m31;  // if partner going alone, skip me, so assign same value to my 'play' as win1
+                n3[2] = n32 = n31;
                 v32 = v31-1;
             } else {  // partner not going alone
-                if (playst[bb3][m31] == 0) { // void in led suit
-                    voids[bb3][m31] = 1;
-                }
-                for (int i=0; i<4; i++) {  // identify worst card
-                    for (int j=0; j<8; j++) {
-                        if (playst[bb3][fintp] > 0) {
-                            if (p32 > cv[0][i][j] && cv[0][i][j] > 0 && own[bb3][i][j] == bb3) {
-                                p32 = cv[0][i][j];
-                                worsts = i;
-                                worstr = j;
-                            }
-                        } else {
-                            if (p32 > cv[1][i][j] && cv[1][i][j] > 0 && own[bb3][i][j] == bb3) {
-                                p32 = cv[1][i][j];
-                                worsts = i;
-                                worstr = j;
-                            }
-                        }
-                    }
-                }
-                for (int j=0; j<8; j++) { // identify best and worst rank in led suit
-                    if (own[bb3][m31][j] == bb3) {
-                        if (j > maxsuit) {
-                            maxsuit = j;
-                        }
-                        if (j < minsuit) {
-                            minsuit = j;
-                        }
-                    }
-                }
-                for (int j=0; j<8; j++) { // identify highest, 2nd highest and lowest trump
-                    if (own[bb3][fintp][j] == bb3) {
-                        if (hitrump == -1) {
-                            hitrump = j;
-                            sectrump = j;
-                        } else if (j > hitrump) {
-                            sectrump = hitrump;
-                            hitrump = j;
-                        }
-                        if (j < lotrump) {
-                            lotrump = j;
-                        }
-                    }
-                }
-
-                if (playst[bb3][m31] > 0) { // can follow suit
-                    if (maxsuit > n31) { // if can take lead, play highest
-                        play1 = 3;
-                    } else { // else play lowest
-                        play1 = 4;
-                    }
-                } else if (m31 != fintp && playst[bb3][fintp] > 0) { // can't follow suit but can trump
-                    if (declarer == dd3) { // partner declared
-                        if (right[bb3][fintp] + left[bb3][fintp] > 0) {
-                            // trump with bower if have one and dealer (partner) is declarer
-                            play1 = 0;
-                        } else { // else if have no bower, trump with lowest
-                            play1 = 2;
-                        }
-                    } else if (lone == bb3) { // if going lone, trump with second highest
-                        play1 = 1;
-                    } else if ((n31 == boss[bb3][m31] && lotrump != 7) || lone == aa3 || length[bb3][fintp] < 5 ||
-                               trick[bb3] == 0) {
-                        // play lowest trump if defending against lone OR boss card led (and lowest trump is not right) OR
-                        // < 5 trump left OR lost 1st 2 tricks
-                        play1 = 2;
-                    } else {
-                        play1 = 6;
-                        if (worsts != fintp) {
-                            hint[cc3][worsts] = 1;
-                        }
-                    }
-                } else { // throw off
-                    play1 = 6;
-                    if (worsts != fintp) {
-                        hint[cc3][worsts] = 1;
-                    }
-                }
-
-                cardplay = playfirst(play1, fintp, hitrump, sectrump, lotrump, m31, maxsuit, minsuit, suitace, worsts,
-                                     worstr, bb3, playst[bb3][m31], cards);
-                m32 = cardplay%10;
-                n32 = (cardplay/10)%10;
+                cardplay = deal.player32(m3, n3, m2, n2, pos3, win, trick);
+                m3[2] = m32 = cardplay%10;
+                n3[2] = n32 = (cardplay/10)%10;
 
                 System.out.println("Player " + position[bb3] + " plays the " + cardname[m32][n32] + "." + "\n");
                 for (int i=0; i<4; i++) {
@@ -4009,119 +2793,19 @@ class Game {
                     v32 = -1;
                 }
                 if (v32 > v31) {
-                    win3 = bb3;
+                    win[3] = win3 = bb3;
                 }
             }
 
             // third to play, 3rd trick
-            double p33 = 20;
-            play1 = -1;
-            int m33 = -1;
-            int n33 = -1;
-            int v33 = -1;
-            maxsuit = -1; // highest trump
-            minsuit = 20; // lowest trump
-            hitrump = -1;
-            sectrump = -1;
-            lotrump = 20;
-            worsts = -1; // worst suit
-            worstr = -1; // worst rank
-
             if (lone == aa3) {
-                m33 = m31;  // if partner going alone, skip me, so assign same value to my 'play' as win2
-                n33 = n31;
+                m3[3] = m33 = m31;  // if partner going alone, skip me, so assign same value to my 'play' as win2
+                n3[3] = n33 = n31;
                 v33 = v32-1;
             } else { // partner not going alone
-                if (playst[cc3][m31] == 0) { // void in led suit
-                    voids[cc3][m31] = 1;
-                }
-                for (int i=0; i<4; i++) {  // identify worst card
-                    for (int j=0; j<8; j++) {
-                        if (playst[cc3][fintp] > 0) {
-                            if (p33 > cv[0][i][j] && cv[0][i][j] > 0 && own[cc3][i][j] == cc3) {
-                                p33 = cv[0][i][j];
-                                worsts = i;
-                                worstr = j;
-                            }
-                        } else {
-                            if (p33 > cv[1][i][j] && cv[1][i][j] > 0 && own[cc3][i][j] == cc3) {
-                                p33 = cv[1][i][j];
-                                worsts = i;
-                                worstr = j;
-                            }
-                        }
-                    }
-                }
-                for (int j=0; j<8; j++) { // identify highest and lowest rank, following suit
-                    if (own[cc3][m31][j] == cc3) {
-                        if (j > maxsuit) {
-                            maxsuit = j;
-                        }
-                        if (j < minsuit) {
-                            minsuit = j;
-                        }
-                    }
-                }
-                for (int j=0; j<8; j++) { // identify highest, 2nd highest and lowest trump
-                    if (own[cc3][fintp][j] == cc3) {
-                        if (hitrump == -1) {
-                            hitrump = j;
-                            sectrump = j;
-                        } else if (j > hitrump) {
-                            sectrump = hitrump;
-                            hitrump = j;
-                        }
-                        if (j < lotrump) {
-                            lotrump = j;
-                        }
-                    }
-                }
-
-                if (playst[cc3][m31] > 0) { // can follow suit
-                    if (maxsuit > n31+1 && win3 == win2) {
-                        play1 = 3;
-                    } else if (maxsuit > n32 && win3 == bb3 && m31 == m32) {
-                        play1 = 3;
-                    } else {
-                        play1 = 4;
-                    }
-                } else if (m31 != fintp && playst[cc3][fintp] > 0) { // can't follow suit but can trump
-                    if ((right[cc3][fintp] + left[cc3][fintp] > 0) &&
-                        declarer == aa3 && (n31 != boss[cc3][m31] || (win3 == bb3) && m32 != fintp)) {
-                        // trump with bower if have one AND partner is declarer AND either partner didn't play boss or 2nd
-                        // player is winning w/o trump
-                        play1 = 0;
-                    } else if (lone == dd3) { // if next to play is going lone, play highest trump
-                        play1 = 0;
-                    } else if (win3 == bb3 && ((m32 == fintp && lotrump > n32) || m32 != fintp)) { // if 2nd to play is
-                        // winning AND (they played trump AND my lowest trump is higher) OR they didn't play trump,
-                        // play lowest trump
-                        play1 = 2;
-                    } else if (win3 == bb3 && m32 == fintp && sectrump > n32) { // if 2nd to play is winning w/ trump and
-                        // my 2nd highest trump beats them, play 2nd highest trump
-                        play1 = 1;
-                    } else if (win3 == bb3 && m32 == fintp && maxsuit > n32) { // if 2nd to play is winning w/ trump and
-                        // my highest trump beats them, play highest trump
-                        play1 = 0;
-                    } else if (win3 == aa3 && n31 != boss[cc3][m31]) {
-                        play1 = 2; // if partner is winning BUT didn't play boss card, play lowest trump
-                    } else {
-                        play1 = 6;
-                        if (worsts != fintp) {
-                            hint[cc3][worsts] = 1;
-                        }
-                    }
-                } else { //throw off
-                    play1 = 6;
-                    if (worsts != fintp) {
-                        hint[cc3][worsts] = 1;
-                    }
-                }
-
-                cardplay = playfirst(play1, fintp, hitrump, sectrump, lotrump, m31, maxsuit, minsuit, suitace, worsts,
-                                     worstr, cc3, playst[cc3][m31], cards);
-                m33 = cardplay%10;
-                n33 = (cardplay/10)%10;
+                cardplay = deal.player33(m3, n3, m2, n2, pos3, win, trick);
+                m3[3] = m33 = cardplay%10;
+                n3[3] = n33 = (cardplay/10)%10;
 
                 System.out.println("Player " + position[cc3] + " plays the " + cardname[m33][n33] + "." + "\n");
                 for (int i=0; i<4; i++) {
@@ -4144,103 +2828,19 @@ class Game {
                     v33 = -1;
                 }
                 if (v33 > v31 && v33 > v32) {
-                    win3 = cc3;
+                    win[3] = win3 = cc3;
                 }
             }
 
             // fourth to play, 3rd trick
-            double p34 = 20;
-            play1 = -1;
-            int m34 = -1;
-            int n34 = -1;
-            int v34 = -1;
-            hitrump = 20;
-            lotrump = 20;
-            maxsuit = -1; // highest trump
-            minsuit = 20; // lowest trump
-
             if (lone == bb3) {
-                m34 = m32;  // if partner going alone, skip me, pretend I played 9 of led suit
-                n34 = 9;
+                m3[4] = m34 = m32;  // if partner going alone, skip me, pretend I played 9 of led suit
+                n3[4] = n34 = 0;
                 v34 = v33-1;
             } else { // partner not going alone
-                if (playst[dd3][m31] == 0) { // void in led suit
-                    voids[dd3][m31] = 1;
-                }
-                for (int j=7; j>=0; j--) { // calculate lowest trump which beats 3rd player (if trumped and winning)
-                    if (own[dd3][fintp][j] == dd3 && j < hitrump && m33 == fintp && j > n33) {
-                        hitrump = j;
-                    }
-                    if (own[dd3][fintp][j] == dd3 && j < lotrump) { // calculate lowest trump if can win trick and first to trump
-                        lotrump = j;
-                    }
-                }
-                for (int j=7; j>=0; j--) { // calculate maxsuit and minsuit
-                    if (own[dd3][m31][j] == dd3) { // have this rank in hand
-                        if (win3 == aa3 && j > n31) { // 1st to play winning, identify lowest card which wins trick
-                            maxsuit = j;
-                        } else if (win3 == bb3 && declarer == bb3 && m32 != fintp && (right[dd3][fintp] +
-                                                                                      left[dd3][fintp] > 0) && j > n32) {
-                            // 2nd to play winning, identify lowest card which wins trick IF partner declared and have a bower
-                            // to lead next round
-                            maxsuit = j;
-                        } else if (win3 == cc3 && j > n31) { // 3rd to play winning, identify lowest card which wins trick
-                            maxsuit = j;
-                        } else { // else identify worst card in suit to play
-                            minsuit = j;
-                        }
-                    }
-                }
-
-                if (playst[dd3][m31] > 0) { // can follow suit
-                    if (maxsuit != -1) {
-                        play1 = 3;
-                    } else {
-                        play1 = 4;
-                    }
-                } else if (playst[dd3][fintp] > 0) { // can't follow suit but can trump
-                    if (win3 == win2) { // player who led trick is winning, play lowest trump
-                        play1 = 2;
-                    } else if (win3 == cc3) { // 3rd to play winning
-                        if (m33 == fintp && hitrump != 20) { // overtrump if possible
-                            play1 = 0;
-                        } else if (m33 != fintp) { // play lowest trump if first to trump
-                            play1 = 2;
-                        }
-                    } else {
-                        play1 = 6;
-                    }
-                } else {
-                    play1 = 6;
-                }
-                for (int i=0; i<4; i++) { // determine worst card
-                    for (int j=0; j<8; j++) {
-                        if (playst[dd3][fintp] > 0) {
-                            if (p34 > cv[0][i][j] && cv[0][i][j] > 0 && own[dd3][i][j] == dd3) {
-                                p34 = cv[0][i][j];
-                                worsts = i;
-                                worstr = j;
-                                if (worsts != fintp) {
-                                    hint[dd3][worsts] = 1;
-                                }
-                            }
-                        } else {
-                            if (p34 > cv[1][i][j] && cv[1][i][j] > 0 && own[dd3][i][j] == dd3) {
-                                p34 = cv[1][i][j];
-                                worsts = i;
-                                worstr = j;
-                                if (worsts != fintp) {
-                                    hint[dd3][worsts] = 1;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                cardplay = playfirst(play1, fintp, hitrump, sectrump, lotrump, m31, maxsuit, minsuit, suitace, worsts,
-                                     worstr, dd3, playst[dd3][m31], cards);
-                m34 = cardplay%10;
-                n34 = (cardplay/10)%10;
+                cardplay = deal.player34(m3, n3, m2, n2, pos3, win, trick);
+                m3[4] = m34 = cardplay%10;
+                n3[4] = n34 = (cardplay/10)%10;
 
                 System.out.println("Player " + position[dd3] + " plays the " + cardname[m34][n34] + "." + "\n");
                 for (int i=0; i<4; i++) {
@@ -4263,7 +2863,7 @@ class Game {
                     v34 = -1;
                 }
                 if (v34 > v31 && v34 > v32 && v34 > v33) {
-                    win3 = dd3;
+                    win[3] = win3 = dd3;
                 }
             }
 
@@ -4356,137 +2956,15 @@ class Game {
             final int bb4 = (win3+1)%4; // second to play
             final int cc4 = (win3+2)%4; // third to play
             final int dd4 = (win3+3)%4; // fourth to play
+            final int[] pos4 = {aa4, bb4, cc4, dd4};
 
             // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
             // play out fourth trick; first to play is winner of third trick
             wturn = 4; // turn 4
-            play1 = -1;
-            double p41 = 20;
-            double p42 = -1;
-            int m41 = -1;
-            int n41 = -1;
-            int v41 = -1;
-            hitrump = -1;
-            lotrump = 20;
-            maxsuit = -1;
-            minsuit = suit[2][(win3-win2+4)%4];
-            playace = 1.195;
-            suitace = -1;
-            bos = -1;
-            win4 = win3;
 
-            for (int j=0; j<8; j++) { // calculate highest and lowest trump
-                if (own[aa4][fintp][j] == aa4) {
-                    if (j > hitrump) {
-                        hitrump = j;
-                    }
-                    if (j < lotrump) {
-                        lotrump = j;
-                    }
-                }
-            }
-            for (int i=0; i<4; i++) { // calculate if have boss card in any non-trump suit * could have 2 of them!
-                if (own[aa4][i][boss[aa4][i]] == aa4 && i != fintp) {
-                    bos = i;
-                    cv[0][i][boss[aa4][i]] = .95; // make this boss card the best one to lead
-                }
-            }
-            for (int j=0; j<6; j++) { // find max rank of same suit to re-play
-                if (own[aa4][suit[2][(win3-win2+4)%4]][j] == aa4) { // find highest of same suit to lead
-                    maxsuit = j;
-                    minsuit = suit[2][(win3-win2+4)%4];
-                }
-            }
-            for (int i=0; i<4; i++) { // determine best card to lead
-                for (int j=0; j<8; j++) {
-                    if (cv[0][i][j] > p42 && cv[0][i][j] != 0 && own[aa4][i][j] == aa4 && i != fintp) {
-                        p42 = cv[0][i][j];
-                        suitace = i;
-                        sectrump = j;
-                    }
-                }
-            }
-            for (int i=0; i<4; i++) { // determine worst card to lead
-                for (int j=0; j<8; j++) {
-                    if (cv[0][i][j] < p41 && cv[0][i][j] != 0 && own[aa4][i][j] == aa4 && i != fintp) {
-                        p41 = cv[0][i][j];
-                        worsts = i;
-                        worstr = j;
-                    }
-                }
-            }
-
-            // is single-suited, play highest
-            if (playst[aa4][fintp] == 2) { // have 2 trump left, lead highest
-                play1 = 0;
-            } else if (ss[aa4] < 4 && ss[aa4] > -1) {
-                play1 = 5;
-            } else if (lone == aa4) { // if going lone
-                if (own[aa4][fintp][boss[aa4][fintp]] == aa4 || solo[aa4][fintp] == 1 || (playst[aa4][fintp] > 0 &&
-                                                                                          trick[aa4] == 1)) {
-                    // if have boss trump OR are the only player with trump OR have only won 1 trick, lead highest trump
-                    play1 = 0;
-                } else if (((voids[bb4][fintp] == 1 && voids[dd4][fintp] == 1) || trick[aa4] == 3) &&
-                           playst[aa4][fintp] > 0) {
-                    // if both opponents void in trump OR have won 3 tricks, lead highest trump
-                    play1 = 0;
-                } else { // lead best non-trump
-                    play1 = 5;
-                }
-            } else if (lone == bb4 || lone == dd4) { // if opponent going lone
-                if (hitrump == boss[aa4][fintp] || solo[(aa4)%4][fintp] == 1) { // if have boss trump or the only trump,
-                    // lead highest trump
-                    play1 = 0;
-                }
-                else if (suit[2][(aa4-win2+4)%4] != fintp && playst[aa4][suit[2][(win3-win2+4)%4]] > 0) { // if won w/o
-                    // trump lead same suit if have it
-                    play1 = 3;
-                } else { // else lead best non-trump
-                    play1 = 5;
-                }
-            } else if (hitrump == boss[aa4][fintp] || solo[aa4][fintp] == 1) {
-                // if have a boss trump, OR are the only player w/ trump, lead highest trump
-                play1 = 0;
-            } else if ((voids[bb4][fintp] == 1 && voids[dd4][fintp] == 1) && bos != -1) {
-                // if have boss card in an off-suit AND opponents are void in trump, lead it
-                play1 = 5;
-            } else if (trick[aa4] == 3 && aces[aa4][fintp] == 1 && playst[aa4][fintp] == 1 &&
-                       (length[aa4][fintp] - playst[aa4][fintp] < 4)) {
-                // if partnership has won first 3 tricks AND have 1 trump left + boss off-suit AND 3 or less trump left,
-                // play hi trump
-                play1 = 0;
-            } else if (declarer == aa4) { // I am declarer
-                if ((length[aa4][fintp] - playst[aa4][fintp] < 2 && own[aa4][fintp][boss[aa4][fintp]] == aa4) ||
-                    solo[aa4][fintp] == 1) {
-                    // if have boss trump AND only 2 or less trump left, or are the only player with trump left, lead it
-                    play1 = 0;
-                } else if (bos != -1 && own[aa4][fintp][boss[aa4][fintp]] == aa4) { // have boss trump AND a boss off-suit card
-                    play1 = 0;
-                } else {
-                    play1 = 5;
-                }
-            } else if (declarer == cc4) { // partner is declarer
-                if ((length[aa4][fintp] - playst[aa4][fintp] < 2 && own[aa4][fintp][boss[aa4][fintp]] == aa4) ||
-                    solo[aa4][fintp] == 1) {
-                    play1 = 0; // if have the only trump left, or have the boss trump and only one other trump outstanding,
-                    // lead highest trump
-                } else if ((right[aa4][fintp] + left[aa4][fintp]) > 0) {
-                    play1 = 0; // if have a bower, lead it
-                } else if (suitace > -1) {
-                    play1 = 5; // if have a good ace, lead it
-                } else if (trick[aa4] == 1 && playst[aa4][fintp] > 0) {
-                    play1 = 0; // if have trump and have only won 1 trick, lead highest trump
-                } else {
-                    play1 = 6;
-                }
-            } else {
-                play1 = 6;
-            }
-
-            cardplay = playfirst(play1, fintp, hitrump, sectrump, lotrump, m41, maxsuit, minsuit, suitace, worsts,
-                                 worstr, aa4, -1, cards);
-            m41 = cardplay%10;
-            n41 = (cardplay/10)%10;
+            cardplay = deal.player41(m4, n4, m3, n3, pos4, win, trick);
+            m4[1] = m41 = cardplay%10;
+            n4[1] = n41 = (cardplay/10)%10;
 
             System.out.println("Player " + position[aa4] + " plays the " + cardname[m41][n41] + "." + "\n");//
             for (int i=0; i<4; i++) {
@@ -4506,92 +2984,17 @@ class Game {
             } else {
                 v41 = n41;
             }
+            win[4] = win4 = win3;
 
             // second to play, 4th trick
-            p42 = 20;
-            play1 = -1;
-            int m42 = -1;
-            int n42 = -1;
-            int v42 = -1;
-            hitrump = -1;
-            lotrump = 20;
-            maxsuit = -1;
-            minsuit = 20;
-            playace = 1.195;
-            suitace = -1;
-            worsts = -1; // worst suit
-            worstr = -1; // worst rank
-
             if (lone == dd4) {
-                m42 = m41;  // if partner going alone, skip me, so assign same value to my 'play' as win1
-                n42 = n41;
+                m4[2] = m42 = m41;  // if partner going alone, skip me, so assign same value to my 'play' as win1
+                n4[2] = n42 = n41;
                 v42 = v41-2;
             } else { // partner not going alone
-                if (playst[bb4][m41] == 0) { // void in led suit
-                    voids[bb4][m41] = 1;
-                }
-                for (int i=0; i<4; i++) {  // identify worst card
-                    for (int j=0; j<8; j++) {
-                        if (p42 > cv[1][i][j] && cv[1][i][j] > 0 && own[bb4][i][j] == bb4) {
-                            p42 = cv[1][i][j];
-                            worsts = i;
-                            worstr = j;
-                        }
-                    }
-                }
-                for (int j=0; j<8; j++) { // identify highest and lowest trump
-                    if (own[bb4][fintp][j] == bb4) {
-                        if (j > hitrump) {
-                            hitrump = j;
-                        }
-                        if (j < lotrump) {
-                            lotrump = j;
-                        }
-                    }
-                }
-                for (int j=0; j<8; j++) { // identify best and worst rank in led suit
-                    if (own[bb4][m41][j] == bb4) {
-                        if (j > maxsuit) {
-                            maxsuit = j;
-                        }
-                        if (j < minsuit) {
-                            minsuit = j;
-                        }
-                    }
-                }
-
-                if (playst[bb4][m41] > 0) { // can follow suit
-                    if (maxsuit > n41) { // if can take lead, play highest
-                        play1 = 3;
-                    } else { // play lowest in suit
-                        play1 = 4;
-                    }
-                } else if (m41 != fintp && playst[bb4][fintp] > 0) { // can't follow suit but can trump
-                    if (declarer == dd4) { // partner declared
-                        if (right[bb4][fintp] + left[bb4][fintp] > 0) {
-                            // trump with bower if have one and dealer (partner) is declarer
-                            play1 = 0;
-                        } else { // else if have no bower, trump with lowest
-                            play1 = 2;
-                        }
-                    } else if (lone == bb4) { // if going lone, trump with second highest
-                        play1 = 2;
-                    } else if (n41 == boss[bb4][m41] || lone == aa4 || (declarer == bb4 && playst[bb4][fintp] > 1) ||
-                               (trick[bb4] == 1)) {
-                        // play lowest trump if opponent going lone OR boss led OR have 2 trump as declarer OR have
-                        // only won 1 trick so far
-                        play1 = 2;
-                    } else { // throw off
-                        play1 = 6;
-                    }
-                } else { // throw off
-                    play1 = 6;
-                }
-
-                cardplay = playfirst(play1, fintp, hitrump, sectrump, lotrump, m41, maxsuit, minsuit, suitace, worsts,
-                                     worstr, bb4, playst[bb4][m41], cards);
-                m42 = cardplay%10;
-                n42 = (cardplay/10)%10;
+                cardplay = deal.player42(m4, n4, m3, n3, pos4, win, trick);
+                m4[2] = m42 = cardplay%10;
+                n4[2] = n42 = (cardplay/10)%10;
 
                 System.out.println("Player " + position[bb4] + " plays the " + cardname[m42][n42] + "." + "\n");
                 for (int i=0; i<4; i++) {
@@ -4614,98 +3017,19 @@ class Game {
                     v42 = -1;
                 }
                 if (v42 > v41) {
-                    win4 = bb4;
+                    win[4] = win4 = bb4;
                 }
             }
 
             // third to play, 4th trick
-            double p43 = 20;
-            play1 = -1;
-            int m43 = -1;
-            int n43 = -1;
-            int v43 = -1;
-            hitrump = -1;
-            lotrump = 20;
-            maxsuit = -1;
-            minsuit = 20;
-            worsts = -1; // worst suit
-            worstr = -1; // worst rank
-
             if (lone == aa4) {
-                m43 = m41;  // if partner going alone, skip me, so assign same value to my 'play' as win3
-                n43 = n41;
+                m4[3] = m43 = m41;  // if partner going alone, skip me, so assign same value to my 'play' as win3
+                n4[3] = n43 = n41;
                 v43 = v42-1;
             } else { // partner not going alone
-                if (playst[cc4][m41] == 0) { // void in led suit
-                    voids[cc4][m41] = 1;
-                }
-                for (int i=0; i<4; i++) {  // identify worst card
-                    for (int j=0; j<8; j++) {
-                        if (p43 > cv[1][i][j] && cv[1][i][j] > 0 && own[cc4][i][j] == cc4) {
-                            p43 = cv[1][i][j];
-                            worsts = i;
-                            worstr = j;
-                        }
-                    }
-                }
-                for (int j=0; j<8; j++) { // identify highest and lowest trump
-                    if (own[cc4][fintp][j] == cc4) {
-                        if (j > hitrump) {
-                            hitrump = j;
-                        }
-                        if (j < lotrump) {
-                            lotrump = j;
-                        }
-                    }
-                }
-                for (int j=0; j<8; j++) { // identify best and worst rank in led suit
-                    if (own[cc4][m41][j] == cc4) {
-                        if (j > maxsuit) {
-                            maxsuit = j;
-                        }
-                        if (j < minsuit) {
-                            minsuit = j;
-                        }
-                    }
-                }
-
-                if (playst[cc4][m41] > 0) { // can follow suit
-                    if (maxsuit > n41+1 && win4 == win3) {
-                        play1 = 3;
-                    } else if (maxsuit > n42 && win4 == bb4 && m41 == m42) {
-                        play1 = 3;
-                    } else {
-                        play1 = 4;
-                    }
-                } else if ( playst[cc4][fintp] > 0) { // can't follow suit but can trump
-                    if ((right[cc4][fintp] + left[cc4][fintp] > 0) && declarer == aa4 &&
-                        n42 != 7 && (n41 != boss[cc4][m41] || win4 == (bb4))) { // trump with bower if have one
-                        // AND partner is declarer AND either partner didn't play a boss card or 2nd player is winning
-                        play1 = 0;
-                    } else if (lone == dd4) { // if next to play declared alone, play highest trump
-                        play1 = 0;
-                    } else if ((m42 == fintp && lotrump > n42) || (trick[cc4] < 3 && win4 == (bb4) && m42 != fintp)) {
-                        // if previous player trumped AND my lowest trump is better, OR my team has not won all the
-                        // trick so far AND
-                        // previous player is winning the trick w/o trump, play lowest trump
-                        play1 = 2;
-                    } else if (m42 == fintp && maxsuit > n42) { // if previous player trumped AND my highest trump beats
-                        // them, play highest trump
-                        play1 = 0;
-                    } else if (n41 != boss[cc4][m41] && m42 != fintp) {
-                        // if p did not lead the boss rank AND previous player did not trump, play lowest trump
-                        play1 = 2;
-                    } else {
-                        play1 = 6;
-                    }
-                } else { //throw off
-                    play1 = 6;
-                }
-
-                cardplay = playfirst(play1, fintp, hitrump, sectrump, lotrump, m41, maxsuit, minsuit, suitace, worsts,
-                                     worstr, cc4, playst[cc4][m41], cards);
-                m43 = cardplay%10;
-                n43 = (cardplay/10)%10;
+                cardplay = deal.player43(m4, n4, m3, n3, pos4, win, trick);
+                m4[3] = m43 = cardplay%10;
+                n4[3] = n43 = (cardplay/10)%10;
 
                 System.out.println("Player " + position[cc4] + " plays the " + cardname[m43][n43] + "." + "\n");
                 for (int i=0; i<4; i++) {
@@ -4728,90 +3052,19 @@ class Game {
                     v43 = -1;
                 }
                 if (v43 > v41 && v43 > v42) {
-                    win4 = cc4;
+                    win[4] = win4 = cc4;
                 }
             }
 
             // fourth to play, 4th trick
-            double p44 = 20;
-            play1 = -1;
-            int m44 = -1;
-            int n44 = -1;
-            int v44 = -1;
-            hitrump = 20;
-            lotrump = 20;
-            maxsuit = -1; // highest trump
-            minsuit = 20; // lowest trump
-
             if (lone == bb4) {
-                m44 = m42;  // if partner going alone, skip me, pretend I played 9 of led suit
-                n44 = 0;
+                m4[4] = m44 = m42;  // if partner going alone, skip me, pretend I played 9 of led suit
+                n4[4] = n44 = 0;
                 v44 = v43-1;
             } else { // partner not going alone
-                if (playst[dd4][m41] == 0) { // void in led suit
-                    voids[dd4][m41] = 1;
-                }
-                for (int j=7; j>=0; j--) { // calculate lowest trump which beats 3rd player (if trumped and winning)
-                    if (own[dd4][fintp][j] == dd4 && j < hitrump && m43 == fintp && j > n43) {
-                        hitrump = j;
-                    }
-                    if (own[dd4][fintp][j] == dd4 && j < lotrump) { // calculate lowest trump if can win trick and 3rd
-                        // seat didn't trump
-                        lotrump = j;
-                    }
-                }
-                for (int j=7; j>=0; j--) { // calculate maxsuit and minsuit
-                    if (own[dd4][m41][j] == dd4) { // have this rank
-                        if (win4 == win3 && j > n41) { // 1st to play winning, identify lowest card which wins trick
-                            maxsuit = j;
-                        } else if (win4 == bb4 && declarer == bb4 && m42 != fintp && (own[dd4][fintp][7] == dd4 ||
-                                                                                      own[dd4][fintp][6] == dd4) && j > n42) {
-                            // 2nd to play winning, identify lowest card which wins trick IF partner declared and have a
-                            // bower to lead next round
-                            maxsuit = j;
-                        } else if (win4 == cc4 && j > n43) { // 3rd to play winning, identify lowest card which wins trick
-                            maxsuit = j;
-                        } else { // else identify worst card in suit to play
-                            minsuit = j;
-                        }
-                    }
-                }
-                for (int i=0; i<4; i++) { // calculate worst card
-                    for (int j=0; j<8; j++) {
-                        if (p44 > cv[1][i][j] && cv[1][i][j] > 0 && own[dd4][i][j] == dd4) {
-                            p44 = cv[1][i][j];
-                            worsts = i;
-                            worstr = j;
-                        }
-                    }
-                }
-
-                if (playst[dd4][m41] > 0) { // can follow suit
-                    if (maxsuit != -1) {
-                        play1 = 3;
-                    } else {
-                        play1 = 4;
-                    }
-                } else if (playst[dd4][fintp] > 0) { // can't follow suit but can trump
-                    if (win4 == win3) { // player who led trick is winning, play lowest trump
-                        play1 = 2;
-                    } else if (win4 == cc4) { // 3rd to play winning
-                        if (m43 == fintp && hitrump != 20) { // overtrump if possible
-                            play1 = 0;
-                        } else if (m43 != fintp) { // play lowest trump if first to trump
-                            play1 = 2;
-                        }
-                    } else {
-                        play1 = 6;
-                    }
-                } else {
-                    play1 = 6;
-                }
-
-                cardplay = playfirst(play1, fintp, hitrump, sectrump, lotrump, m41, maxsuit, minsuit, suitace, worsts,
-                                     worstr, dd4, playst[dd4][m41], cards);
-                m44 = cardplay%10;
-                n44 = (cardplay/10)%10;
+                cardplay = deal.player44(m4, n4, m3, n3, pos4, win, trick);
+                m4[4] = m44 = cardplay%10;
+                n4[4] = n44 = (cardplay/10)%10;
 
                 System.out.println("Player " + position[dd4] + " plays the " + cardname[m44][n44] + "." + "\n");
                 for (int i=0; i<4; i++) {
@@ -4834,7 +3087,7 @@ class Game {
                     v44 = -1;
                 }
                 if (v44 > v41 && v44 > v42 && v44 > v43) {
-                    win4 = dd4;
+                    win[4] = win4 = dd4;
                 }
             }
 
@@ -4853,19 +3106,17 @@ class Game {
             final int bb5 = (win4+1)%4; // second to play
             final int cc5 = (win4+2)%4; // third to play
             final int dd5 = (win4+3)%4; // fourth to play
+            final int[] pos5 = {aa5, bb5, cc5, dd5};
 
             // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
             // play out fifth trick; first to play is winner of fourth trick
             wturn = 5; // trick 5
-            win5 = win4;
-            int m51 = -1;
-            int n51 = -1;
-            int v51 = -1;
+
             for (int i=0; i<4; i++) {
                 for (int j=0; j<8; j++) {
                     if (own[win4][i][j] == win4) {
-                        m51 = i;
-                        n51 = j;
+                        m5[1] = m51 = i;
+                        n5[1] = n51 = j;
                     }
                 }
             }
@@ -4878,20 +3129,18 @@ class Game {
             } else {
                 v51 = n51;
             }
+            win[5] = win5 = win4;
 
             // second to play, fifth trick
-            int m52 = -1;
-            int n52 = -1;
-            int v52 = -1;
             if (lone == (win4+3)%4) {
-                m52 = m51;  // if partner going alone, skip me, so assign same value to my 'play' as win1
-                n52 = n51;
+                m5[2] = m52 = m51;  // if partner going alone, skip me, so assign same value to my 'play' as win1
+                n5[2] = n52 = n51;
             } else {  // partner not going alone
                 for (int i=0; i<4; i++) {
                     for (int j=0; j<8; j++) {
                         if (own[(win4+1)%4][i][j] == (win4+1)%4) {
-                            m52 = i;
-                            n52 = j;
+                            m5[2] = m52 = i;
+                            n5[2] = n52 = j;
                             v52 = v51-2;
                         }
                     }
@@ -4908,23 +3157,20 @@ class Game {
                     v52 = -1;
                 }
                 if (v52 > v51) {
-                    win5 = (win4+1)%4;
+                    win[5] = win5 = (win4+1)%4;
                 }
             }
 
             // third to play, fifth trick
-            int m53 = -1;
-            int n53 = -1;
-            int v53 = -1;
             if (lone == win4) {
-                m53 = m51;  // if partner going alone, skip me, so assign same value to my 'play' as win5
-                n53 = n51;
+                m5[3] = m53 = m51;  // if partner going alone, skip me, so assign same value to my 'play' as win5
+                n5[3] = n53 = n51;
             } else {  // partner not going alone
                 for (int i=0; i<4; i++) {
                     for (int j=0; j<8; j++) {
                         if (own[(win4+2)%4][i][j] == (win4+2)%4) {
-                            m53 = i;
-                            n53 = j;
+                            m5[3] = m53 = i;
+                            n5[3] = n53 = j;
                             v53 = v52-2;
                         }
                     }
@@ -4941,23 +3187,20 @@ class Game {
                     v53 = -1;
                 }
                 if (v53 > v51 && v53 > v52) {
-                    win5 = (win4+2)%4;
+                    win[5] = win5 = (win4+2)%4;
                 }
             }
 
             // fourth to play, fifth trick
-            int m54 = -1;
-            int n54 = -1;
-            int v54 = -1;
             if (lone == (win4+1)%4) {
-                m54 = m52;  // if partner going alone, skip me, so assign same value to my 'play' as partner
-                n54 = n52;
+                m5[4] = m54 = m52;  // if partner going alone, skip me, so assign same value to my 'play' as partner
+                n5[4] = n54 = n52;
             } else {  // partner not going alone
                 for (int i=0; i<4; i++) {
                     for (int j=0; j<8; j++) {
                         if (own[(win4+3)%4][i][j] == (win4+3)%4) {
-                            m54 = i;
-                            n54 = j;
+                            m5[4] = m54 = i;
+                            n5[4] = n54 = j;
                             v54 = v53-2;
                         }
                     }
@@ -4974,7 +3217,7 @@ class Game {
                     v54 = -1;
                 }
                 if (v54 > v51 && v54 > v52 && v54 > v53) {
-                    win5 = (win4+3)%4;
+                    win[5] = win5 = (win4+3)%4;
                 }
             }
 
@@ -5060,12 +3303,20 @@ class Game {
 class Deal {
 
     // Initialized in constructor
-    BidStrategy bid;
-    PlayStrategy play;
     int[] cards;
     int dealer;
     int upst; // suit of turned card
     int uprk; // rank of turned card
+    int aa; // position after dealer
+    int bb; // position of dealer's partner
+    int cc; // position before dealer
+    int dd; // position of dealer
+
+    // Initialized in preparePlay()
+    int declarer;
+    int fintp;
+    int lone;
+    int round;
 
     // Create arrays to store cards for each player (value of 1 means player has the card)
     int[][][] own = new int[4][4][8]; // keeps track of where each card is, from [player]'s perspective
@@ -5114,13 +3365,16 @@ class Deal {
     int cswap = -1; // only known to dealer
 
     // *** Constructor, initializing deal parameters ***
-    public Deal(BidStrategy bid, PlayStrategy play, int[] cards, int dealer) {
-        this.bid = bid;
-        this.play = play;
+    public Deal(int[] cards, int dealer) {
         this.cards = cards;
         this.dealer = dealer;
+
         this.upst = cards[20]%4;
         this.uprk = cards[20]/4;
+        this.aa = (dealer+1)%4;
+        this.bb = (dealer+2)%4;
+        this.cc = (dealer+3)%4;
+        this.dd = dealer;
     }
 
     // *** Method "prepareBid" for initializing variables used in bidding ***
@@ -5128,7 +3382,7 @@ class Deal {
 
         // New calculation of best card to discard
         int seat = 8; // see notes (pertains to bidding situation)
-        cswap = bid.swapcard(cards, seat, dealer); // determines # of card swapped by dealer for turn card
+        cswap = BidStrategy.swapcard(cards, seat, dealer); // determines # of card swapped by dealer for turn card
         // only for purposes of creating bidding hand for dealer, with turn card as trump
 
         // New method for calculating bidscore (determining best bid for each player)
@@ -5143,7 +3397,7 @@ class Deal {
                 }
                 int post = i; // position of player (relative to dealer)
                 int tsuit = j; // which suit is trump (turn card suit means round 1, else round 2)
-                bidscore[i][j] = bid.trump(cards, post, tsuit, upst, uprk);
+                bidscore[i][j] = BidStrategy.trump(cards, post, tsuit, upst, uprk);
                 if (noteswap == 1) { // swap back turn card
                     int temp = cards[cswap];
                     cards[cswap] = cards[20];
@@ -5283,20 +3537,24 @@ class Deal {
         }
     }
 
-    // *** Method "doSwap" for executing dealer swap (for turn card) ***
-    public void doSwap(int declarer, int lone) {
-
-        // Re-calculate of best card to discard
-        int seat = ((declarer-dealer+4)%4)*2 + 1 - (lone+6)/6; // see spreadsheet for meaning
-        cswap = bid.swapcard(cards, seat, dealer); // determines # of card swapped by dealer for turn card
-
-        int temp = cards[cswap]; // dealer swaps cards
-        cards[cswap] = cards[20];
-        cards[20] = temp;
-    }
-
     // *** Method "preparePlay" for initializing variables used in playing ***
-    public void preparePlay(int fintp, int lone, int round) {
+    public void preparePlay(int declarer, int fintp, int lone, int round) {
+
+        this.declarer = declarer;
+        this.fintp = fintp;
+        this.lone = lone;
+        this.round = round;
+
+        // if first round contract AND seat 2 didn't call lone, have dealer swap cards
+        if (round == 0 && lone != bb) {
+            // Re-calculate of best card to discard
+            int seat = ((declarer-dealer+4)%4)*2 + 1 - (lone+6)/6; // see spreadsheet for meaning
+            cswap = BidStrategy.swapcard(cards, seat, dealer); // determines # of card swapped by dealer for turn card
+
+            int temp = cards[cswap]; // dealer swaps cards
+            cards[cswap] = cards[20];
+            cards[20] = temp;
+        }
 
         // change value of bowers to reflect proper suit and hierarchy
         for (int i=0; i<24; i++) {
@@ -5430,7 +3688,7 @@ class Deal {
         }
 
         //** invoke method calc to calculate values for cv[lead][][] and cv[toss][][]
-        cv = play.calc(cards, fintp, own, playst, max, nax, lone, dealer);
+        cv = PlayStrategy.calc(cards, fintp, own, playst, max, nax, lone, dealer);
 
         // determine number of non-trump void suits for each player
         for (int i=0; i<4; i++) {
@@ -5441,5 +3699,2039 @@ class Deal {
                 }
             }
         }
+    }
+
+    // *** Method "playfirst" for play of cards ***
+    int playfirst(int play, int fintp, int hitrump, int sectrump, int lotrump, int lead,
+                  int maxsuit, int minsuit, int suitace, int worsts, int worstr, int who,
+                  int slength, int cards[]) {
+        int cardplay = -1;
+        int m = -1;
+        int n = -1;
+        // values of play1: 0 = high trump; 1 = second high trump; 2 = low trump;
+        // 3 = maxsuit; 4 = minsuit; 5 = best A; 6 = worst card (default)
+        if (play == 0) {
+            m = fintp;
+            n = hitrump;
+        } else if (play == 1) {
+            m = fintp;
+            n = sectrump;
+        } else if (play == 2) {
+            m = fintp;
+            n = lotrump;
+        } else if (play == 3) {
+            if (lead == -1) { // **can also mean lead same suit!
+                m = minsuit;
+            } else {
+                m = lead;
+            }
+            n = maxsuit;
+        } else if (play == 4) {
+            m = lead;
+            n = minsuit;
+        } else if (play == 5 && suitace != -1) {
+            if (slength == -1) {
+                n = sectrump;
+            } else {
+                n = 5;
+            }
+            m = suitace;
+        } else { // play worst card
+            m = worsts;
+            n = worstr;
+        }
+        cardplay = m + n*10;
+        return cardplay;
+    }
+
+    public int player11(int[] m1, int[] n1, int[] m0, int[] n0, int[] pos, int[] win, int[] trick) {
+        int hitrump = -1;
+        int sectrump = -1;
+        int lotrump = 20;
+        int maxsuit = -1;
+        int minsuit = 20;
+        int suitace = -1; // suit of A played
+        double playace = 0; // value of A played
+        int worsts = -1; // worst suit
+        int worstr = -1; // worst rank
+        int worstsa = -1; // alternate worst suit
+        int worstra = -1; // alternate worst rank
+        int play1 = -1;
+
+        double p11 = 20;
+        double p11a = 20;
+        int m11 = m1[1];
+
+        for (int i=0; i<4; i++) { // establishes best ace to lead; not trump AND 5+ length suit
+            if (own[aa][i][5] == aa && cv[0][i][5] > playace && i != fintp && length[aa][i] > 4 &&
+                (i != cards[20]%4 || round == 0)) {
+                playace = cv[0][i][5];
+                suitace = i;
+            }
+        }
+        for (int i=0; i<8; i++) {
+            if (own[aa][fintp][i] == aa) {
+                if (i > hitrump) {
+                    hitrump = i; // calculates rank of highest trump (0 - 7)
+                }
+                if (i < lotrump) {
+                    lotrump = i; // calculates rank of lowest trump (0 - 7)
+                }
+            }
+        }
+        for (int i=0; i<4; i++) {  // find lowest card from shortest suit (lowest cv[0] value)
+            for (int j=0; j<6; j++) {
+                if (p11 > cv[0][i][j] && cv[0][i][j] > 0 && own[aa][i][j] == aa) {
+                    p11 = cv[0][i][j];
+                    worsts = i;
+                    worstr = j;
+                }
+            }
+        }
+        for (int i=0; i<4; i++) {  // find 2nd lowest card from shortest suit (alternate cv[0])
+            for (int j=0; j<8; j++) {
+                if (p11a > cv[0][i][j] && cv[0][i][j] > 0 && own[aa][i][j] == aa && p11 < cv[0][i][j]) {
+                    p11a = cv[0][i][j];
+                    worstsa = i;
+                    worstra = j;
+                }
+            }
+        }
+        // if worst card in hand is in turned suit, and bid was made 2nd round, assign next worst card as worst card
+        if (worsts == upst && round == 1 && worsts != worstsa) {
+            worsts = worstsa;
+            worstr = worstra;
+        }
+
+        if (lone == aa && playst[aa][fintp] > 0) { // if going lone, lead highest trump (if have trump)
+            play1 = 0;
+        } else if (lone == dd || lone == bb) { // if defending against lone
+            if (aces[aa][fintp] > 1) { // if have more than one A, play one
+                play1 = 5;
+            } else { // else play worst card
+                play1 = 6;
+            }
+        } else if (declarer == cc) { // partner in 3rd seat is declarer
+            if (hitrump > 5 || playst[aa][fintp] > 2) {
+                // if have bower or 3+ trump, lead best trump
+                play1 = 0;
+            } else if (playst[aa][fintp] > 0) { // else lead worst trump
+                play1 = 2;
+            } else if (playace > 1.195) { // else lead a 'good A'
+                play1 = 5;
+            } else { // else lead worst card
+                play1 = 6;
+            }
+        } else if (declarer == aa) { // if declared w/ partner
+            if (right[aa][fintp] + left[aa][fintp] == 2 &&
+                (aces[aa][fintp] > 0 || playst[aa][fintp] > 2)) {
+                // if have both bowers AND (an off-suit A OR 3+ trump), lead R
+                play1 = 0;
+            } else if (right[aa][fintp] == 1 && acet[aa][fintp] == 1 && kingt[aa][fintp] == 1) {
+                // if have R + A + K of trump, lead R
+                play1 = 0;
+            } else if (left[aa][fintp] == 1 && acet[aa][fintp] == 1 && (aces[aa][fintp] > 0 ||
+                                                                        playst[aa][fintp] > 2)) { // if have L + A of trump AND (an off-A OR 3+ trump), lead L
+                play1 = 0;
+            } else if (left[aa][fintp] == 1 && playst[aa][fintp] == 2 && aces[aa][fintp] > 0 &&
+                       vd[aa] == 2 && round == 1) { // if have L-x of trump AND an off-A AND 2-suited, lead L
+                play1 = 0;
+            } else if (suitace != -1) {
+                if (round == 0 && declarer == aa && right[aa][fintp] == 1 && playst[aa][fintp] == 2 &&
+                    (ace[aa][suitace] == 3 || (ace[aa][suitace] == 2 && own[aa][suitace][4] == aa))) {
+                    play1 = 0; // if round 1 AND declarer AND have R + another trump AND either (have A-x-x or A-K
+                    // off-suit), lead R, then A 2nd trick
+                    sit[0] = 1; // 1st special situation: will win this trick, should lead off-suit A 2nd trick
+                }
+            } else if (playst[aa][fintp] == 3 && round == 1 && right[aa][fintp] == 0) {
+                // bid 2nd round with 3 trump AND don't have R
+                if (playace > 0) { // lead an off-suit A if have one
+                    play1 = 5;
+                } else if (uprk == 2) { // if R turned, lead high trump
+                    play1 = 0;
+                } else { // else lead low trump
+                    play1 = 2;
+                }
+            } else if (aces[aa][fintp] > 0 && ((hitrump < 6 && playst[aa][fintp] > 1) || (fintp == 3-upst &&
+                                                                                          (right[aa][fintp] + left[aa][fintp] == 1) && playst[aa][fintp] > 2))) {
+                // if have an off-suit A AND (have 2+ non-bower trump OR [next is trump AND have at least three trump
+                // headed by only one bower]), lead low trump
+                play1 = 2;
+            } else if (playst[aa][fintp] == 4) { // if have 4 trump, lead low trump
+                play1 = 2;
+            } else {
+                play1 = 6;
+            }
+        } else if (declarer == bb) { // if 2nd seat declared
+            if (right[aa][fintp] + left[aa][fintp] == 2) {
+                // if have both bowers, lead R
+                play1 = 0;
+                // if have 3+ trump AND R not turned, lead low trump
+            } else if (uprk != 2 && playst[aa][fintp] > 2) {
+                play1 = 2;
+            } else if (uprk == 2 && vd[aa] == 0 && aces[aa][fintp] == 0 && hitrump < 4 &&
+                       playst[aa][fintp] == 1) { // if R is turn card AND are 4-suited AND have no aces AND
+                // a single trump Q-, lead trump
+                play1 = 0;
+            } else if (playst[aa][fintp] == 2 && vd[aa] > 0 && aces[aa][fintp] > 0 &&
+                       suitace > -1) {
+                // if have 2 trump AND are 2- or 3-suited AND have an off-suit Ace
+                if (hitrump > 5) { // if have a bower, lead best Ace
+                    play1 = 5;
+                } else { // else lead low trump
+                    play1 = 2;
+                }
+            } else if (playst[aa][fintp] == 2 && vd[aa] > 0 && aces[aa][fintp] == 0) {
+                // if have 2 trump AND are 2- or 3-suited AND no off-suit Ace
+                if (uprk == 2 || right[aa][fintp] == 1) { // if R turned OR have R, lead worst card
+                    play1 = 6;
+                } else { // else lead low trump
+                    play1 = 2;
+                }
+            } else if (playace > 1.195) { // else lead a 'good A'
+                play1 = 5;
+            } else { // else lead worst card
+                play1 = 6;
+            }
+        } else if (declarer == dd) { // dealer declared
+            if (playst[aa][fintp] == 2 && vd[aa] > 0 &&
+                aces[aa][fintp] == 0 && hitrump < 4) { // have 2 trump AND 2- or 3-suited AND
+                // have no Ace AND Q- is best trump, lead low trump
+                play1 = 2;
+            } else if (playace > 1.195) { // else lead a 'good A'
+                play1 = 5;
+            } else { // else lead worst card
+                play1 = 6;
+            }
+        }
+
+        // if leading a non-trump non-ace and have the A of that suit as well, lead the A instead
+        if (worsts == suitace && play1 == 6) {
+            play1 = 5;
+        }
+
+        return playfirst(play1, fintp, hitrump, sectrump, lotrump, m11, maxsuit, minsuit, suitace,
+                         worsts, worstr, aa, 0, cards);
+    }
+
+    public int player12(int[] m1, int[] n1, int[] m0, int[] n0, int[] pos, int[] win, int[] trick) {
+        int hitrump = -1;
+        int sectrump = -1;
+        int lotrump = 20;
+        int maxsuit = -1;
+        int minsuit = 20;
+        int suitace = -1; // suit of A played
+        double playace = 0; // value of A played
+        int worsts = -1; // worst suit
+        int worstr = -1; // worst rank
+        int play1 = -1;
+
+        double p12 = 20;
+        int m11 = m1[1];
+        int n11 = n1[1];
+
+        if (lone != cc && playst[bb][m11] == 0) { // void in led suit
+            voids[bb][m11] = 1;
+        }
+        for (int i=0; i<4; i++) { // identify best ace
+            if (own[bb][i][5] == bb && cv[0][i][5] > playace && i != fintp) {
+                playace = cv[0][i][5];
+                suitace = i;
+            }
+        }
+        for (int i=0; i<4; i++) { // identify worst card
+            for (int j=0; j<8; j++) {
+                if (playst[bb][fintp] > 0) { // if have trump use cv[0][][] to determine worst card
+                    if (p12 > cv[0][i][j] && cv[0][i][j] > 0 && own[bb][i][j] == bb) {
+                        p12 = cv[0][i][j];
+                        worsts = i;
+                        worstr = j;
+                    }
+                } else { // if void in trump, use 'cvtoss' to determine worst card
+                    if (p12 > cv[1][i][j] && cv[1][i][j] > 0 && own[bb][i][j] == bb) {
+                        p12 = cv[1][i][j];
+                        worsts = i;
+                        worstr = j;
+                    }
+                }
+            }
+        }
+        if (lone != cc) { // only do calculation if 3rd seat not going lone
+            for (int j=0; j<8; j++) { // calculate highest and lowest of led suit
+                if (own[bb][m11][j] == bb) {
+                    if (j > maxsuit) {
+                        maxsuit = j;
+                    }
+                    if (j < minsuit) {
+                        minsuit = j;
+                    }
+                }
+            }
+        }
+        for (int j=0; j<8; j++) { // calculate highest, second highest, and lowest trump
+            if (own[bb][fintp][j] == bb) {
+                if (hitrump == -1) {
+                    hitrump = j;
+                    sectrump = j;
+                } else if (j > hitrump) {
+                    sectrump = hitrump;
+                    hitrump = j;
+                }
+                if (j < lotrump) {
+                    lotrump = j;
+                }
+            }
+        }
+
+        if (lone == bb && playst[bb][m11] == 0 && playst[bb][fintp] > 0) { // 2nd seat going alone
+            // and can't follow suit but have trump
+            play1 = 1;
+        } else if (lone == cc) { // 3rd seat going alone, so 2nd seat is first lead
+            if (playst[bb][3-fintp] > 0) {
+                worsts = 3-fintp;
+                for (int i=0; i<8; i++) { // play highest of next suit (hopefully partner [dealer] is void and not declarer)
+                    if (own[bb][3-fintp][i] == bb) {
+                        worstr = i;
+                        play1 = 6; // special case: play 'worst card' but assign proper values
+                    }
+                }
+            } else if (aces[bb][fintp] > 1) { // have 2+ aces, then play one
+                play1 = 5;
+            } else { // otherwise play worst card
+                play1 = 6;
+            }
+            m11 = worsts; // pretend West played North's worst suit (irrelevant)
+            n11 = 0; // pretend West played a 9
+        } else if (playst[bb][m11] > 0) { // can follow suit
+            if (fintp == upst && uprk == 2 && m11 == upst) { // trump led and know partner has R
+                play1 = 4;
+            } else if (maxsuit > n11) { // can beat lead
+                play1 = 3;
+            } else {
+                play1 = 4;
+            }
+        } else if (m11 != fintp && playst[bb][fintp] > 0) { // can't follow suit but can trump
+            if (n11 < 4 && declarer == cc) { // if Q- led AND 3rd seat declarer, trump with 2nd highest
+                play1 = 1;
+            } else if (declarer == dd && hitrump == 7 && playst[bb][fintp] == 1 && rank[0][0] < 5) {
+                play1 = 6; // if dealer declared AND have only one trump, R, AND lead was not an A, throw off [trying for 5 tricks]
+            } else if (declarer == dd && hitrump > 5 ) { // trump with bower if partner (dealer) declared AND have a bower
+                play1 = 0;
+            } else if (declarer == bb) { // play low trump if declared
+                play1 = 2;
+            } else if (declarer != bb && n11 > 3 && lotrump != 7) {
+                // trump low if not declarer AND K or A led (but not w/ R)
+                play1 = 2;
+            } else { // play worst card
+                play1 = 6;
+                if (worsts != fintp) {
+                    hint[bb][worsts] = 1;
+                }
+            }
+        } else { // play worst card
+            play1 = 6;
+            if (worsts != fintp) {
+                hint[bb][worsts] = 1;
+            }
+        }
+
+        return playfirst(play1, fintp, hitrump, sectrump, lotrump, m11, maxsuit, minsuit, suitace, worsts,
+                         worstr, bb, playst[bb][m11], cards);
+    }
+
+    public int player13(int[] m1, int[] n1, int[] m0, int[] n0, int[] pos, int[] win, int[] trick) {
+        int hitrump = -1;
+        int sectrump = -1;
+        int lotrump = 20;
+        int maxsuit = -1;
+        int minsuit = 20;
+        int suitace = -1; // suit of A played
+        double playace = 0; // value of A played
+        int worsts = -1; // worst suit
+        int worstr = -1; // worst rank
+        int play1 = -1;
+
+        double p13 = 20;
+        int lowtrump = 0; // lowest trump that beats 2nd seat if 2nd seat trumped
+        int m11 = m1[1];
+        int n11 = n1[1];
+        int m12 = m1[2];
+        int n12 = n1[2];
+        int win1 = win[1];
+
+        // overrides
+        play1 = 6;
+
+        if (playst[cc][m11] == 0) { // void in led suit
+            voids[cc][m11] = 1;
+        }
+        for (int i=0; i<4; i++) {  // identify worst card
+            for (int j=0; j<8; j++) {
+                if (playst[cc][fintp] > 0) {
+                    if (p13 > cv[0][i][j] && cv[0][i][j] > 0 && own[cc][i][j] == cc) {
+                        p13 = cv[0][i][j];
+                        worsts = i;
+                        worstr = j;
+                    }
+                } else {
+                    if (p13 > cv[1][i][j] && cv[1][i][j] > 0 && own[cc][i][j] == cc) {
+                        p13 = cv[1][i][j];
+                        worsts = i;
+                        worstr = j;
+                    }
+                }
+            }
+        }
+        for (int j=0; j<8; j++) {
+            if (own[cc][m11][j] == cc) { // find best and worst card if following suit
+                if (j > maxsuit) {
+                    maxsuit = j;
+                }
+                if (j < minsuit) {
+                    minsuit = j;
+                }
+            }
+        }
+        for (int j=0; j<8; j++) { // calculate highest, second highest, and lowest trump
+            if (own[cc][fintp][j] == cc) {
+                if (hitrump == -1) {
+                    hitrump = j;
+                    sectrump = j;
+                } else if (j > hitrump) {
+                    sectrump = hitrump;
+                    hitrump = j;
+                }
+                if (j < lotrump) {
+                    lotrump = j;
+                }
+            }
+        }
+
+        if (playst[cc][m11] > 0) { // can follow suit
+            if ((maxsuit > n11+1 && win1 == aa) || (win1 == bb && maxsuit > n12 && m12 == m11)) {
+                play1 = 3; // play highest card of suit to take lead if:
+                // partner winning AND can beat by 2 ranks, OR opponent winning and can beat (and they followed suit)
+            } else {
+                play1 = 4; // play lowest card of suit
+            }
+        } else if (m11 != fintp && playst[cc][fintp] > 0) { // void in suit led but able to trump
+            for (int j=7; j>=0; j--) { // determine lowest trump to take lead IF 2nd player trumped
+                if (own[cc][fintp][j] == cc && j > n12 && m12 == fintp) {
+                    lowtrump = j;
+                }
+            }
+            if (lone == cc) { // 3rd seat going lone: trump with second highest (if not bower), else lowest
+                if (sectrump < 6) {
+                    play1 = 1;
+                } else {
+                    play1 = 2;
+                }
+            } else if (lone == dd) { // dealer going lone: trump with highest, unless have R or protected L or A,
+                // in which case play worst card
+                if (right[cc][fintp] == 1 || (left[cc][fintp] == 1 && playst[cc][fintp] > 1) ||
+                    (acet[cc][fintp] == 1 && playst[cc][fintp] > 2)) {
+                    play1 = 6;
+                    if (worsts != fintp) {
+                        hint[cc][worsts] = 1;
+                    }
+                } else {
+                    play1 = 0;
+                }
+
+            } else if (m12 != fintp && (win1 == bb || (n11 < boss[cc][m11] && lotrump != 7))) { // if 2nd seat winning
+                // w/o trump OR 1st seat (partner) played lower than boss card, play lowest trump (but play worst
+                // card if only R)
+                play1 = 2;
+            } else if (m12 == fintp && lowtrump > n12) { // if 2nd seat trumped but can overtrump, do so with lowest
+                // trump that takes lead
+                lotrump = lowtrump;
+                play1 = 2;
+            } else {
+                play1 = 6;
+                if (worsts != fintp) {
+                    hint[cc][worsts] = 1;
+                }
+            }
+        } else { // throw off
+            play1 = 6;
+            if (worsts != fintp) {
+                hint[cc][worsts] = 1;
+            }
+        }
+
+        return playfirst(play1, fintp, hitrump, sectrump, lotrump, m11, maxsuit, minsuit, suitace, worsts,
+                         worstr, cc, playst[cc][m11], cards);
+    }
+
+    public int player14(int[] m1, int[] n1, int[] m0, int[] n0, int[] pos, int[] win, int[] trick) {
+        int hitrump = -1;
+        int sectrump = -1;
+        int lotrump = 20;
+        int maxsuit = -1;
+        int minsuit = 20;
+        int suitace = -1; // suit of A played
+        double playace = 0; // value of A played
+        int worsts = -1; // worst suit
+        int worstr = -1; // worst rank
+        int play1 = -1;
+
+        double p14 = 20;
+        int m11 = m1[1];
+        int n11 = n1[1];
+        int m12 = m1[2];
+        int n12 = n1[2];
+        int m13 = m1[3];
+        int n13 = n1[3];
+        int win1 = win[1];
+
+        // overrides
+        play1 = 6;
+        hitrump = -1; // overtrump 3rd seat in this instance
+        sectrump = -1;
+        lotrump = 20;
+
+        if (playst[dd][m11] == 0) { // void in led suit
+            voids[dd][m11] = 1;
+        }
+        for (int i=0; i<4; i++) { // identify worst card
+            for (int j=0; j<8; j++) {
+                if (playst[dd][fintp] > 0) {
+                    if (p14 > cv[0][i][j] && cv[0][i][j] > 0 && own[dd][i][j] == dd) {
+                        p14 = cv[0][i][j];
+                        worsts = i;
+                        worstr = j;
+                    }
+                } else {
+                    if (p14 > cv[1][i][j] && cv[1][i][j] > 0 && own[dd][i][j] == dd) {
+                        p14 = cv[1][i][j];
+                        worsts = i;
+                        worstr = j;
+                    }
+                }
+            }
+        }
+
+        if (win1 == aa) { // first seat is winning
+            if (playst[dd][m11] > 0) { // can follow suit
+                for (int j=7; j>=0; j--) { // calculate lowest card which beats 1st seat, and lowest card in suit
+                    if (own[dd][m11][j] == dd) {
+                        if (j > n11) { // maxsuit given a value IF can win
+                            maxsuit = j;
+                            play1 = 3;
+                        } else if (j < minsuit && maxsuit == -1) { // minsuit is default to use if maxsuit still = -1
+                            minsuit = j;
+                            play1 = 4;
+                        }
+                    }
+                }
+            } else if (playst[dd][fintp] > 0) { // if can't follow suit, but can trump
+                if (declarer == dd && (right[dd][fintp] + left[dd][fintp] == 2) && playst[dd][fintp] == 2) {
+                    // default to playing worst card if declared as dealer and only have both bowers
+                    play1 = 6;
+                } else if (declarer == bb && playst[dd][fintp] == 4 && worstr == 5 && (right[dd][fintp] +
+                                                                                       left[dd][fintp] == 2)) {
+                    hitrump = 7;
+                    play1 = 0; // partner declared AND have 4 trump (including both bowers) AND off-suit is an Ace,
+                    // win w/ R
+                } else {
+                    for (int j=7; j>=0; j--) {
+                        if (own[dd][fintp][j] == dd && j < lotrump) { // lotrump given a value IF can trump for win
+                            lotrump = j;
+                            play1 = 2;
+                        }
+                    }
+                }
+            } else {
+                play1 = 6;
+            }
+        }
+        if (win1 == bb) { // partner in 2nd seat is winning
+            if (playst[dd][m11] > 0) { // can follow suit (if can't follow suit, default will be to throw off worst card)
+                for (int j=7; j>=0; j--) { // calculate lowest card which beats partner, and lowest card in suit
+                    if (own[dd][m11][j] == dd) {
+                        if (j > n12) {
+                            maxsuit = j; // maxsuit given a value IF beats partner
+                        }
+                        if (j < minsuit) {
+                            minsuit = j; // minsuit is default lowest card to follow suit
+                        }
+                    }
+                }
+                if (m12 != fintp && declarer == bb && (right[dd][fintp] + left[dd][fintp] > 0) && maxsuit > -1) {
+                    // if 2nd seat declared AND is winning
+                    // w/o trump AND I can beat him AND I have a bower, player higher card (to lead bower next trick)
+                    play1 = 3;
+                } else {
+                    play1 = 4;
+                }
+            } else {
+                play1 = 6;
+            }
+        }
+        if (win1 == cc) { // 3rd seat winning
+            if (playst[dd][m11] > 0) { // can follow suit
+                for (int j=7; j>=0; j--) {
+                    if (own[dd][m11][j] == dd) {
+                        if (j > n13 && m13 == m11) {
+                            maxsuit = j; // lowest card which beats 3rd seat, if they followed lead
+                            play1 = 3;
+                        } else if (j < minsuit && maxsuit == -1) {
+                            minsuit = j;
+                            play1 = 4;
+                        }
+                    }
+                }
+            } else if (playst[dd][fintp] > 0 ) { // can't follow suit but can trump
+                for (int j=7; j>=0; j--) {
+                    if (own[dd][fintp][j] == dd) {
+                        if (j > n13 && m13 == fintp) { // trump card which takes lead (beating 3rd seat if they also trumped)
+                            hitrump = j;
+                            play1 = 0;
+                        } else if (j < minsuit && m13 != fintp) {
+                            lotrump = j;
+                            play1 = 2;
+                        }
+                    }
+                }
+            }
+        }
+
+        return playfirst(play1, fintp, hitrump, sectrump, lotrump, m11, maxsuit, minsuit, suitace, worsts,
+                         worstr, dd, playst[dd][m11], cards);
+    }
+
+    public int player21(int[] m2, int[] n2, int[] m1, int[] n1, int[] pos2, int[] win, int[] trick) {
+        int hitrump = -1;
+        int sectrump = -1;
+        int lotrump = 20;
+        int maxsuit = -1;
+        int minsuit = 20;
+        int suitace = -1; // suit of A played
+        double playace = 0; // value of A played
+        int worsts = -1; // worst suit
+        int worstr = -1; // worst rank
+        int play1 = -1;
+
+        double p21 = 20;
+        int m21 = m2[1];
+        int n21 = n2[1];
+        int m12 = m1[2];
+        int n12 = n1[2];
+        int m14 = m1[4];
+        int n14 = n1[4];
+        int aa2 = pos2[0];
+        int bb2 = pos2[1];
+        int cc2 = pos2[2];
+        int dd2 = pos2[3];
+        int win1 = win[1];
+
+        // overrides
+        maxsuit = -1;
+        minsuit = suit[0][aa];
+        suitace = -1;
+        playace = 1.05;
+
+        for (int i=0; i<4; i++) { // establishes best ace to led; not trump AND 5+ length suit
+            if (own[win1][i][5] == win1 && cv[0][i][5] > playace && i != fintp && length[win1][i] > 4) {
+                playace = cv[0][i][5];
+                suitace = i;
+            }
+        }
+        for (int i=0; i<8; i++) {
+            if (own[win1][fintp][i] == win1) {
+                if (i > hitrump) {
+                    hitrump = i; // calculates rank of highest trump (0 - 7)
+                }
+                if (i < lotrump) {
+                    lotrump = i; // calculates rank of lowest trump (0 - 7)
+                }
+            }
+        }
+        for (int j=0; j<6; j++) { // find max rank of same suit to re-play
+            if (own[win1][suit[0][aa]][j] == win1) { // find highest of same suit to lead
+                maxsuit = j;
+                minsuit = suit[0][aa]; // suit that win1 played on 1st trick
+            }
+        }
+        for (int i=0; i<4; i++) {  // find lowest card from shortest suit (lowest cv[0] value)
+            for (int j=0; j<6; j++) {
+                if (p21 > cv[0][i][j] && cv[0][i][j] > 0 && own[win1][i][j] == win1) {
+                    p21 = cv[0][i][j];
+                    worsts = i;
+                    worstr = j;
+                }
+            }
+        }
+        if (lone == win1) { // if going lone
+            if (playst[win1][fintp] > 1 || hitrump == boss[win1][fintp]) { // if have 2+ trump or boss trump, play highest
+                play1 = 0;
+            } else if (suitace != -1) { // if have a good A to play
+                play1 = 5;
+            }
+        } else if (lone == bb2 || lone == dd2) { // if opponent going lone
+            if (suit[0][aa] != fintp && playst[win1][suit[0][aa]] > 0) { // if won against lone w/o trump AND
+                //  have another of the same suit, play it (highest)
+                play1 = 3;
+            } else if (aces[win1][fintp] > 1) { // else if have 2 or more aces, play one
+                play1 = 5;
+            }
+        } else if (win1 == declarer) { // I declared and get to lead
+            if (sit[0] == 1) {
+                play1 = 5; // 1st special situation: won 1st trick with R, should lead A 2nd trick
+            } else if (win1 == aa) { // win from 1st seat
+                if (rank[0][0] == 7 && (hitrump == boss[win1][fintp] || solo[win1][fintp] == 1) &&
+                    playst[win1][fintp] > 1) { // if won with
+                    // R and still have boss trump (or only trump) AND 2+ trump, play highest trump
+                    play1 = 0;
+                } else if (rank[0][0] == 6 && own[win1][fintp][5] == win1 && playst[win1][fintp] > 1) { // if won with
+                    // L AND have A of trump AND 2+ trump, play hi trump
+                    play1 = 0;
+                } else if (rank[0][0] == 5 && suit[0][0] != fintp) { // won with non-trump A
+                    if (playst[win1][fintp] > 1) { // if have 2+ trump, play lo trump
+                        play1 = 2;
+                    } else if (playst[win1][suit[0][aa]] > 0) { // else play same suit if possible
+                        play1 = 3;
+                    }
+                }
+            } else if (win1 == dealer || win1 == (dealer+2)%4) { // win from 2nd seat or as dealer
+                if (win1 == (dealer+2)%4 && uprk == 2 && round == 0 && playst[win1][fintp] > 0 && lotrump < 6 &&
+                    aces[win1][fintp] > 0) {
+                    // if in 2nd seat AND made dealer pick up R AND have A- trump AND at least one off-suit A,
+                    // lead lo trump
+                    play1 = 2;
+                } else if (win1 == (dealer+2)%4 && uprk == 5 && round == 0 && left[win1][fintp] == 1 && lotrump < 5) {
+                    play1 = 2; // if in 2nd seat AND made dealer pick up A AND have L + a lower trump, lead lo trump
+                } else if (suit[0][aa] != fintp) { // if won w/o trump
+                    if ((right[win1][fintp] + left[win1][fintp] > 0) && playst[win1][fintp] > 1) {
+                        // if have a bower AND 2+ trump, lead hi trump
+                        play1 = 0;
+                    } else if (playst[win1][fintp] < 3 && playst[win1][suit[0][aa]] > 0 && (win1 == dealer || m12 != m14)) {
+                        // repeat suit if possible AND have 2- trump, unless partner (dealer) followed suit
+                        play1 = 3;
+                    } else if (playst[win1][fintp] > 0) { // else play hi trump if have 3+ trump
+                        play1 = 0;
+                    }
+                } else if (suit[0][aa] == fintp) { // if won with trump
+                    if (hitrump == boss[win1][fintp] && (aces[win1][fintp] > 0 || playst[win1][fintp] > 1)) { // if have
+                        // boss trump AND (an off A OR
+                        // 2+ trump), lead hi trump
+                        play1 = 0;
+                    } else if (aces[win1][fintp] > 0 && suit[0][0] == fintp) { // if have an off A AND trump led, lead A
+                        play1 = 5;
+                    }
+                }
+            } else if (win1 == ((dealer+3)%4) && suit[0][0] == fintp) { // win from 3rd seat, partner led trump
+                if (hitrump == boss[win1][fintp] && aces[win1][fintp] > 0) {
+                    // if have boss trump AND an off A, lead hi trump
+                    play1 = 0;
+                } else if (aces[win1][fintp] > 0) { // if have off A, lead it
+                    play1 = 5;
+                }
+            } else if (win1 == (dealer+3)%4) { // win from 3rd seat, partner void in trump (would have led trump if
+                // had any)
+                if (suit[0][2] != fintp && hitrump == boss[win1][fintp] && playst[win1][fintp] > 1) {
+                    // if won w/o trump AND have boss trump AND 2+ trump, play hi trump
+                    play1 = 0;
+                } else if (suit[0][2] == fintp && playst[win1][fintp] > 0) { // won with trump, and have more trump
+                    if (hitrump == boss[win1][fintp] || (left[win1][fintp] + acet[win1][fintp] == 2)) {
+                        play1 = 0; // have boss trump OR L/A, play hi trump
+                    } else if (playst[win1][fintp] > 1) { // else play lo trump (if have trump)
+                        play1 = 2;
+                    }
+                }
+            }
+        } else if (declarer == cc2) { // partner declared
+            if (right[win1][fintp] + left[win1][fintp] > 0) { // if have bower, lead it
+                play1 = 0;
+            } else if (suit[0][aa] != fintp && playst[win1][suit[0][aa]] > 0 &&
+                       suit[0][(win1-dealer+5)%4] != suit[0][aa]) {
+                // if won w/o trump AND partner threw off AND have another of same suit, repeat suit
+                play1 = 3;
+            } else if (win1 == aa) { // won from 1st seat
+                if (playst[win1][fintp] > 0 && aces[win1][fintp] > 0) { // if have trump AND an off-A, play lo trump
+                    play1 = 2;
+                } else if (aces[win1][fintp] > 0) { // if have no trump but off-A, play off-A
+                    play1 = 5;
+                }
+            } else if (win1 == (dealer+2)%4) { // won from 2nd seat
+                if (suit[0][1] != fintp) { // 1st trick won w/o trump
+                    if ((playst[win1][fintp] + aces[win1][fintp] > 2) && playst[(dealer+2)%4][fintp] > 0) {
+                        // if # of trump + # of off-Aces > 2, AND have trump, lead lo trump
+                        play1 = 2;
+                    }
+                } else { // 1st trick won w/ trump
+                    if (suit[0][0] == fintp && aces[win1][fintp] > 0) { // if trump led AND have an off-A, lead off-A
+                        play1 = 5;
+                    } else if (aces[win1][fintp] > 0 && playst[win1][fintp] > 0) { // if trump not led AND have an off-A,
+                        // lead lo trump
+                        play1 = 2;
+                    }
+                }
+            } else if (win1 == (dealer+3)%4) { // won from 3rd seat
+                if (playst[win1][fintp] > 0 && aces[win1][fintp] > 0) { // if have trump AND an off-A, lead lo trump
+                    play1 = 2;
+                } else if (suit[0][0] == fintp && aces[win1][fintp] > 0) { // if trump led AND have an off-A, lead off-A
+                    play1 = 5;
+                } else if (aces[win1][fintp] > 1) { // if have no trump AND 2+ off-Aces, lead off-A
+                    play1 = 5;
+                }
+            } else if (win1 == dealer) { // win as dealer
+                if ((right[win1][fintp] + left[win1][fintp] > 0) && suit[0][1] != fintp) {
+                    // have a bower AND partner didn't play trump 1st trick, lead lo trump
+                    play1 = 0;
+                } else if (playst[win1][fintp] > 0 && suit[0][win1] != fintp) {
+                    play1 = 2; // if have trump and didn't win first trick with trump, play low trump
+                } else if (aces[win1][fintp] > 0) {
+                    play1 = 5; // if have an A, play one
+                }
+            }
+        } else if (bb2 == declarer || dd2 == declarer) { // defending
+            if (suit[0][aa] != fintp && playst[win1][suit[0][aa]] > 0) {
+                // if won w/o trump, re-lead same suit if possible
+                play1 = 3;
+            } else if (aces[win1][fintp] > 0) { // if have an off-A, play it
+                play1 = 5;
+            }
+        }
+        if (play1 == -1) {
+            play1 = 6;
+        }
+        //if leading a non-trump non-ace and have the A of that suit as well, lead the A instead
+        if (worsts == suitace && play1 == 6) {
+            play1 = 5;
+        }
+
+        return playfirst(play1, fintp, hitrump, sectrump, lotrump, m21, maxsuit, minsuit, suitace, worsts,
+                         worstr, win1, 0, cards);
+    }
+
+    public int player22(int[] m2, int[] n2, int[] m1, int[] n1, int[] pos2, int[] win, int[] trick) {
+        int hitrump = -1;
+        int sectrump = -1;
+        int lotrump = 20;
+        int maxsuit = -1;
+        int minsuit = 20;
+        int suitace = -1; // suit of A played
+        double playace = 0; // value of A played
+        int worsts = -1; // worst suit
+        int worstr = -1; // worst rank
+        int play1 = -1;
+
+        double p22 = 20;
+        int m21 = m2[1];
+        int n21 = n2[1];
+        int aa2 = pos2[0];
+        int bb2 = pos2[1];
+        int cc2 = pos2[2];
+        int dd2 = pos2[3];
+        int win1 = win[1];
+
+        if (playst[bb2][m21] == 0) { // void in led suit
+            voids[bb2][m21] = 1;
+        }
+        for (int i=0; i<4; i++) {  // identify worst card
+            for (int j=0; j<8; j++) {
+                if (playst[bb2][fintp] > 0) {
+                    if (p22 > cv[0][i][j] && cv[0][i][j] > 0 && own[bb2][i][j] == bb2) {
+                        p22 = cv[0][i][j];
+                        worsts = i;
+                        worstr = j;
+                    }
+                } else {
+                    if (p22 > cv[1][i][j] && cv[1][i][j] > 0 && own[bb2][i][j] == bb2) {
+                        p22 = cv[1][i][j];
+                        worsts = i;
+                        worstr = j;
+                    }
+                }
+            }
+        }
+
+        if (playst[bb2][m21] > 0) { // can follow suit
+            for (int j=0; j<8; j++) {
+                if (own[bb2][m21][j] == bb2) {
+                    if (j > maxsuit) {
+                        maxsuit = j;
+                    }
+                    if (j < minsuit) {
+                        minsuit = j;
+                    }
+                }
+            }
+            if (maxsuit > n21) {
+                play1 = 3;
+            } else {
+                play1 = 4;
+            }
+        } else if (m21 != fintp && playst[bb2][fintp] > 0) { // can't follow suit but can trump
+            for (int j=0; j<8; j++) {
+                if (own[bb2][fintp][j] == bb2) { // determine best and worst cards in trump suit
+                    if (hitrump == -1) {
+                        hitrump = j;
+                        sectrump = j;
+                    } else if (j > hitrump) {
+                        sectrump = hitrump;
+                        hitrump = j;
+                    }
+                    if (j < lotrump) {
+                        lotrump = j;
+                    }
+                }
+            }
+            if (lone == win1) { // opponent going alone, trump with lowest
+                play1 = 2;
+            } else if (lone == bb2) { // if going lone, trump with second highest
+                play1 = 1;
+            } else if (declarer == dd2 && (right[bb2][fintp] + left[bb2][fintp] > 0) &&
+                       (dealer != bb2 || (uprk != 2 || round != 0))) {
+                // if partner declared AND have bower AND did not pick up R as dealer, trump w/ bower
+                play1 = 0;
+            } else if (declarer == dd2 && lotrump < 7) { // if partner declared and have non-R trump, play lo trump
+                play1 = 2;
+            } else if (rank[1][0] > 3 || (declarer == bb2 && playst[bb2][fintp] > 2) || ((declarer == win1 ||
+                                                                                          declarer == cc2)
+                                                                                         && playst[bb2][fintp] > 1)) { // if A or K led OR have 3+ trump as declarer OR have 2+ trump
+                // as defender, play lo trump
+                play1 = 2;
+            } else {
+                play1 = 6;
+                if (worsts != fintp) {
+                    hint[bb2][worsts] = 1;
+                }
+            }
+        } else { // throw off
+            play1 = 6;
+            if (worsts != fintp) {
+                hint[bb2][worsts] = 1;
+            }
+        }
+
+        return playfirst(play1, fintp, hitrump, sectrump, lotrump, m21, maxsuit, minsuit, suitace, worsts,
+                         worstr, bb2, playst[bb2][m21], cards);
+    }
+
+    public int player23(int[] m2, int[] n2, int[] m1, int[] n1, int[] pos2, int[] win, int[] trick) {
+        int hitrump = -1;
+        int sectrump = -1;
+        int lotrump = 20;
+        int maxsuit = -1;
+        int minsuit = 20;
+        int suitace = -1; // suit of A played
+        double playace = 0; // value of A played
+        int worsts = -1; // worst suit
+        int worstr = -1; // worst rank
+        int play1 = -1;
+
+        double p23 = 20;
+        int m21 = m2[1];
+        int n21 = n2[1];
+        int m22 = m2[2];
+        int n22 = n2[2];
+        int m11 = m1[1];
+        int n11 = n1[1];
+        int aa2 = pos2[0];
+        int bb2 = pos2[1];
+        int cc2 = pos2[2];
+        int dd2 = pos2[3];
+        int win1 = win[1];
+        int win2 = win[2];
+
+        if (playst[cc2][m21] == 0) { // void in led suit
+            voids[cc2][m21] = 1;
+        }
+        for (int i=0; i<4; i++) {  // identify worst card
+            for (int j=0; j<8; j++) {
+                if (playst[cc2][fintp] > 0) {
+                    if (p23 > cv[0][i][j] && cv[0][i][j] > 0 && own[cc2][i][j] == cc2) {
+                        p23 = cv[0][i][j];
+                        worsts = i;
+                        worstr = j;
+                    }
+                } else {
+                    if (p23 > cv[1][i][j] && own[cc2][i][j] == cc2) {
+                        p23 = cv[1][i][j];
+                        worsts = i;
+                        worstr = j;
+                    }
+                }
+            }
+        }
+
+        if (playst[cc2][m21] > 0) { // can follow suit
+            for (int j=0; j<8; j++) {
+                if (own[cc2][m21][j] == cc2) {
+                    if (j > maxsuit) {
+                        maxsuit = j;
+                    }
+                    if (j < minsuit) {
+                        minsuit = j;
+                    }
+                }
+            }
+            if (maxsuit > n21+1 && win2 == win1) { // if partner winning AND can beat them by 2+ ranks, play hi
+                // card and take lead
+                play1 = 3;
+            } else if (maxsuit > n22 && win2 == bb2 && m21 == m22) { // if opponent winning w/o trump AND can beat
+                // them, play hi card
+                play1 = 3;
+            } else { // if can't take lead, throw off
+                play1 = 4;
+            }
+        } else if (m21 != fintp && playst[cc2][fintp] > 0) { // can't follow suit but can trump (and trump not led)
+            for (int j=0; j<8; j++) {
+                if (own[cc2][fintp][j] == cc2) {
+                    if (hitrump == -1) {
+                        hitrump = j;
+                        sectrump = j;
+                    } else if (j > hitrump) {
+                        sectrump = hitrump;
+                        hitrump = j;
+                    }
+                    if (j < lotrump) {
+                        lotrump = j;
+                    }
+                }
+            }
+            if (lone == dd2) { // opponent playing after me is going lone
+                if (n21 == boss[cc2][m21] && playst[cc2][fintp] > 1 && left[cc2][fintp] == 1) {
+                    // if p led boss card (so won 1st trick) AND I have guarded L, play off (hope for euchre)
+                    play1 = 6;
+                    if (worsts != fintp) {
+                        hint[cc2][worsts] = 1;
+                    }
+                } else { // else play high trump
+                    play1 = 0;
+                }
+            } else if (lone == bb2 && win2 == bb2 && m22 != fintp) {
+                // if opponent playing before me is going lone and is winning w/o trump, play lo trump
+                play1 = 2;
+            } else if (lone == bb2 && win2 == win1) {
+                // if opponent playing before me is going alone and followed suit and p is winning, play off
+                play1 = 6;
+                if (worsts != fintp) {
+                    hint[cc2][worsts] = 1;
+                }
+            } else if (m22 != fintp) { // opponent followed suit (non-trump) or played off
+                if (n21 == boss[cc2][m21] && length[cc2][m21] > 2) {
+                    // if p leading with boss card AND 3+ left in that suit, play off
+                    play1 = 6;
+                    if (worsts != fintp) {
+                        hint[cc2][worsts] = 1;
+                    }
+                } else if (m21 == m11 || playst[cc2][fintp] > 2) { // if p re-led same suit OR have 3+ trump,
+                    // play second highest trump
+                    play1 = 1;
+                } else if (declarer == win1 && (right[cc2][fintp] + left[cc2][fintp] > 0)) {
+                    play1 = 0;
+                } else {
+                    play1 = 2;
+                }
+            } else if (m22 == fintp) { // opponent (2nd player) trumped
+                if (lotrump > n22) {
+                    play1 = 2;
+                } else if (sectrump > n22) {
+                    play1 = 1;
+                } else if (hitrump > n22) {
+                    play1 = 0;
+                } else {
+                    play1 = 6;
+                    if (worsts != fintp) {
+                        hint[cc2][worsts] = 1;
+                    }
+                }
+            }
+        } else { //throw off
+            play1 = 6;
+            if (worsts != fintp) {
+                hint[cc2][worsts] = 1;
+            }
+        }
+
+        return playfirst(play1, fintp, hitrump, sectrump, lotrump, m21, maxsuit, minsuit, suitace, worsts,
+                         worstr, cc2, playst[cc2][m21], cards);
+    }
+
+    public int player24(int[] m2, int[] n2, int[] m1, int[] n1, int[] pos2, int[] win, int[] trick) {
+        int hitrump = -1;
+        int sectrump = -1;
+        int lotrump = 20;
+        int maxsuit = -1;
+        int minsuit = 20;
+        int suitace = -1; // suit of A played
+        double playace = 0; // value of A played
+        int worsts = -1; // worst suit
+        int worstr = -1; // worst rank
+        int play1 = -1;
+
+        double p24 = 20;
+        int m21 = m2[1];
+        int n21 = n2[1];
+        int m22 = m2[2];
+        int n22 = n2[2];
+        int m23 = m2[3];
+        int n23 = n2[3];
+        int aa2 = pos2[0];
+        int bb2 = pos2[1];
+        int cc2 = pos2[2];
+        int dd2 = pos2[3];
+        int win1 = win[1];
+        int win2 = win[2];
+
+        // overrides
+        hitrump = 20;
+        lotrump = 20;
+
+        if (playst[dd2][m21] == 0) { // void in led suit
+            voids[dd2][m21] = 1;
+        }
+        for (int i=0; i<4; i++) {
+            for (int j=0; j<8; j++) {
+                if (playst[dd2][fintp] > 0) {
+                    if (p24 > cv[0][i][j] && cv[0][i][j] > 0 && own[dd2][i][j] == dd2) {
+                        p24 = cv[0][i][j];
+                        worsts = i;
+                        worstr = j;
+                        if (worsts != fintp) {
+                            hint[dd2][worsts] = 1;
+                        }
+                    }
+                } else {
+                    if (p24 > cv[1][i][j] && cv[1][i][j] > 0 && own[dd2][i][j] == dd2) {
+                        p24 = cv[1][i][j];
+                        worsts = i;
+                        worstr = j;
+                        if (worsts != fintp) {
+                            hint[dd2][worsts] = 1;
+                        }
+                    }
+                }
+            }
+        }
+        for (int j=7; j>=0; j--) { // calculate lowest trump which beats 3rd player (if trumped and winning)
+            if (own[dd2][fintp][j] == dd2 && j < hitrump && m23 == fintp && j > n23) {
+                hitrump = j;
+            }
+            if (own[dd2][fintp][j] == dd2 && j < lotrump) { // calculate lowest trump if can win trick and first
+                // to trump
+                lotrump = j;
+            }
+        }
+        for (int j=7; j>=0; j--) { // calculate maxsuit and minsuit
+            if (own[dd2][m21][j] == dd2) { // have this card in hand
+                if (win2 == win1 && j > n21) { // 1st seat winning, identify lowest card which wins trick
+                    maxsuit = j;
+                } else if (win2 == bb2 && declarer == bb2 && m22 != fintp &&
+                           (own[dd2][fintp][7] == dd2 || own[dd2][fintp][6] == dd2) && j > n22) {
+                    // 2nd seat winning, identify lowest card which wins trick IF partner declared and have a
+                    // bower to lead next round
+                    maxsuit = j;
+                } else if (win2 == cc2 && j > n23) { // 3rd seat winning, identify lowest card which wins trick
+                    maxsuit = j;
+                } else { // else identify worst card in suit to play
+                    minsuit = j;
+                }
+            }
+        }
+
+        if (playst[dd2][m21] > 0) { // can follow suit
+            if (maxsuit != -1) {
+                play1 = 3;
+            } else {
+                play1 = 4;
+            }
+        } else if (playst[dd2][fintp] > 0) { // can't follow suit but can trump
+            if (win2 == win1) { // player who led trick is winning, play lowest trump
+                play1 = 2;
+            } else if (win2 == cc2) { // 3rd to play winning
+                if (m23 == fintp && hitrump != 20) { // overtrump if possible
+                    play1 = 0;
+                } else if (m23 != fintp) { // play lowest trump if first to trump
+                    play1 = 2;
+                }
+            }
+        }
+
+        return playfirst(play1, fintp, hitrump, sectrump, lotrump, m21, maxsuit, minsuit, suitace, worsts,
+                         worstr, dd2, playst[dd2][m21], cards);
+    }
+
+    public int player31(int[] m3, int[] n3, int[] m2, int[] n2, int[] pos3, int[] win, int[] trick) {
+        int hitrump = -1;
+        int sectrump = -1;
+        int lotrump = 20;
+        int maxsuit = -1;
+        int minsuit = 20;
+        int suitace = -1; // suit of A played
+        double playace = 0; // value of A played
+        int worsts = -1; // worst suit
+        int worstr = -1; // worst rank
+        int play1 = -1;
+
+        double p31 = 20;
+        double p31a = -1;
+        int bos = -1;
+        int m31 = m3[1];
+        int n31 = n3[1];
+        int aa3 = pos3[0];
+        int bb3 = pos3[1];
+        int cc3 = pos3[2];
+        int dd3 = pos3[3];
+        int win1 = win[1];
+        int win2 = win[2];
+
+        // overrides
+        maxsuit = -1;
+        minsuit = suit[1][(win2-win1+4)%4];
+
+        for (int j=0; j<8; j++) { // calculate highest and lowest trump
+            if (own[aa3][fintp][j] == aa3) {
+                if (j > hitrump) {
+                    hitrump = j;
+                }
+                if (j < lotrump) {
+                    lotrump = j;
+                }
+            }
+        }
+        for (int i=0; i<4; i++) { // calculate if have boss card in any non-trump suit
+            if (own[aa3][i][boss[aa3][i]] == aa3 && i != fintp) {
+                bos = i;
+                cv[0][i][boss[aa3][i]] = .95; // make this boss card the best one to lead
+            }
+        }
+        for (int j=0; j<6; j++) { // find max rank of same suit to re-play
+            if (own[aa3][suit[1][(win2-win1+4)%4]][j] == aa3) { // find highest of same suit to lead
+                maxsuit = j; // actually the rank
+                minsuit = suit[1][(win2-win1+4)%4]; // the suit
+            }
+        }
+        for (int i=0; i<4; i++) { // determine best card to lead
+            for (int j=0; j<8; j++) {
+                if (cv[0][i][j] > p31a && own[aa3][i][j] == aa3 && i != fintp) {
+                    p31a = cv[0][i][j];
+                    suitace = i; // suit
+                    sectrump = j; // rank
+                }
+            }
+        }
+        for (int i=0; i<4; i++) { // determine worst card to lead
+            for (int j=0; j<8; j++) {
+                if (cv[0][i][j] < p31 && cv[0][i][j] != 0 && own[aa3][i][j] == aa3 && i != fintp) {
+                    p31 = cv[0][i][j];
+                    worsts = i;
+                    worstr = j;
+                }
+            }
+        }
+
+        // if single-suited, play highest
+        if (playst[aa3][fintp] == 3) { // have 3 trump left, lead highest
+            play1 = 0;
+        } else if (ss[aa3] < 4 && ss[aa3] > -1) {
+            play1 = 5;
+        } else if (lone == aa3) { // if going lone
+            if (own[aa3][fintp][boss[aa3][fintp]] == aa3 || solo[aa3][fintp] == 1 || playst[aa3][fintp] > 1) {
+                // if have boss trump or 2+ trump or only player with trump, lead highest trump
+                play1 = 0;
+            } else if (voids[bb3][fintp] == 1 && voids[dd3][fintp] == 1 && playst[aa3][fintp] > 1) {
+                //if know both opponents are void in trump, lead highest trump
+                play1 = 0;
+            } else { // lead best non-trump
+                play1 = 5;
+            }
+        } else if (lone == bb3 || lone == dd3) { // if opponent going lone
+            if (suit[1][(win2-win1+4)%4] != fintp && playst[aa3][suit[1][(win2-win1+4)%4]] > 0) { // if won w/o trump
+                // lead same suit if have it
+                play1 = 3;
+            } else { // lead best non-trump
+                play1 = 5;
+            }
+        } else if (declarer == aa3) { // I am declarer
+            if (solo[aa3][fintp] == 1) { // if have all the remaining trump, lead highest
+                play1 = 0;
+            } else if (playst[aa3][fintp] > 1 && ((fintp == upst && uprk == 2 && dealer == cc3) ||
+                                                  (fintp == 3-upst && uprk == 2 && length[aa3][fintp] > 5))) {
+                // if partner (dealer) picked up R OR bid next 2nd round and bower was buried, lead low trump
+                play1 = 2;
+            } else if ((own[aa3][fintp][boss[aa3][fintp]] == aa3 || solo[aa3][fintp] == 1 || playst[aa3][fintp] > 1) &&
+                       (voids[bb3][fintp] + voids[dd3][fintp] != 2) && trick[aa3] != 1) {
+                // if have boss trump or only player left with trump or have 2+ trump,
+                // AND opponents may still have trump AND have won 2 tricks
+                play1 = 0; // lead high trump
+            } else {
+                play1 = 5; // lead best non-trump
+            }
+        } else if (declarer == cc3) { // partner is declarer
+            if (solo[aa3][fintp] == 1) { // if have all remaining trump, lead highest
+                play1 = 0;
+            } else if ((right[aa3][fintp] + left[aa3][fintp]) > 0 && bos > -1) {
+                // if have a bower AND a boss off-suit, lead highest trump
+                play1 = 0;
+            } else { // lead best non-trump
+                play1 = 5;
+            }
+        } else if ((declarer == bb3 || declarer == dd3) && playst[aa3][fintp] > 1 && length[aa3][fintp] < 6 &&
+                   bos != -1) {
+            // defending AND have 2 trump AND round of trump already played AND have a boss off-suit, lead low trump
+            play1 = 2;
+        } else {
+            play1 = 6;
+        }
+
+        // if leading a non-trump non-ace and have the A of that suit as well, lead the A instead
+        if (worsts == suitace && play1 == 6) {
+            play1 = 5;
+        }
+
+        return playfirst(play1, fintp, hitrump, sectrump, lotrump, m31, maxsuit, minsuit, suitace, worsts,
+                         worstr, aa3, -1, cards);
+    }
+
+    public int player32(int[] m3, int[] n3, int[] m2, int[] n2, int[] pos3, int[] win, int[] trick) {
+        int hitrump = -1;
+        int sectrump = -1;
+        int lotrump = 20;
+        int maxsuit = -1;
+        int minsuit = 20;
+        int suitace = -1; // suit of A played
+        double playace = 0; // value of A played
+        int worsts = -1; // worst suit
+        int worstr = -1; // worst rank
+        int play1 = -1;
+
+        double p32 = 20;
+        int m31 = m3[1];
+        int n31 = n3[1];
+        int aa3 = pos3[0];
+        int bb3 = pos3[1];
+        int cc3 = pos3[2];
+        int dd3 = pos3[3];
+        //int keep = 0; // if have 2 trump AND a boss card off-suit, trump low if can ??
+
+        //overrides
+        suitace = -1;
+        playace = 1.195;
+
+        if (playst[bb3][m31] == 0) { // void in led suit
+            voids[bb3][m31] = 1;
+        }
+        for (int i=0; i<4; i++) {  // identify worst card
+            for (int j=0; j<8; j++) {
+                if (playst[bb3][fintp] > 0) {
+                    if (p32 > cv[0][i][j] && cv[0][i][j] > 0 && own[bb3][i][j] == bb3) {
+                        p32 = cv[0][i][j];
+                        worsts = i;
+                        worstr = j;
+                    }
+                } else {
+                    if (p32 > cv[1][i][j] && cv[1][i][j] > 0 && own[bb3][i][j] == bb3) {
+                        p32 = cv[1][i][j];
+                        worsts = i;
+                        worstr = j;
+                    }
+                }
+            }
+        }
+        for (int j=0; j<8; j++) { // identify best and worst rank in led suit
+            if (own[bb3][m31][j] == bb3) {
+                if (j > maxsuit) {
+                    maxsuit = j;
+                }
+                if (j < minsuit) {
+                    minsuit = j;
+                }
+            }
+        }
+        for (int j=0; j<8; j++) { // identify highest, 2nd highest and lowest trump
+            if (own[bb3][fintp][j] == bb3) {
+                if (hitrump == -1) {
+                    hitrump = j;
+                    sectrump = j;
+                } else if (j > hitrump) {
+                    sectrump = hitrump;
+                    hitrump = j;
+                }
+                if (j < lotrump) {
+                    lotrump = j;
+                }
+            }
+        }
+
+        if (playst[bb3][m31] > 0) { // can follow suit
+            if (maxsuit > n31) { // if can take lead, play highest
+                play1 = 3;
+            } else { // else play lowest
+                play1 = 4;
+            }
+        } else if (m31 != fintp && playst[bb3][fintp] > 0) { // can't follow suit but can trump
+            if (declarer == dd3) { // partner declared
+                if (right[bb3][fintp] + left[bb3][fintp] > 0) {
+                    // trump with bower if have one and dealer (partner) is declarer
+                    play1 = 0;
+                } else { // else if have no bower, trump with lowest
+                    play1 = 2;
+                }
+            } else if (lone == bb3) { // if going lone, trump with second highest
+                play1 = 1;
+            } else if ((n31 == boss[bb3][m31] && lotrump != 7) || lone == aa3 || length[bb3][fintp] < 5 ||
+                       trick[bb3] == 0) {
+                // play lowest trump if defending against lone OR boss card led (and lowest trump is not right) OR
+                // < 5 trump left OR lost 1st 2 tricks
+                play1 = 2;
+            } else {
+                play1 = 6;
+                if (worsts != fintp) {
+                    hint[cc3][worsts] = 1;
+                }
+            }
+        } else { // throw off
+            play1 = 6;
+            if (worsts != fintp) {
+                hint[cc3][worsts] = 1;
+            }
+        }
+
+        return playfirst(play1, fintp, hitrump, sectrump, lotrump, m31, maxsuit, minsuit, suitace, worsts,
+                         worstr, bb3, playst[bb3][m31], cards);
+    }
+
+    public int player33(int[] m3, int[] n3, int[] m2, int[] n2, int[] pos3, int[] win, int[] trick) {
+        int hitrump = -1;
+        int sectrump = -1;
+        int lotrump = 20;
+        int maxsuit = -1;
+        int minsuit = 20;
+        int suitace = -1; // suit of A played
+        double playace = 0; // value of A played
+        int worsts = -1; // worst suit
+        int worstr = -1; // worst rank
+        int play1 = -1;
+
+        double p33 = 20;
+        int m31 = m3[1];
+        int n31 = n3[1];
+        int m32 = m3[2];
+        int n32 = n3[2];
+        int aa3 = pos3[0];
+        int bb3 = pos3[1];
+        int cc3 = pos3[2];
+        int dd3 = pos3[3];
+        int win2 = win[2];
+        int win3 = win[3];
+
+        if (playst[cc3][m31] == 0) { // void in led suit
+            voids[cc3][m31] = 1;
+        }
+        for (int i=0; i<4; i++) {  // identify worst card
+            for (int j=0; j<8; j++) {
+                if (playst[cc3][fintp] > 0) {
+                    if (p33 > cv[0][i][j] && cv[0][i][j] > 0 && own[cc3][i][j] == cc3) {
+                        p33 = cv[0][i][j];
+                        worsts = i;
+                        worstr = j;
+                    }
+                } else {
+                    if (p33 > cv[1][i][j] && cv[1][i][j] > 0 && own[cc3][i][j] == cc3) {
+                        p33 = cv[1][i][j];
+                        worsts = i;
+                        worstr = j;
+                    }
+                }
+            }
+        }
+        for (int j=0; j<8; j++) { // identify highest and lowest rank, following suit
+            if (own[cc3][m31][j] == cc3) {
+                if (j > maxsuit) {
+                    maxsuit = j;
+                }
+                if (j < minsuit) {
+                    minsuit = j;
+                }
+            }
+        }
+        for (int j=0; j<8; j++) { // identify highest, 2nd highest and lowest trump
+            if (own[cc3][fintp][j] == cc3) {
+                if (hitrump == -1) {
+                    hitrump = j;
+                    sectrump = j;
+                } else if (j > hitrump) {
+                    sectrump = hitrump;
+                    hitrump = j;
+                }
+                if (j < lotrump) {
+                    lotrump = j;
+                }
+            }
+        }
+
+        if (playst[cc3][m31] > 0) { // can follow suit
+            if (maxsuit > n31+1 && win3 == win2) {
+                play1 = 3;
+            } else if (maxsuit > n32 && win3 == bb3 && m31 == m32) {
+                play1 = 3;
+            } else {
+                play1 = 4;
+            }
+        } else if (m31 != fintp && playst[cc3][fintp] > 0) { // can't follow suit but can trump
+            if ((right[cc3][fintp] + left[cc3][fintp] > 0) &&
+                declarer == aa3 && (n31 != boss[cc3][m31] || (win3 == bb3) && m32 != fintp)) {
+                // trump with bower if have one AND partner is declarer AND either partner didn't play boss or 2nd
+                // player is winning w/o trump
+                play1 = 0;
+            } else if (lone == dd3) { // if next to play is going lone, play highest trump
+                play1 = 0;
+            } else if (win3 == bb3 && ((m32 == fintp && lotrump > n32) || m32 != fintp)) { // if 2nd to play is
+                // winning AND (they played trump AND my lowest trump is higher) OR they didn't play trump,
+                // play lowest trump
+                play1 = 2;
+            } else if (win3 == bb3 && m32 == fintp && sectrump > n32) { // if 2nd to play is winning w/ trump and
+                // my 2nd highest trump beats them, play 2nd highest trump
+                play1 = 1;
+            } else if (win3 == bb3 && m32 == fintp && maxsuit > n32) { // if 2nd to play is winning w/ trump and
+                // my highest trump beats them, play highest trump
+                play1 = 0;
+            } else if (win3 == aa3 && n31 != boss[cc3][m31]) {
+                play1 = 2; // if partner is winning BUT didn't play boss card, play lowest trump
+            } else {
+                play1 = 6;
+                if (worsts != fintp) {
+                    hint[cc3][worsts] = 1;
+                }
+            }
+        } else { //throw off
+            play1 = 6;
+            if (worsts != fintp) {
+                hint[cc3][worsts] = 1;
+            }
+        }
+
+        return playfirst(play1, fintp, hitrump, sectrump, lotrump, m31, maxsuit, minsuit, suitace, worsts,
+                         worstr, cc3, playst[cc3][m31], cards);
+    }
+
+    public int player34(int[] m3, int[] n3, int[] m2, int[] n2, int[] pos3, int[] win, int[] trick) {
+        int hitrump = -1;
+        int sectrump = -1;
+        int lotrump = 20;
+        int maxsuit = -1;
+        int minsuit = 20;
+        int suitace = -1; // suit of A played
+        double playace = 0; // value of A played
+        int worsts = -1; // worst suit
+        int worstr = -1; // worst rank
+        int play1 = -1;
+
+        double p34 = 20;
+        int m31 = m3[1];
+        int n31 = n3[1];
+        int m32 = m3[2];
+        int n32 = n3[2];
+        int m33 = m3[3];
+        int n33 = n3[3];
+        int aa3 = pos3[0];
+        int bb3 = pos3[1];
+        int cc3 = pos3[2];
+        int dd3 = pos3[3];
+        int win2 = win[2];
+        int win3 = win[3];
+
+        // overrides
+        hitrump = 20;
+        lotrump = 20;
+
+        if (playst[dd3][m31] == 0) { // void in led suit
+            voids[dd3][m31] = 1;
+        }
+        for (int j=7; j>=0; j--) { // calculate lowest trump which beats 3rd player (if trumped and winning)
+            if (own[dd3][fintp][j] == dd3 && j < hitrump && m33 == fintp && j > n33) {
+                hitrump = j;
+            }
+            if (own[dd3][fintp][j] == dd3 && j < lotrump) { // calculate lowest trump if can win trick and first to trump
+                lotrump = j;
+            }
+        }
+        for (int j=7; j>=0; j--) { // calculate maxsuit and minsuit
+            if (own[dd3][m31][j] == dd3) { // have this rank in hand
+                if (win3 == aa3 && j > n31) { // 1st to play winning, identify lowest card which wins trick
+                    maxsuit = j;
+                } else if (win3 == bb3 && declarer == bb3 && m32 != fintp && (right[dd3][fintp] +
+                                                                              left[dd3][fintp] > 0) && j > n32) {
+                    // 2nd to play winning, identify lowest card which wins trick IF partner declared and have a bower
+                    // to lead next round
+                    maxsuit = j;
+                } else if (win3 == cc3 && j > n31) { // 3rd to play winning, identify lowest card which wins trick
+                    maxsuit = j;
+                } else { // else identify worst card in suit to play
+                    minsuit = j;
+                }
+            }
+        }
+
+        if (playst[dd3][m31] > 0) { // can follow suit
+            if (maxsuit != -1) {
+                play1 = 3;
+            } else {
+                play1 = 4;
+            }
+        } else if (playst[dd3][fintp] > 0) { // can't follow suit but can trump
+            if (win3 == win2) { // player who led trick is winning, play lowest trump
+                play1 = 2;
+            } else if (win3 == cc3) { // 3rd to play winning
+                if (m33 == fintp && hitrump != 20) { // overtrump if possible
+                    play1 = 0;
+                } else if (m33 != fintp) { // play lowest trump if first to trump
+                    play1 = 2;
+                }
+            } else {
+                play1 = 6;
+            }
+        } else {
+            play1 = 6;
+        }
+        for (int i=0; i<4; i++) { // determine worst card
+            for (int j=0; j<8; j++) {
+                if (playst[dd3][fintp] > 0) {
+                    if (p34 > cv[0][i][j] && cv[0][i][j] > 0 && own[dd3][i][j] == dd3) {
+                        p34 = cv[0][i][j];
+                        worsts = i;
+                        worstr = j;
+                        if (worsts != fintp) {
+                            hint[dd3][worsts] = 1;
+                        }
+                    }
+                } else {
+                    if (p34 > cv[1][i][j] && cv[1][i][j] > 0 && own[dd3][i][j] == dd3) {
+                        p34 = cv[1][i][j];
+                        worsts = i;
+                        worstr = j;
+                        if (worsts != fintp) {
+                            hint[dd3][worsts] = 1;
+                        }
+                    }
+                }
+            }
+        }
+
+        return playfirst(play1, fintp, hitrump, sectrump, lotrump, m31, maxsuit, minsuit, suitace, worsts,
+                         worstr, dd3, playst[dd3][m31], cards);
+    }
+
+    public int player41(int[] m4, int[] n4, int[] m3, int[] n3, int[] pos4, int[] win, int[] trick) {
+        int hitrump = -1;
+        int sectrump = -1;
+        int lotrump = 20;
+        int maxsuit = -1;
+        int minsuit = 20;
+        int suitace = -1; // suit of A played
+        double playace = 0; // value of A played
+        int worsts = -1; // worst suit
+        int worstr = -1; // worst rank
+        int play1 = -1;
+
+        double p41 = 20;
+        double p41a = -1;
+        int bos = -1;
+        int m41 = m4[1];
+        int n41 = n4[1];
+        int aa4 = pos4[0];
+        int bb4 = pos4[1];
+        int cc4 = pos4[2];
+        int dd4 = pos4[3];
+        int win2 = win[2];
+        int win3 = win[3];
+
+        // overrides
+        maxsuit = -1;
+        minsuit = suit[2][(win3-win2+4)%4];
+        suitace = -1;
+        playace = 1.195;
+
+        for (int j=0; j<8; j++) { // calculate highest and lowest trump
+            if (own[aa4][fintp][j] == aa4) {
+                if (j > hitrump) {
+                    hitrump = j;
+                }
+                if (j < lotrump) {
+                    lotrump = j;
+                }
+            }
+        }
+        for (int i=0; i<4; i++) { // calculate if have boss card in any non-trump suit * could have 2 of them!
+            if (own[aa4][i][boss[aa4][i]] == aa4 && i != fintp) {
+                bos = i;
+                cv[0][i][boss[aa4][i]] = .95; // make this boss card the best one to lead
+            }
+        }
+        for (int j=0; j<6; j++) { // find max rank of same suit to re-play
+            if (own[aa4][suit[2][(win3-win2+4)%4]][j] == aa4) { // find highest of same suit to lead
+                maxsuit = j;
+                minsuit = suit[2][(win3-win2+4)%4];
+            }
+        }
+        for (int i=0; i<4; i++) { // determine best card to lead
+            for (int j=0; j<8; j++) {
+                if (cv[0][i][j] > p41a && cv[0][i][j] != 0 && own[aa4][i][j] == aa4 && i != fintp) {
+                    p41a = cv[0][i][j];
+                    suitace = i;
+                    sectrump = j;
+                }
+            }
+        }
+        for (int i=0; i<4; i++) { // determine worst card to lead
+            for (int j=0; j<8; j++) {
+                if (cv[0][i][j] < p41 && cv[0][i][j] != 0 && own[aa4][i][j] == aa4 && i != fintp) {
+                    p41 = cv[0][i][j];
+                    worsts = i;
+                    worstr = j;
+                }
+            }
+        }
+
+        // is single-suited, play highest
+        if (playst[aa4][fintp] == 2) { // have 2 trump left, lead highest
+            play1 = 0;
+        } else if (ss[aa4] < 4 && ss[aa4] > -1) {
+            play1 = 5;
+        } else if (lone == aa4) { // if going lone
+            if (own[aa4][fintp][boss[aa4][fintp]] == aa4 || solo[aa4][fintp] == 1 || (playst[aa4][fintp] > 0 &&
+                                                                                      trick[aa4] == 1)) {
+                // if have boss trump OR are the only player with trump OR have only won 1 trick, lead highest trump
+                play1 = 0;
+            } else if (((voids[bb4][fintp] == 1 && voids[dd4][fintp] == 1) || trick[aa4] == 3) &&
+                       playst[aa4][fintp] > 0) {
+                // if both opponents void in trump OR have won 3 tricks, lead highest trump
+                play1 = 0;
+            } else { // lead best non-trump
+                play1 = 5;
+            }
+        } else if (lone == bb4 || lone == dd4) { // if opponent going lone
+            if (hitrump == boss[aa4][fintp] || solo[(aa4)%4][fintp] == 1) { // if have boss trump or the only trump,
+                // lead highest trump
+                play1 = 0;
+            }
+            else if (suit[2][(aa4-win2+4)%4] != fintp && playst[aa4][suit[2][(win3-win2+4)%4]] > 0) { // if won w/o
+                // trump lead same suit if have it
+                play1 = 3;
+            } else { // else lead best non-trump
+                play1 = 5;
+            }
+        } else if (hitrump == boss[aa4][fintp] || solo[aa4][fintp] == 1) {
+            // if have a boss trump, OR are the only player w/ trump, lead highest trump
+            play1 = 0;
+        } else if ((voids[bb4][fintp] == 1 && voids[dd4][fintp] == 1) && bos != -1) {
+            // if have boss card in an off-suit AND opponents are void in trump, lead it
+            play1 = 5;
+        } else if (trick[aa4] == 3 && aces[aa4][fintp] == 1 && playst[aa4][fintp] == 1 &&
+                   (length[aa4][fintp] - playst[aa4][fintp] < 4)) {
+            // if partnership has won first 3 tricks AND have 1 trump left + boss off-suit AND 3 or less trump left,
+            // play hi trump
+            play1 = 0;
+        } else if (declarer == aa4) { // I am declarer
+            if ((length[aa4][fintp] - playst[aa4][fintp] < 2 && own[aa4][fintp][boss[aa4][fintp]] == aa4) ||
+                solo[aa4][fintp] == 1) {
+                // if have boss trump AND only 2 or less trump left, or are the only player with trump left, lead it
+                play1 = 0;
+            } else if (bos != -1 && own[aa4][fintp][boss[aa4][fintp]] == aa4) { // have boss trump AND a boss off-suit card
+                play1 = 0;
+            } else {
+                play1 = 5;
+            }
+        } else if (declarer == cc4) { // partner is declarer
+            if ((length[aa4][fintp] - playst[aa4][fintp] < 2 && own[aa4][fintp][boss[aa4][fintp]] == aa4) ||
+                solo[aa4][fintp] == 1) {
+                play1 = 0; // if have the only trump left, or have the boss trump and only one other trump outstanding,
+                // lead highest trump
+            } else if ((right[aa4][fintp] + left[aa4][fintp]) > 0) {
+                play1 = 0; // if have a bower, lead it
+            } else if (suitace > -1) {
+                play1 = 5; // if have a good ace, lead it
+            } else if (trick[aa4] == 1 && playst[aa4][fintp] > 0) {
+                play1 = 0; // if have trump and have only won 1 trick, lead highest trump
+            } else {
+                play1 = 6;
+            }
+        } else {
+            play1 = 6;
+        }
+
+        return playfirst(play1, fintp, hitrump, sectrump, lotrump, m41, maxsuit, minsuit, suitace, worsts,
+                         worstr, aa4, -1, cards);
+    }
+
+    public int player42(int[] m4, int[] n4, int[] m3, int[] n3, int[] pos4, int[] win, int[] trick) {
+        int hitrump = -1;
+        int sectrump = -1;
+        int lotrump = 20;
+        int maxsuit = -1;
+        int minsuit = 20;
+        int suitace = -1; // suit of A played
+        double playace = 0; // value of A played
+        int worsts = -1; // worst suit
+        int worstr = -1; // worst rank
+        int play1 = -1;
+
+        double p42 = 20;
+        int m41 = m4[1];
+        int n41 = n4[1];
+        int aa4 = pos4[0];
+        int bb4 = pos4[1];
+        int cc4 = pos4[2];
+        int dd4 = pos4[3];
+
+        // overrides
+        suitace = -1;
+        playace = 1.195;
+
+        if (playst[bb4][m41] == 0) { // void in led suit
+            voids[bb4][m41] = 1;
+        }
+        for (int i=0; i<4; i++) {  // identify worst card
+            for (int j=0; j<8; j++) {
+                if (p42 > cv[1][i][j] && cv[1][i][j] > 0 && own[bb4][i][j] == bb4) {
+                    p42 = cv[1][i][j];
+                    worsts = i;
+                    worstr = j;
+                }
+            }
+        }
+        for (int j=0; j<8; j++) { // identify highest and lowest trump
+            if (own[bb4][fintp][j] == bb4) {
+                if (j > hitrump) {
+                    hitrump = j;
+                }
+                if (j < lotrump) {
+                    lotrump = j;
+                }
+            }
+        }
+        for (int j=0; j<8; j++) { // identify best and worst rank in led suit
+            if (own[bb4][m41][j] == bb4) {
+                if (j > maxsuit) {
+                    maxsuit = j;
+                }
+                if (j < minsuit) {
+                    minsuit = j;
+                }
+            }
+        }
+
+        if (playst[bb4][m41] > 0) { // can follow suit
+            if (maxsuit > n41) { // if can take lead, play highest
+                play1 = 3;
+            } else { // play lowest in suit
+                play1 = 4;
+            }
+        } else if (m41 != fintp && playst[bb4][fintp] > 0) { // can't follow suit but can trump
+            if (declarer == dd4) { // partner declared
+                if (right[bb4][fintp] + left[bb4][fintp] > 0) {
+                    // trump with bower if have one and dealer (partner) is declarer
+                    play1 = 0;
+                } else { // else if have no bower, trump with lowest
+                    play1 = 2;
+                }
+            } else if (lone == bb4) { // if going lone, trump with second highest
+                play1 = 2;
+            } else if (n41 == boss[bb4][m41] || lone == aa4 || (declarer == bb4 && playst[bb4][fintp] > 1) ||
+                       (trick[bb4] == 1)) {
+                // play lowest trump if opponent going lone OR boss led OR have 2 trump as declarer OR have
+                // only won 1 trick so far
+                play1 = 2;
+            } else { // throw off
+                play1 = 6;
+            }
+        } else { // throw off
+            play1 = 6;
+        }
+
+        return playfirst(play1, fintp, hitrump, sectrump, lotrump, m41, maxsuit, minsuit, suitace, worsts,
+                         worstr, bb4, playst[bb4][m41], cards);
+    }
+
+    public int player43(int[] m4, int[] n4, int[] m3, int[] n3, int[] pos4, int[] win, int[] trick) {
+        int hitrump = -1;
+        int sectrump = -1;
+        int lotrump = 20;
+        int maxsuit = -1;
+        int minsuit = 20;
+        int suitace = -1; // suit of A played
+        double playace = 0; // value of A played
+        int worsts = -1; // worst suit
+        int worstr = -1; // worst rank
+        int play1 = -1;
+
+        double p43 = 20;
+        int m41 = m4[1];
+        int n41 = n4[1];
+        int m42 = m4[2];
+        int n42 = n4[2];
+        int aa4 = pos4[0];
+        int bb4 = pos4[1];
+        int cc4 = pos4[2];
+        int dd4 = pos4[3];
+        int win3 = win[3];
+        int win4 = win[4];
+
+        if (playst[cc4][m41] == 0) { // void in led suit
+            voids[cc4][m41] = 1;
+        }
+        for (int i=0; i<4; i++) {  // identify worst card
+            for (int j=0; j<8; j++) {
+                if (p43 > cv[1][i][j] && cv[1][i][j] > 0 && own[cc4][i][j] == cc4) {
+                    p43 = cv[1][i][j];
+                    worsts = i;
+                    worstr = j;
+                }
+            }
+        }
+        for (int j=0; j<8; j++) { // identify highest and lowest trump
+            if (own[cc4][fintp][j] == cc4) {
+                if (j > hitrump) {
+                    hitrump = j;
+                }
+                if (j < lotrump) {
+                    lotrump = j;
+                }
+            }
+        }
+        for (int j=0; j<8; j++) { // identify best and worst rank in led suit
+            if (own[cc4][m41][j] == cc4) {
+                if (j > maxsuit) {
+                    maxsuit = j;
+                }
+                if (j < minsuit) {
+                    minsuit = j;
+                }
+            }
+        }
+
+        if (playst[cc4][m41] > 0) { // can follow suit
+            if (maxsuit > n41+1 && win4 == win3) {
+                play1 = 3;
+            } else if (maxsuit > n42 && win4 == bb4 && m41 == m42) {
+                play1 = 3;
+            } else {
+                play1 = 4;
+            }
+        } else if ( playst[cc4][fintp] > 0) { // can't follow suit but can trump
+            if ((right[cc4][fintp] + left[cc4][fintp] > 0) && declarer == aa4 &&
+                n42 != 7 && (n41 != boss[cc4][m41] || win4 == (bb4))) { // trump with bower if have one
+                // AND partner is declarer AND either partner didn't play a boss card or 2nd player is winning
+                play1 = 0;
+            } else if (lone == dd4) { // if next to play declared alone, play highest trump
+                play1 = 0;
+            } else if ((m42 == fintp && lotrump > n42) || (trick[cc4] < 3 && win4 == (bb4) && m42 != fintp)) {
+                // if previous player trumped AND my lowest trump is better, OR my team has not won all the
+                // trick so far AND
+                // previous player is winning the trick w/o trump, play lowest trump
+                play1 = 2;
+            } else if (m42 == fintp && maxsuit > n42) { // if previous player trumped AND my highest trump beats
+                // them, play highest trump
+                play1 = 0;
+            } else if (n41 != boss[cc4][m41] && m42 != fintp) {
+                // if p did not lead the boss rank AND previous player did not trump, play lowest trump
+                play1 = 2;
+            } else {
+                play1 = 6;
+            }
+        } else { //throw off
+            play1 = 6;
+        }
+
+        return playfirst(play1, fintp, hitrump, sectrump, lotrump, m41, maxsuit, minsuit, suitace, worsts,
+                         worstr, cc4, playst[cc4][m41], cards);
+    }
+
+    public int player44(int[] m4, int[] n4, int[] m3, int[] n3, int[] pos4, int[] win, int[] trick) {
+        int hitrump = -1;
+        int sectrump = -1;
+        int lotrump = 20;
+        int maxsuit = -1;
+        int minsuit = 20;
+        int suitace = -1; // suit of A played
+        double playace = 0; // value of A played
+        int worsts = -1; // worst suit
+        int worstr = -1; // worst rank
+        int play1 = -1;
+
+        double p44 = 20;
+        int m41 = m4[1];
+        int n41 = n4[1];
+        int m42 = m4[2];
+        int n42 = n4[2];
+        int m43 = m4[3];
+        int n43 = n4[3];
+        int aa4 = pos4[0];
+        int bb4 = pos4[1];
+        int cc4 = pos4[2];
+        int dd4 = pos4[3];
+        int win3 = win[3];
+        int win4 = win[4];
+
+        // overrides
+        hitrump = 20;
+        lotrump = 20;
+
+        if (playst[dd4][m41] == 0) { // void in led suit
+            voids[dd4][m41] = 1;
+        }
+        for (int j=7; j>=0; j--) { // calculate lowest trump which beats 3rd player (if trumped and winning)
+            if (own[dd4][fintp][j] == dd4 && j < hitrump && m43 == fintp && j > n43) {
+                hitrump = j;
+            }
+            if (own[dd4][fintp][j] == dd4 && j < lotrump) { // calculate lowest trump if can win trick and 3rd
+                // seat didn't trump
+                lotrump = j;
+            }
+        }
+        for (int j=7; j>=0; j--) { // calculate maxsuit and minsuit
+            if (own[dd4][m41][j] == dd4) { // have this rank
+                if (win4 == win3 && j > n41) { // 1st to play winning, identify lowest card which wins trick
+                    maxsuit = j;
+                } else if (win4 == bb4 && declarer == bb4 && m42 != fintp && (own[dd4][fintp][7] == dd4 ||
+                                                                              own[dd4][fintp][6] == dd4) && j > n42) {
+                    // 2nd to play winning, identify lowest card which wins trick IF partner declared and have a
+                    // bower to lead next round
+                    maxsuit = j;
+                } else if (win4 == cc4 && j > n43) { // 3rd to play winning, identify lowest card which wins trick
+                    maxsuit = j;
+                } else { // else identify worst card in suit to play
+                    minsuit = j;
+                }
+            }
+        }
+        for (int i=0; i<4; i++) { // calculate worst card
+            for (int j=0; j<8; j++) {
+                if (p44 > cv[1][i][j] && cv[1][i][j] > 0 && own[dd4][i][j] == dd4) {
+                    p44 = cv[1][i][j];
+                    worsts = i;
+                    worstr = j;
+                }
+            }
+        }
+
+        if (playst[dd4][m41] > 0) { // can follow suit
+            if (maxsuit != -1) {
+                play1 = 3;
+            } else {
+                play1 = 4;
+            }
+        } else if (playst[dd4][fintp] > 0) { // can't follow suit but can trump
+            if (win4 == win3) { // player who led trick is winning, play lowest trump
+                play1 = 2;
+            } else if (win4 == cc4) { // 3rd to play winning
+                if (m43 == fintp && hitrump != 20) { // overtrump if possible
+                    play1 = 0;
+                } else if (m43 != fintp) { // play lowest trump if first to trump
+                    play1 = 2;
+                }
+            } else {
+                play1 = 6;
+            }
+        } else {
+            play1 = 6;
+        }
+
+        return playfirst(play1, fintp, hitrump, sectrump, lotrump, m41, maxsuit, minsuit, suitace, worsts,
+                         worstr, dd4, playst[dd4][m41], cards);
     }
 }

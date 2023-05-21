@@ -1,1 +1,5 @@
 *.jar
+*.jar-*
+*.java-*
+*.txt
+*.lst
