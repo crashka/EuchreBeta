@@ -128,6 +128,348 @@ public class EuchreBeta {
 
 class BidStrategy {
 
+    // *** Method "swapcard" to determine card dealer should swap, if 1st round bid ***
+    public static int swapcard(int cards[], int seat, int dealer) {
+        // seat 0 = dealer alone; seat 1 = dealer wp; seat 2 = 1st seat alone, ...
+        int aced = 0; // number of off-suit aces held by dealer
+        int kingd = 0; // number of off-suit kings held by dealer
+        int swap = -1; // the eventual best card to swap
+        int tempswap = 100; // the current best swap value of dealer's card
+        int code = -1; // determines which array of swapnew to use
+        // assign set values for certain card arrays
+        int[][] swapnew = new int[][] {{23,24,29,25,26,27},{11,13,28,16,18,20},{3,7,28,13,17,20},
+                                       {5,6,28,7,9,19},{4,5,28,7,9,19},{6,7,28,8,9,19},{1,5,28,11,15,19},{10,12,14,15,17,22},
+                                       {4,8,10,14,18,22},{1,2,3,4,7,21},{1,2,3,6,8,21},{1,2,3,4,5,21},{2,6,9,12,16,21}};
+        int [] psuit = new int[4]; // for dealer [suit], length of suit
+        for (int i=0+dealer*5; i<5+dealer*5; i++) { // dealer's cards
+            psuit[cards[i]%4]++;
+            if (cards[i]/4 == 2 && cards[i]%4 == 3-cards[20]%4) { // rank is Jack, suit is next
+                psuit[cards[20]%4]++; // trump suit increased by 1
+                psuit[3-cards[20]%4]--; // next suit decreased by 1
+            }
+            if (cards[i]/4 == 5 && cards[i]%4 != cards[20]%4) {
+                aced ++; // count dealer's off-suit aces
+            }
+            if (cards[i]/4 == 4 && cards[i]%4 != cards[20]%4) {
+                kingd ++; // count dealer's off-suit kings
+            }
+        }
+        for (int i=0+dealer*5; i<5+dealer*5; i++) { // dealer's cards
+            if (seat == 8) { // denotes pre-bidding determination of 5th player's cards
+                if (cards[i]%4 == cards[20]%4) {
+                    code = 0; // trump suit
+                } else if ((cards[i]%4 == 3-cards[20]%4) && psuit[cards[i]%4] > 1) {
+                    code = 1; // doubleton+ next suit
+                } else if ((cards[i]%4 == 3-cards[20]%4) && psuit[cards[i]%4] < 2) {
+                    code = 4; // singleton next suit
+                } else if (psuit[cards[i]%4] > 1) {
+                    code = 7; // doubleton green suit
+                } else {
+                    code = 10; // singleton green suit
+                }
+            } else { // someone has bid and dealer needs to swap cards
+                if (cards[i]%4 == cards[20]%4) {
+                    code = 0; // trump suit
+                } else if ((cards[i]%4 == 3-cards[20]%4) && psuit[cards[i]%4] > 1 &&
+                           (seat == 2 || seat == 6)) {
+                    code = 2; // doubleton+ next suit AND opponent bidding alone
+                } else if ((cards[i]%4 == 3-cards[20]%4) && psuit[cards[i]%4] > 1) {
+                    code = 1; // doubleton+ next suit
+                } else if ((cards[i]%4 == 3-cards[20]%4) && psuit[cards[i]%4] < 2 &&
+                           seat == 0) {
+                    code = 3; // singleton next suit AND dealer bidding alone
+                } else if ((cards[i]%4 == 3-cards[20]%4) && psuit[cards[i]%4] < 2 &&
+                           seat == 1) {
+                    code = 4; // singleton next suit AND dealer bidding wp
+                } else if ((cards[i]%4 == 3-cards[20]%4) && psuit[cards[i]%4] < 2 &&
+                           (seat == 3 || seat == 5 || seat == 7)) {
+                    code = 5; // singleton next suit AND any player but dealer bidding wp
+                } else if ((cards[i]%4 == 3-cards[20]%4) && psuit[cards[i]%4] < 2 &&
+                           (seat == 2 || seat == 6)) {
+                    code = 6; // singleton next suit AND opponent bidding alone
+                } else if (psuit[cards[i]%4] > 1 && (seat == 2 || seat == 6)) {
+                    code = 8; // doubleton+ green suit AND opponent bidding alone
+                } else if (psuit[cards[i]%4] > 1) {
+                    code = 7; // doubleton+ green suit, all other situations
+                } else if (seat == 0) {
+                    code = 9; // singleton green suit AND dealer bidding alone
+                } else if (seat == 1) {
+                    code = 10; // singleton green suit AND dealer bidding wp
+                } else if (seat == 2 || seat == 6) {
+                    code = 12; // singleton green suit AND opponent bidding alone
+                } else {
+                    code = 11; // singleton green suit AND any player but dealer bidding wp
+                }
+            }
+            if (swapnew[code][cards[i]/4] < tempswap) {
+                tempswap = swapnew[code][cards[i]/4];
+                swap = i;
+            }
+        }
+        if (seat == 6 && psuit[3-cards[20]%4] == 1) {
+            // 3rd seat going alone, dealer has just one card in next suit
+            for (int i=0+dealer*5; i<5+dealer*5; i++) {
+                if (cards[i]%4 == 3-cards[20]%4 && cards[i]/4 != 2) { // next suit but NOT L
+                    swap = i; // void dealer in next suit; partner will lead next suit if can
+                }
+            }
+        }
+        if (seat == 0 && psuit[cards[20]%4] == 2 && aced == 2 && kingd == 1) {
+            // dealer bidding alone with 3 trump, holding A and A-K off-suit
+            for (int i=0+dealer*5; i<5+dealer*5; i++) { // dealer's cards
+                if (cards[i]/4 == 5 && psuit[cards[i]%4] == 1) {
+                    swap = i; // discard singleton ace
+                }
+            }
+        }
+        return swap; // number of card to be swapped out with turn card
+    }
+
+    // *** Method "trump" to determine bidscore for each player / trump suit ***
+    public static double trump(int cards[], int post, int tsuit, int turns, int turnr) {
+        // input player's cards and seat, trump suit, turn card suit and turn card rank
+        double bscore = 0;
+        double mx[] = new double[4]; // maxsuit for each suit
+        double nx[] = new double[4]; // 2nd highest rank for each suit
+        int ps[] = new int[4]; // length of each suit
+        int bw = 0; // count of bowers
+        int rb = 0; // indicates have R
+        int rl = 0; // indicates have L
+        int bt = 0; // count of trump higher than turn card
+        int ac = 0; // count of off-suit aces
+        int vd = 0; // count of void suits
+        int oc = 0; // count # of off suits led by K-, and length of such suits
+        double[] vtrump = new double [] {2.2,3,9.9,3.9,5,6.2}; // values for various trump cards
+        for (int i=0; i<4; i++) { // initialize mx values
+            mx[i] = -1;
+        }
+        for (int i=0; i<5; i++) { // cycle through player's hand
+            // count number of bowers
+            if (cards[i+post*5]/4 == 2 && cards[i+post*5]%4 == tsuit) {
+                rb = 1;// have R
+                bw ++;
+            }
+            if (cards[i+post*5]/4 == 2 && cards[i+post*5]%4 == 3-tsuit) {
+                bw ++; // have L
+                rl = 1;
+            }
+            // count number of off-suit aces
+            if (cards[i+post*5]/4 == 5 && cards[i+post*5]%4 != tsuit) {
+                ac ++; // count one more off-suit ace
+            }
+            // calculate suit length
+            ps[cards[i+post*5]%4]++; // tally length of each suit
+            if (cards[i+post*5]%4 == 3-tsuit && cards[i+post*5]/4 == 2) { // card is L
+                ps[tsuit]++; // increase length of trump suit
+                ps[3-tsuit]--; // decrease length of next suit
+            }
+            // calculate max rank of each suit, also second highest rank
+            if (cards[i+post*5]%4 != 3-tsuit || cards[i+post*5]/4 != 2) {
+                // don't count L as max rank
+                if (cards[i+post*5]/4 > mx[cards[i+post*5]%4]) { // higher rank
+                    nx[cards[i+post*5]%4] = mx[cards[i+post*5]%4];
+                    mx[cards[i+post*5]%4] = cards[i+post*5]/4;
+                } else if (cards[i+post*5]/4 > nx[cards[i+post*5]%4]) {
+                    nx[cards[i+post*5]%4] = cards[i+post*5]/4;
+                }
+            }
+            // incorporate point value of trump cards
+            if (cards[i+post*5]%4 == tsuit) {
+                bscore += vtrump[cards[i+post*5]/4];
+            }
+            if (cards[i+post*5]%4 == 3-tsuit && cards[i+post*5]/4 == 2) {
+                bscore += 7.7; // incorporate point value of L
+            }
+            // for 3rd seat, 1st round, count number of trump higher than turn
+            if (post == 3 && ((turnr != 2 && cards[i+post*5]/4 > turnr) ||
+                              (cards[i+post*5]/4 == 2 && (cards[i+post*5]%4 == turns || cards[i+post*5]%4 == 3-turns)))) {
+                bt++;
+            }
+        }
+        for (int i=0; i<4; i++) { // cycle through suits
+            if (ps[i] == 0) {
+                vd++; // count void suits
+                mx[i] = 4.9; // correct mx value for void suits
+            }
+            if (mx[i] == 5 && ps[i] > 1 && nx[i] < 4) { //
+                mx[i] = 4.7; // correct mx value for A-x suits where x != K
+            }
+        }
+        // correction for off-suits
+        oc = 0; // reinitialize count
+        for (int i=0; i<4; i++) { // cycle through suits
+            if (i != tsuit) {
+                if (mx[i] > 4.5) { // suit led by A
+                    if (ps[i] == 1) { // singleton A
+                        bscore += 1.9;
+                    } else if (nx[i] == 4) { // A-K...
+                        bscore += 2.1; // doubleton A-K
+                    } else if (ps[i] == 2) {
+                        bscore += 1.2; // doubleton A-x
+                    } else if (ps[i] > 0) {
+                        bscore += 0.8; // A-x-x
+                    }
+                }
+                if (mx[i] == 4) { // suit led by K
+                    if (turnr == 5 && i == turns) { // A turned, and looking at turned suit
+                        if (ps[i] == 1) {
+                            bscore += 1.9; // treat single K like an A
+                        } else {
+                            bscore += 1.2; // treat doubleton+ K like an A
+                        }
+                    } else {
+                        bscore -= 0.4; // -0.4 for K-high suit
+                        oc++;
+                        oc+= ps[i] - 1;
+                    }
+                }
+                if (mx[i] == 3) { // suit led by Q
+                    if ((turnr == 5 || turnr == 4) && i == turns) {
+                        // A or K turned, and looking at turned suit
+                        bscore -= 0.4; // treat like K-high suit
+                        oc++;
+                        oc+= ps[i] - 1;
+                    } else {
+                        bscore -= 1.9; // -1.9 for Q-high suit
+                        oc++;
+                        oc+= ps[i] - 1;
+                        if (i == 3-tsuit) {
+                            bscore += 0.5; // add back 0.5 for next suit
+                        }
+                    }
+                }
+                if (mx[i] == 2 || mx[i] == 1) { // suit led by J or 10
+                    bscore -= 2.8; // -2.8 for J- or 10-high suits
+                    oc++;
+                    oc+= ps[i] - 1;
+                    if (i == 3-tsuit) {
+                        bscore += 0.5; // add back 0.5 for next suit
+                    }
+                }
+                if (mx[i] == 0) { // singleton 9 suit
+                    bscore -= 4; // -4 for singleton 9 suits
+                    oc++;
+                    oc+= ps[i] - 1;
+                    if (i == 3-tsuit) {
+                        bscore += 0.5; // add back 0.5 for next suit
+                    }
+                }
+            }
+        }
+        if (oc != 0) {
+            bscore -= (oc - 1); // correct for multiple off-suits K-, or length of these suits 2+
+        }
+        // correction for multiple off-Aces
+        if (ac == 2) {
+            bscore += 2.7; // +2.7 pts for 2 off-Aces
+        }
+        if (ac == 3) {
+            bscore += 4.3; // +4.3 pts for 3 off-Aces
+        }
+        // correction for voids
+        if (ps[tsuit] > 2) {
+            if (vd == 1) {
+                bscore += 0.5; // +0.5 if 1 void AND 3+ trump
+            }
+            if (vd == 2) {
+                bscore += 2; // +2 if 1 void AND 3+ trump
+            }
+        }
+        // correction for trump suit length
+        if (ps[tsuit] == 4) {
+            bscore++; // +1 if 4 trump
+        } else if (ps[tsuit] == 2) {
+            if (bw == 2) {
+                bscore -= 2; // -2 if 2 trump, both bowers
+            } else {
+                bscore -= 3.5; // -3.5 if 2 trump, not both bowers
+            }
+        } else if (ps[tsuit] == 1) {
+            bscore -= 7; // -7 if 1 trump
+        }
+        // correction for bowers
+        if (ps[tsuit] > 2 && bw == 2) {
+            bscore += 3.4;
+        } else if (ps[tsuit] > 2 && rb == 1) {
+            bscore++;
+        } else if (bw == 0) {
+            bscore -= 1.5;
+        }
+        // correction for no R / no off-Ace
+        if (rb == 0 && ac == 0) {
+            bscore -= 0.7; // -0.7 if no bower AND no off-Ace
+        }
+        // special cases
+        // 1st seat, value of turn card, 1st round
+        if (post == 1 && tsuit == turns) { // 1st round
+            if (turnr == 0) {
+                bscore += 0.8; // +0.8 if 9 turned
+            } else if (turnr == 1) {
+                bscore += 0.6; // +0.6 if 10 turned
+            } else if (turnr == 3) {
+                bscore += 0.4; // +0.4 if Q turned
+            } else if (turnr == 4) {
+                bscore += 0.2; // +0.2 if K turned
+            }
+        }
+        // 1st seat, trump rank, 1st round
+        if (post == 1) {
+            if (turnr == 2 && turns == tsuit) {
+                bscore -= 1.7; // R turned
+            } else if ((rb == 1 || rl == 1) && turns == tsuit) {
+                bscore += 1; // have R or L
+            } else if (mx[tsuit] != 2 && mx[tsuit] > turnr && turns == tsuit) {
+                bscore ++; // +1 if have higher trump than turn
+            } else if (turns == tsuit){
+                bscore -= 0.7; // -0.7 if have lower trump than turn
+            }
+        }
+        // 1st seat, 2nd round, next bid
+        if (tsuit == 3-turns && turnr == 2 && post == 1) {
+            bscore += 2; // add 2 if bidding next and R turned
+        }
+        if (tsuit == 3-turns && post == 1) {
+            bscore += 0.5; // add 0.5 if bidding next
+        }
+        // 1st seat, 2nd round
+        if (tsuit != turns && post == 1) { // not turned suit (2nd round bid)
+            if (ac == 1) {
+                bscore += 1.2; // have 1 off-suit Ace
+            } else if (ac == 2) {
+                bscore += 2; // have 2 off-suit Aces
+            } else if (ac == 3) {
+                bscore += 3; // have 3 off-suit Aces
+            }
+            if (ps[turns] > 0) {
+                bscore += 2; // have any cards in next suit
+            }
+        }
+        // 2nd seat, turn suit (1st round)
+        if (turnr == 2 && post == 2 && tsuit == turns) {
+            bscore += 4; // R turned (1st round)
+        } else if (rl == 0 && rb == 0 && turnr != 2 && turnr > mx[turns] && post == 2
+                   && tsuit == turns) {
+            bscore++; // R not turned AND turn is higher than highest trump in hand
+        }
+        // 2nd seat, 2nd round, next
+        if (turnr == 2 && tsuit == 3-turns && post == 2) {
+            bscore += 3; // R turned and bidding next suit (2nd round)
+        }
+        // 3rd seat, first round
+        if (post == 3 && ps[turns] > 2) {
+            if (bt > 2) {
+                bscore += 5.5; // have 3 trump higher than turn
+            } else if (bt == 2) {
+                bscore += 2; // have 2 trump higher than turn
+            }
+        }
+        // dealer, 2nd round, next suit
+        if (post == 0 && tsuit == 3-turns && turnr == 2) {
+            bscore += 3; // +3 points if R turned and bidding next suit
+        }
+        return bscore;
+    }
+
     // *** Method "bidder11" for determining 1st round bid of 1st player to bid ***
     static public int bidder11(Deal deal, int aa, int upst, int uprk, int pts, int game) {
         int psup     = deal.playersuit[aa][upst][upst];
@@ -765,358 +1107,10 @@ class BidStrategy {
         }
         return call;
     }
-
-    // *** Method "swapcard" to determine card dealer should swap, if 1st round bid ***
-    public static int swapcard(int cards[], int seat, int dealer) {
-        // seat 0 = dealer alone; seat 1 = dealer wp; seat 2 = 1st seat alone, ...
-        int aced = 0; // number of off-suit aces held by dealer
-        int kingd = 0; // number of off-suit kings held by dealer
-        int swap = -1; // the eventual best card to swap
-        int tempswap = 100; // the current best swap value of dealer's card
-        int code = -1; // determines which array of swapnew to use
-        // assign set values for certain card arrays
-        int[][] swapnew = new int[][] {{23,24,29,25,26,27},{11,13,28,16,18,20},{3,7,28,13,17,20},
-                                       {5,6,28,7,9,19},{4,5,28,7,9,19},{6,7,28,8,9,19},{1,5,28,11,15,19},{10,12,14,15,17,22},
-                                       {4,8,10,14,18,22},{1,2,3,4,7,21},{1,2,3,6,8,21},{1,2,3,4,5,21},{2,6,9,12,16,21}};
-        int [] psuit = new int[4]; // for dealer [suit], length of suit
-        for (int i=0+dealer*5; i<5+dealer*5; i++) { // dealer's cards
-            psuit[cards[i]%4]++;
-            if (cards[i]/4 == 2 && cards[i]%4 == 3-cards[20]%4) { // rank is Jack, suit is next
-                psuit[cards[20]%4]++; // trump suit increased by 1
-                psuit[3-cards[20]%4]--; // next suit decreased by 1
-            }
-            if (cards[i]/4 == 5 && cards[i]%4 != cards[20]%4) {
-                aced ++; // count dealer's off-suit aces
-            }
-            if (cards[i]/4 == 4 && cards[i]%4 != cards[20]%4) {
-                kingd ++; // count dealer's off-suit kings
-            }
-        }
-        for (int i=0+dealer*5; i<5+dealer*5; i++) { // dealer's cards
-            if (seat == 8) { // denotes pre-bidding determination of 5th player's cards
-                if (cards[i]%4 == cards[20]%4) {
-                    code = 0; // trump suit
-                } else if ((cards[i]%4 == 3-cards[20]%4) && psuit[cards[i]%4] > 1) {
-                    code = 1; // doubleton+ next suit
-                } else if ((cards[i]%4 == 3-cards[20]%4) && psuit[cards[i]%4] < 2) {
-                    code = 4; // singleton next suit
-                } else if (psuit[cards[i]%4] > 1) {
-                    code = 7; // doubleton green suit
-                } else {
-                    code = 10; // singleton green suit
-                }
-            } else { // someone has bid and dealer needs to swap cards
-                if (cards[i]%4 == cards[20]%4) {
-                    code = 0; // trump suit
-                } else if ((cards[i]%4 == 3-cards[20]%4) && psuit[cards[i]%4] > 1 &&
-                           (seat == 2 || seat == 6)) {
-                    code = 2; // doubleton+ next suit AND opponent bidding alone
-                } else if ((cards[i]%4 == 3-cards[20]%4) && psuit[cards[i]%4] > 1) {
-                    code = 1; // doubleton+ next suit
-                } else if ((cards[i]%4 == 3-cards[20]%4) && psuit[cards[i]%4] < 2 &&
-                           seat == 0) {
-                    code = 3; // singleton next suit AND dealer bidding alone
-                } else if ((cards[i]%4 == 3-cards[20]%4) && psuit[cards[i]%4] < 2 &&
-                           seat == 1) {
-                    code = 4; // singleton next suit AND dealer bidding wp
-                } else if ((cards[i]%4 == 3-cards[20]%4) && psuit[cards[i]%4] < 2 &&
-                           (seat == 3 || seat == 5 || seat == 7)) {
-                    code = 5; // singleton next suit AND any player but dealer bidding wp
-                } else if ((cards[i]%4 == 3-cards[20]%4) && psuit[cards[i]%4] < 2 &&
-                           (seat == 2 || seat == 6)) {
-                    code = 6; // singleton next suit AND opponent bidding alone
-                } else if (psuit[cards[i]%4] > 1 && (seat == 2 || seat == 6)) {
-                    code = 8; // doubleton+ green suit AND opponent bidding alone
-                } else if (psuit[cards[i]%4] > 1) {
-                    code = 7; // doubleton+ green suit, all other situations
-                } else if (seat == 0) {
-                    code = 9; // singleton green suit AND dealer bidding alone
-                } else if (seat == 1) {
-                    code = 10; // singleton green suit AND dealer bidding wp
-                } else if (seat == 2 || seat == 6) {
-                    code = 12; // singleton green suit AND opponent bidding alone
-                } else {
-                    code = 11; // singleton green suit AND any player but dealer bidding wp
-                }
-            }
-            if (swapnew[code][cards[i]/4] < tempswap) {
-                tempswap = swapnew[code][cards[i]/4];
-                swap = i;
-            }
-        }
-        if (seat == 6 && psuit[3-cards[20]%4] == 1) {
-            // 3rd seat going alone, dealer has just one card in next suit
-            for (int i=0+dealer*5; i<5+dealer*5; i++) {
-                if (cards[i]%4 == 3-cards[20]%4 && cards[i]/4 != 2) { // next suit but NOT L
-                    swap = i; // void dealer in next suit; partner will lead next suit if can
-                }
-            }
-        }
-        if (seat == 0 && psuit[cards[20]%4] == 2 && aced == 2 && kingd == 1) {
-            // dealer bidding alone with 3 trump, holding A and A-K off-suit
-            for (int i=0+dealer*5; i<5+dealer*5; i++) { // dealer's cards
-                if (cards[i]/4 == 5 && psuit[cards[i]%4] == 1) {
-                    swap = i; // discard singleton ace
-                }
-            }
-        }
-        return swap; // number of card to be swapped out with turn card
-    }
-
-    // *** Method "trump" to determine bidscore for each player / trump suit ***
-    public static double trump(int cards[], int post, int tsuit, int turns, int turnr) {
-        // input player's cards and seat, trump suit, turn card suit and turn card rank
-        double bscore = 0;
-        double mx[] = new double[4]; // maxsuit for each suit
-        double nx[] = new double[4]; // 2nd highest rank for each suit
-        int ps[] = new int[4]; // length of each suit
-        int bw = 0; // count of bowers
-        int rb = 0; // indicates have R
-        int rl = 0; // indicates have L
-        int bt = 0; // count of trump higher than turn card
-        int ac = 0; // count of off-suit aces
-        int vd = 0; // count of void suits
-        int oc = 0; // count # of off suits led by K-, and length of such suits
-        double[] vtrump = new double [] {2.2,3,9.9,3.9,5,6.2}; // values for various trump cards
-        for (int i=0; i<4; i++) { // initialize mx values
-            mx[i] = -1;
-        }
-        for (int i=0; i<5; i++) { // cycle through player's hand
-            // count number of bowers
-            if (cards[i+post*5]/4 == 2 && cards[i+post*5]%4 == tsuit) {
-                rb = 1;// have R
-                bw ++;
-            }
-            if (cards[i+post*5]/4 == 2 && cards[i+post*5]%4 == 3-tsuit) {
-                bw ++; // have L
-                rl = 1;
-            }
-            // count number of off-suit aces
-            if (cards[i+post*5]/4 == 5 && cards[i+post*5]%4 != tsuit) {
-                ac ++; // count one more off-suit ace
-            }
-            // calculate suit length
-            ps[cards[i+post*5]%4]++; // tally length of each suit
-            if (cards[i+post*5]%4 == 3-tsuit && cards[i+post*5]/4 == 2) { // card is L
-                ps[tsuit]++; // increase length of trump suit
-                ps[3-tsuit]--; // decrease length of next suit
-            }
-            // calculate max rank of each suit, also second highest rank
-            if (cards[i+post*5]%4 != 3-tsuit || cards[i+post*5]/4 != 2) {
-                // don't count L as max rank
-                if (cards[i+post*5]/4 > mx[cards[i+post*5]%4]) { // higher rank
-                    nx[cards[i+post*5]%4] = mx[cards[i+post*5]%4];
-                    mx[cards[i+post*5]%4] = cards[i+post*5]/4;
-                } else if (cards[i+post*5]/4 > nx[cards[i+post*5]%4]) {
-                    nx[cards[i+post*5]%4] = cards[i+post*5]/4;
-                }
-            }
-            // incorporate point value of trump cards
-            if (cards[i+post*5]%4 == tsuit) {
-                bscore += vtrump[cards[i+post*5]/4];
-            }
-            if (cards[i+post*5]%4 == 3-tsuit && cards[i+post*5]/4 == 2) {
-                bscore += 7.7; // incorporate point value of L
-            }
-            // for 3rd seat, 1st round, count number of trump higher than turn
-            if (post == 3 && ((turnr != 2 && cards[i+post*5]/4 > turnr) ||
-                              (cards[i+post*5]/4 == 2 && (cards[i+post*5]%4 == turns || cards[i+post*5]%4 == 3-turns)))) {
-                bt++;
-            }
-        }
-        for (int i=0; i<4; i++) { // cycle through suits
-            if (ps[i] == 0) {
-                vd++; // count void suits
-                mx[i] = 4.9; // correct mx value for void suits
-            }
-            if (mx[i] == 5 && ps[i] > 1 && nx[i] < 4) { //
-                mx[i] = 4.7; // correct mx value for A-x suits where x != K
-            }
-        }
-        // correction for off-suits
-        oc = 0; // reinitialize count
-        for (int i=0; i<4; i++) { // cycle through suits
-            if (i != tsuit) {
-                if (mx[i] > 4.5) { // suit led by A
-                    if (ps[i] == 1) { // singleton A
-                        bscore += 1.9;
-                    } else if (nx[i] == 4) { // A-K...
-                        bscore += 2.1; // doubleton A-K
-                    } else if (ps[i] == 2) {
-                        bscore += 1.2; // doubleton A-x
-                    } else if (ps[i] > 0) {
-                        bscore += 0.8; // A-x-x
-                    }
-                }
-                if (mx[i] == 4) { // suit led by K
-                    if (turnr == 5 && i == turns) { // A turned, and looking at turned suit
-                        if (ps[i] == 1) {
-                            bscore += 1.9; // treat single K like an A
-                        } else {
-                            bscore += 1.2; // treat doubleton+ K like an A
-                        }
-                    } else {
-                        bscore -= 0.4; // -0.4 for K-high suit
-                        oc++;
-                        oc+= ps[i] - 1;
-                    }
-                }
-                if (mx[i] == 3) { // suit led by Q
-                    if ((turnr == 5 || turnr == 4) && i == turns) {
-                        // A or K turned, and looking at turned suit
-                        bscore -= 0.4; // treat like K-high suit
-                        oc++;
-                        oc+= ps[i] - 1;
-                    } else {
-                        bscore -= 1.9; // -1.9 for Q-high suit
-                        oc++;
-                        oc+= ps[i] - 1;
-                        if (i == 3-tsuit) {
-                            bscore += 0.5; // add back 0.5 for next suit
-                        }
-                    }
-                }
-                if (mx[i] == 2 || mx[i] == 1) { // suit led by J or 10
-                    bscore -= 2.8; // -2.8 for J- or 10-high suits
-                    oc++;
-                    oc+= ps[i] - 1;
-                    if (i == 3-tsuit) {
-                        bscore += 0.5; // add back 0.5 for next suit
-                    }
-                }
-                if (mx[i] == 0) { // singleton 9 suit
-                    bscore -= 4; // -4 for singleton 9 suits
-                    oc++;
-                    oc+= ps[i] - 1;
-                    if (i == 3-tsuit) {
-                        bscore += 0.5; // add back 0.5 for next suit
-                    }
-                }
-            }
-        }
-        if (oc != 0) {
-            bscore -= (oc - 1); // correct for multiple off-suits K-, or length of these suits 2+
-        }
-        // correction for multiple off-Aces
-        if (ac == 2) {
-            bscore += 2.7; // +2.7 pts for 2 off-Aces
-        }
-        if (ac == 3) {
-            bscore += 4.3; // +4.3 pts for 3 off-Aces
-        }
-        // correction for voids
-        if (ps[tsuit] > 2) {
-            if (vd == 1) {
-                bscore += 0.5; // +0.5 if 1 void AND 3+ trump
-            }
-            if (vd == 2) {
-                bscore += 2; // +2 if 1 void AND 3+ trump
-            }
-        }
-        // correction for trump suit length
-        if (ps[tsuit] == 4) {
-            bscore++; // +1 if 4 trump
-        } else if (ps[tsuit] == 2) {
-            if (bw == 2) {
-                bscore -= 2; // -2 if 2 trump, both bowers
-            } else {
-                bscore -= 3.5; // -3.5 if 2 trump, not both bowers
-            }
-        } else if (ps[tsuit] == 1) {
-            bscore -= 7; // -7 if 1 trump
-        }
-        // correction for bowers
-        if (ps[tsuit] > 2 && bw == 2) {
-            bscore += 3.4;
-        } else if (ps[tsuit] > 2 && rb == 1) {
-            bscore++;
-        } else if (bw == 0) {
-            bscore -= 1.5;
-        }
-        // correction for no R / no off-Ace
-        if (rb == 0 && ac == 0) {
-            bscore -= 0.7; // -0.7 if no bower AND no off-Ace
-        }
-        // special cases
-        // 1st seat, value of turn card, 1st round
-        if (post == 1 && tsuit == turns) { // 1st round
-            if (turnr == 0) {
-                bscore += 0.8; // +0.8 if 9 turned
-            } else if (turnr == 1) {
-                bscore += 0.6; // +0.6 if 10 turned
-            } else if (turnr == 3) {
-                bscore += 0.4; // +0.4 if Q turned
-            } else if (turnr == 4) {
-                bscore += 0.2; // +0.2 if K turned
-            }
-        }
-        // 1st seat, trump rank, 1st round
-        if (post == 1) {
-            if (turnr == 2 && turns == tsuit) {
-                bscore -= 1.7; // R turned
-            } else if ((rb == 1 || rl == 1) && turns == tsuit) {
-                bscore += 1; // have R or L
-            } else if (mx[tsuit] != 2 && mx[tsuit] > turnr && turns == tsuit) {
-                bscore ++; // +1 if have higher trump than turn
-            } else if (turns == tsuit){
-                bscore -= 0.7; // -0.7 if have lower trump than turn
-            }
-        }
-        // 1st seat, 2nd round, next bid
-        if (tsuit == 3-turns && turnr == 2 && post == 1) {
-            bscore += 2; // add 2 if bidding next and R turned
-        }
-        if (tsuit == 3-turns && post == 1) {
-            bscore += 0.5; // add 0.5 if bidding next
-        }
-        // 1st seat, 2nd round
-        if (tsuit != turns && post == 1) { // not turned suit (2nd round bid)
-            if (ac == 1) {
-                bscore += 1.2; // have 1 off-suit Ace
-            } else if (ac == 2) {
-                bscore += 2; // have 2 off-suit Aces
-            } else if (ac == 3) {
-                bscore += 3; // have 3 off-suit Aces
-            }
-            if (ps[turns] > 0) {
-                bscore += 2; // have any cards in next suit
-            }
-        }
-        // 2nd seat, turn suit (1st round)
-        if (turnr == 2 && post == 2 && tsuit == turns) {
-            bscore += 4; // R turned (1st round)
-        } else if (rl == 0 && rb == 0 && turnr != 2 && turnr > mx[turns] && post == 2
-                   && tsuit == turns) {
-            bscore++; // R not turned AND turn is higher than highest trump in hand
-        }
-        // 2nd seat, 2nd round, next
-        if (turnr == 2 && tsuit == 3-turns && post == 2) {
-            bscore += 3; // R turned and bidding next suit (2nd round)
-        }
-        // 3rd seat, first round
-        if (post == 3 && ps[turns] > 2) {
-            if (bt > 2) {
-                bscore += 5.5; // have 3 trump higher than turn
-            } else if (bt == 2) {
-                bscore += 2; // have 2 trump higher than turn
-            }
-        }
-        // dealer, 2nd round, next suit
-        if (post == 0 && tsuit == 3-turns && turnr == 2) {
-            bscore += 3; // +3 points if R turned and bidding next suit
-        }
-        return bscore;
-    }
 }
 
 
 class PlayStrategy {
-
-    Deal deal;
-
-    public PlayStrategy(Deal deal) {
-        this.deal = deal;
-    }
 
     // *** Method "calc" to calculate values of cv[lead][][] and cv[toss][][] ***
     static double[][][] calc(int cards[], int fintp, int own[][][], int playst[][],
