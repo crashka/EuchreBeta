@@ -2210,7 +2210,7 @@ class Game {
                 m1[1] = m11 = cardplay%10;
                 n1[1] = n11 = (cardplay/10)%10;
 
-                System.out.println("Player " + position[aa] + " leads the " + cardname[m11][n11] + "\n");
+                System.out.println("Player " + position[aa] + " leads the " + cardname[m11][n11] + ".\n");
                 for (int i=0; i<4; i++) {
                     own[i][m11][n11] = -1;
                     length[i][m11]--;
@@ -2251,7 +2251,7 @@ class Game {
                     m1[1] = m11 = m12;
                 }
 
-                System.out.println("Player " + position[bb] + " plays the " + cardname[m12][n12] + "." + "\n");
+                System.out.println("Player " + position[bb] + " plays the " + cardname[m12][n12] + ".\n");
                 for (int i=0; i<4; i++) {
                     own[i][m12][n12] = -1;
                     length[i][m12]--;
@@ -2289,7 +2289,7 @@ class Game {
                 m1[3] = m13 = cardplay%10;
                 n1[3] = n13 = (cardplay/10)%10;
 
-                System.out.println("Player " + position[cc] + " plays the " + cardname[m13][n13] + "." + "\n");
+                System.out.println("Player " + position[cc] + " plays the " + cardname[m13][n13] + ".\n");
                 for (int i=0; i<4; i++) {
                     own[i][m13][n13] = -1;
                     length[i][m13]--;
@@ -2327,7 +2327,7 @@ class Game {
                 m1[4] = m14 = cardplay%10;
                 n1[4] = n14 = (cardplay/10)%10;
 
-                System.out.println("Player " + position[dd] + " plays the " + cardname[m14][n14] + "." + "\n");
+                System.out.println("Player " + position[dd] + " plays the " + cardname[m14][n14] + ".\n");
                 for (int i=0; i<4; i++) {
                     own[i][m14][n14] = -1;
                     length[i][m14]--;
@@ -2446,16 +2446,16 @@ class Game {
             m2[1] = m21 = cardplay%10;
             n2[1] = n21 = (cardplay/10)%10;
 
-            System.out.println("Player " + position[win1] + " leads the " + cardname[m21][n21] + "." + "\n");
+            System.out.println("Player " + position[aa2] + " leads the " + cardname[m21][n21] + ".\n");
             for (int i=0; i<4; i++) {
                 own[i][m21][n21] = -1;
                 length[i][m21]--;
             }
-            playst[win1][m21] = playst[win1][m21] - 1;
+            playst[aa2][m21] = playst[aa2][m21] - 1;
             cv[0][m21][n21] = 0;
             cv[1][m21][n21] = 0;
             if (n21 == 5 && m21 != fintp) {
-                aces[win1][fintp]--;
+                aces[aa2][fintp]--;
             }
             suit[1][0] = m21;
             rank[1][0] = n21;
@@ -2464,11 +2464,11 @@ class Game {
             } else {
                 v21 = n21;
             }
-            win[2] = win2 = win1;
+            win[2] = win2 = aa2;
 
             // second to play, 2nd trick
             if (lone == dd2) {
-                m2[2] = m22 = m21;  // if partner going alone, skip me, so assign same value to my 'play' as win1
+                m2[2] = m22 = m21;  // if partner going alone, skip me, so assign same value to my 'play' as win2
                 n2[2] = n22 = n21;
                 v22 = v21-1;
             } else {  // partner not going alone
@@ -2476,7 +2476,7 @@ class Game {
                 m2[2] = m22 = cardplay%10;
                 n2[2] = n22 = (cardplay/10)%10;
 
-                System.out.println("Player " + position[bb2] + " plays the " + cardname[m22][n22] + "." + "\n");
+                System.out.println("Player " + position[bb2] + " plays the " + cardname[m22][n22] + ".\n");
                 for (int i=0; i<4; i++) {
                     own[i][m22][n22] = -1;
                     length[i][m22]--;
@@ -2502,8 +2502,8 @@ class Game {
             }
 
             // third to play, 2nd trick
-            if (lone == win1) {
-                m2[3] = m23 = m21;  // if partner going alone, skip me, so assign same value to my 'play' as win1
+            if (lone == aa2) {
+                m2[3] = m23 = m21;  // if partner going alone, skip me, so assign same value to my 'play' as win2
                 n2[3] = n23 = n21;
                 v23 = v22-1;
             } else { // partner not going alone
@@ -2511,7 +2511,7 @@ class Game {
                 m2[3] = m23 = cardplay%10;
                 n2[3] = n23 = (cardplay/10)%10;
 
-                System.out.println("Player " + position[cc2] + " plays the " + cardname[m23][n23] + "." + "\n");
+                System.out.println("Player " + position[cc2] + " plays the " + cardname[m23][n23] + ".\n");
                 for (int i=0; i<4; i++) {
                     own[i][m23][n23] = -1;
                     length[i][m23]--;
@@ -2546,7 +2546,7 @@ class Game {
                 m2[4] = m24 = cardplay%10;
                 n2[4] = n24 = (cardplay/10)%10;
 
-                System.out.println("Player " + position[dd2] + " plays the " + cardname[m24][n24] + "." + "\n");
+                System.out.println("Player " + position[dd2] + " plays the " + cardname[m24][n24] + ".\n");
                 for (int i=0; i<4; i++) {
                     own[i][m24][n24] = -1;
                     length[i][m24]--;
@@ -2681,7 +2681,7 @@ class Game {
             m3[1] = m31 = cardplay%10;
             n3[1] = n31 = (cardplay/10)%10;
 
-            System.out.println("Player " + position[aa3] + " leads the " + cardname[m31][n31] + "." + "\n");//
+            System.out.println("Player " + position[aa3] + " leads the " + cardname[m31][n31] + ".\n");
             for (int i=0; i<4; i++) {
                 own[i][m31][n31] = -1;
                 length[i][m31]--;
@@ -2699,11 +2699,11 @@ class Game {
             } else {
                 v31 = n31;
             }
-            win[3] = win3 = win2;
+            win[3] = win3 = aa3;
 
             // second to play, 3rd trick
             if (lone == dd3) {
-                m3[2] = m32 = m31;  // if partner going alone, skip me, so assign same value to my 'play' as win1
+                m3[2] = m32 = m31;  // if partner going alone, skip me, so assign same value to my 'play' as win3
                 n3[2] = n32 = n31;
                 v32 = v31-1;
             } else {  // partner not going alone
@@ -2711,7 +2711,7 @@ class Game {
                 m3[2] = m32 = cardplay%10;
                 n3[2] = n32 = (cardplay/10)%10;
 
-                System.out.println("Player " + position[bb3] + " plays the " + cardname[m32][n32] + "." + "\n");
+                System.out.println("Player " + position[bb3] + " plays the " + cardname[m32][n32] + ".\n");
                 for (int i=0; i<4; i++) {
                     own[i][m32][n32] = -1;
                     length[i][m32]--;
@@ -2738,7 +2738,7 @@ class Game {
 
             // third to play, 3rd trick
             if (lone == aa3) {
-                m3[3] = m33 = m31;  // if partner going alone, skip me, so assign same value to my 'play' as win2
+                m3[3] = m33 = m31;  // if partner going alone, skip me, so assign same value to my 'play' as win3
                 n3[3] = n33 = n31;
                 v33 = v32-1;
             } else { // partner not going alone
@@ -2746,7 +2746,7 @@ class Game {
                 m3[3] = m33 = cardplay%10;
                 n3[3] = n33 = (cardplay/10)%10;
 
-                System.out.println("Player " + position[cc3] + " plays the " + cardname[m33][n33] + "." + "\n");
+                System.out.println("Player " + position[cc3] + " plays the " + cardname[m33][n33] + ".\n");
                 for (int i=0; i<4; i++) {
                     own[i][m33][n33] = -1;
                     length[i][m33]--;
@@ -2781,7 +2781,7 @@ class Game {
                 m3[4] = m34 = cardplay%10;
                 n3[4] = n34 = (cardplay/10)%10;
 
-                System.out.println("Player " + position[dd3] + " plays the " + cardname[m34][n34] + "." + "\n");
+                System.out.println("Player " + position[dd3] + " plays the " + cardname[m34][n34] + ".\n");
                 for (int i=0; i<4; i++) {
                     own[i][m34][n34] = -1;
                     length[i][m34]--;
@@ -2905,7 +2905,7 @@ class Game {
             m4[1] = m41 = cardplay%10;
             n4[1] = n41 = (cardplay/10)%10;
 
-            System.out.println("Player " + position[aa4] + " plays the " + cardname[m41][n41] + "." + "\n");//
+            System.out.println("Player " + position[aa4] + " leads the " + cardname[m41][n41] + ".\n");
             for (int i=0; i<4; i++) {
                 own[i][m41][n41] = -1;
                 length[i][m41]--;
@@ -2923,11 +2923,11 @@ class Game {
             } else {
                 v41 = n41;
             }
-            win[4] = win4 = win3;
+            win[4] = win4 = aa4;
 
             // second to play, 4th trick
             if (lone == dd4) {
-                m4[2] = m42 = m41;  // if partner going alone, skip me, so assign same value to my 'play' as win1
+                m4[2] = m42 = m41;  // if partner going alone, skip me, so assign same value to my 'play' as win4
                 n4[2] = n42 = n41;
                 v42 = v41-2;
             } else { // partner not going alone
@@ -2935,7 +2935,7 @@ class Game {
                 m4[2] = m42 = cardplay%10;
                 n4[2] = n42 = (cardplay/10)%10;
 
-                System.out.println("Player " + position[bb4] + " plays the " + cardname[m42][n42] + "." + "\n");
+                System.out.println("Player " + position[bb4] + " plays the " + cardname[m42][n42] + ".\n");
                 for (int i=0; i<4; i++) {
                     own[i][m42][n42] = -1;
                     length[i][m42]--;
@@ -2962,7 +2962,7 @@ class Game {
 
             // third to play, 4th trick
             if (lone == aa4) {
-                m4[3] = m43 = m41;  // if partner going alone, skip me, so assign same value to my 'play' as win3
+                m4[3] = m43 = m41;  // if partner going alone, skip me, so assign same value to my 'play' as win4
                 n4[3] = n43 = n41;
                 v43 = v42-1;
             } else { // partner not going alone
@@ -2970,7 +2970,7 @@ class Game {
                 m4[3] = m43 = cardplay%10;
                 n4[3] = n43 = (cardplay/10)%10;
 
-                System.out.println("Player " + position[cc4] + " plays the " + cardname[m43][n43] + "." + "\n");
+                System.out.println("Player " + position[cc4] + " plays the " + cardname[m43][n43] + ".\n");
                 for (int i=0; i<4; i++) {
                     own[i][m43][n43] = -1;
                     length[i][m43]--;
@@ -3005,7 +3005,7 @@ class Game {
                 m4[4] = m44 = cardplay%10;
                 n4[4] = n44 = (cardplay/10)%10;
 
-                System.out.println("Player " + position[dd4] + " plays the " + cardname[m44][n44] + "." + "\n");
+                System.out.println("Player " + position[dd4] + " plays the " + cardname[m44][n44] + ".\n");
                 for (int i=0; i<4; i++) {
                     own[i][m44][n44] = -1;
                     length[i][m44]--;
@@ -3060,7 +3060,7 @@ class Game {
                 }
             }
 
-            System.out.println("Player " + position[win4] + " leads the " + cardname[m51][n51] + "." + "\n");
+            System.out.println("Player " + position[aa5] + " leads the " + cardname[m51][n51] + ".\n");
             suit[4][0] = m51;
             rank[4][0] = n51;
             if (m51 == fintp) {
@@ -3068,16 +3068,16 @@ class Game {
             } else {
                 v51 = n51;
             }
-            win[5] = win5 = win4;
+            win[5] = win5 = aa5;
 
             // second to play, fifth trick
-            if (lone == (win4+3)%4) {
-                m5[2] = m52 = m51;  // if partner going alone, skip me, so assign same value to my 'play' as win1
+            if (lone == dd5) {
+                m5[2] = m52 = m51;  // if partner going alone, skip me, so assign same value to my 'play' as win5
                 n5[2] = n52 = n51;
             } else {  // partner not going alone
                 for (int i=0; i<4; i++) {
                     for (int j=0; j<8; j++) {
-                        if (own[(win4+1)%4][i][j] == (win4+1)%4) {
+                        if (own[bb5][i][j] == bb5) {
                             m5[2] = m52 = i;
                             n5[2] = n52 = j;
                             v52 = v51-2;
@@ -3085,7 +3085,7 @@ class Game {
                     }
                 }
 
-                System.out.println("Player " + position[(win4+1)%4] + " plays the " + cardname[m52][n52] + "." + "\n");
+                System.out.println("Player " + position[bb5] + " plays the " + cardname[m52][n52] + ".\n");
                 suit[4][1] = m52;
                 rank[4][1] = n52;
                 if (m52 == fintp) {
@@ -3096,7 +3096,7 @@ class Game {
                     v52 = -1;
                 }
                 if (v52 > v51) {
-                    win[5] = win5 = (win4+1)%4;
+                    win[5] = win5 = bb5;
                 }
             }
 
@@ -3107,7 +3107,7 @@ class Game {
             } else {  // partner not going alone
                 for (int i=0; i<4; i++) {
                     for (int j=0; j<8; j++) {
-                        if (own[(win4+2)%4][i][j] == (win4+2)%4) {
+                        if (own[cc5][i][j] == cc5) {
                             m5[3] = m53 = i;
                             n5[3] = n53 = j;
                             v53 = v52-2;
@@ -3115,7 +3115,7 @@ class Game {
                     }
                 }
 
-                System.out.println("Player " + position[(win4+2)%4] + " plays the " + cardname[m53][n53] + "." + "\n");
+                System.out.println("Player " + position[cc5] + " plays the " + cardname[m53][n53] + ".\n");
                 suit[4][2] = m53;
                 rank[4][2] = n53;
                 if (m53 == fintp) {
@@ -3126,18 +3126,18 @@ class Game {
                     v53 = -1;
                 }
                 if (v53 > v51 && v53 > v52) {
-                    win[5] = win5 = (win4+2)%4;
+                    win[5] = win5 = cc5;
                 }
             }
 
             // fourth to play, fifth trick
-            if (lone == (win4+1)%4) {
+            if (lone == bb5) {
                 m5[4] = m54 = m52;  // if partner going alone, skip me, so assign same value to my 'play' as partner
                 n5[4] = n54 = n52;
             } else {  // partner not going alone
                 for (int i=0; i<4; i++) {
                     for (int j=0; j<8; j++) {
-                        if (own[(win4+3)%4][i][j] == (win4+3)%4) {
+                        if (own[dd5][i][j] == dd5) {
                             m5[4] = m54 = i;
                             n5[4] = n54 = j;
                             v54 = v53-2;
@@ -3145,7 +3145,7 @@ class Game {
                     }
                 }
 
-                System.out.println("Player " + position[(win4+3)%4] + " plays the " + cardname[m54][n54] + "." + "\n");
+                System.out.println("Player " + position[dd5] + " plays the " + cardname[m54][n54] + ".\n");
                 suit[4][3] = m54;
                 rank[4][3] = n54;
                 if (m54 == fintp) {
@@ -3156,7 +3156,7 @@ class Game {
                     v54 = -1;
                 }
                 if (v54 > v51 && v54 > v52 && v54 > v53) {
-                    win[5] = win5 = (win4+3)%4;
+                    win[5] = win5 = dd5;
                 }
             }
 
