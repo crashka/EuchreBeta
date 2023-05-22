@@ -3878,7 +3878,7 @@ public class EuchreBeta {
                     cv[0][m24][n24] = 0;
                     cv[1][m24][n24] = 0;
                     if (n24 == 5 && m24 != fintp) {
-                        aces[(win2+3)%4][fintp]--;
+                        aces[dd2][fintp]--;
                     }
                     suit[1][3] = m24;
                     rank[1][3] = n24;
