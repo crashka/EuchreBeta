@@ -1133,16 +1133,18 @@ class PlayStrategy {
             }
         }
         // adjust for singleton suits
-        for (int i=0; i<4; i++) { // suit
-            for (int j=0; j<8; j++) { // rank
-                if (own[dealer][i][j] > -1 && own[dealer][i][j] < 4) {
-                    if (i != fintp && playst[own[dealer][i][j]][i] == 1) { // non-trump, singleton suit
-                        if (i == 3-fintp) { // next suit, every card but L
-                            cvtemp[1][i][j] = cvtemp[1][i][j] - 0.01;
-                            cvtemp[0][i][j] = Math.pow(cvtemp[0][i][j],5); // raw value raised to 5th power
-                        } else { // green suit, every card
-                            cvtemp[1][i][j] = cvtemp[1][i][j] - 0.01;
-                            cvtemp[0][i][j] = Math.pow(cvtemp[0][i][j],10); // raw value raised to 10th power
+        for (int k=0; k<4; k++) { // player
+            for (int i=0; i<4; i++) { // suit
+                for (int j=0; j<8; j++) { // rank
+                    if (own[k][i][j] > -1 && own[k][i][j] < 4) {
+                        if (i != fintp && playst[own[k][i][j]][i] == 1) { // non-trump, singleton suit
+                            if (i == 3-fintp) { // next suit, every card but L
+                                cvtemp[1][i][j] = cvtemp[1][i][j] - 0.01;
+                                cvtemp[0][i][j] = Math.pow(cvtemp[0][i][j],5); // raw value raised to 5th power
+                            } else { // green suit, every card
+                                cvtemp[1][i][j] = cvtemp[1][i][j] - 0.01;
+                                cvtemp[0][i][j] = Math.pow(cvtemp[0][i][j],10); // raw value raised to 10th power
+                            }
                         }
                     }
                 }
@@ -1157,7 +1159,7 @@ class PlayStrategy {
                     }
                     if (playst[k][i] > 1 && playst[k][fintp] == 0) {
                         for (int j=0; j<4; j++) {
-                            if (own[dealer][i][j] == k) {
+                            if (own[k][i][j] == k) {
                                 // if have no trump and A-x or A-x-x, make x the card to throw off (if Q or lower)
                                 cvtemp[1][i][j] = cvtemp[1][i][j]/3;
                             }
@@ -1166,11 +1168,11 @@ class PlayStrategy {
                 }
                 if (max[k][fintp][i] == 4 && i != fintp) { // non-trump suit headed by K
                     if (playst[k][i] == 2) { // have K-x
-                        if (own[dealer][i][3] == k) { // player has K-Q
+                        if (own[k][i][3] == k) { // player has K-Q
                             cvtemp[0][i][4] = cvtemp[0][i][4]/2; // K value halved, so better lead (lower value)
                         }
                         for (int j=0; j<3; j++) {
-                            if (own[dealer][i][j] == k) {
+                            if (own[k][i][j] == k) {
                                 cvtemp[0][i][j] = cvtemp[0][i][j]/2; // if x value is J or lower, 1/2 it so better lead
                             }
                         }
@@ -2627,7 +2629,7 @@ class Game {
             for (int i=0; i<4; i++) { // player
                 for (int j=0; j<4; j++) { // suit
                     for (int k=0; k<8; k++) { // rank
-                        if (own[i][j][k] > -1 && own[i][j][k] < 5 && k > boss[i][j]) {
+                        if (own[i][j][k] > -1 && own[i][j][k] < 4 && k > boss[i][j]) {
                             boss[i][j] = k;
                         }
                     }
@@ -2851,7 +2853,7 @@ class Game {
             for (int i=0; i<4; i++) { // player
                 for (int j=0; j<4; j++) { // suit
                     for (int k=0; k<8; k++) { // rank
-                        if (own[i][j][k] > -1 && own[i][j][k] < 5 && k > boss[i][j]) {
+                        if (own[i][j][k] > -1 && own[i][j][k] < 4 && k > boss[i][j]) {
                             boss[i][j] = k;
                         }
                     }
@@ -3589,10 +3591,8 @@ class Deal {
         }
 
         // identify where each card is
-        for (int i=0; i<4; i++) { // players
-            for (int j=0; j<24; j++) { // cards
-                own[i][cards[j]%4][cards[j]/4] = j/5;
-            }
+        for (int j=0; j<20; j++) { // cards
+            own[j/5][cards[j]%4][cards[j]/4] = j/5;
         }
         if (round == 0) { // dealer swapped a card; all players know turn card is in dealer's hand
             // only dealer knows card discarded
