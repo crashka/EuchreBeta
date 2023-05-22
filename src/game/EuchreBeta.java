@@ -1134,7 +1134,7 @@ class PlayStrategy {
         }
         // adjust for singleton suits
         for (int i=0; i<4; i++) { // suit
-            for (int j=0; j<6; j++) { // rank
+            for (int j=0; j<8; j++) { // rank
                 if (own[dealer][i][j] > -1 && own[dealer][i][j] < 4) {
                     if (i != fintp && playst[own[dealer][i][j]][i] == 1) { // non-trump, singleton suit
                         if (i == 3-fintp) { // next suit, every card but L
@@ -2421,13 +2421,13 @@ class Game {
                     right[i][j] = 0;
                     left[i][j] = 0;
                 }
-            }
-            for (int j=0; j<4; j++) { // suit
-                if (own[dealer][j][6] > -1) {
-                    left[own[dealer][j][6]][j] = 1;
-                }
-                if (own[dealer][j][7] > -1) {
-                    right[own[dealer][j][7]][j] = 1;
+                for (int j=0; j<4; j++) { // suit
+                    if (own[i][j][6] > -1) {
+                        left[own[i][j][6]][j] = 1;
+                    }
+                    if (own[i][j][7] > -1) {
+                        right[own[i][j][7]][j] = 1;
+                    }
                 }
             }
 
@@ -2555,7 +2555,7 @@ class Game {
                 cv[0][m24][n24] = 0;
                 cv[1][m24][n24] = 0;
                 if (n24 == 5 && m24 != fintp) {
-                    aces[(win2+3)%4][fintp]--;
+                    aces[dd2][fintp]--;
                 }
                 suit[1][3] = m24;
                 rank[1][3] = n24;
@@ -2656,13 +2656,13 @@ class Game {
                     right[i][j] = 0;
                     left[i][j] = 0;
                 }
-            }
-            for (int j=0; j<4; j++) { // suit
-                if (own[dealer][j][6] > -1) {
-                    left[own[dealer][j][6]][j] = 1;
-                }
-                if (own[dealer][j][7] > -1) {
-                    right[own[dealer][j][7]][j] = 1;
+                for (int j=0; j<4; j++) { // suit
+                    if (own[i][j][6] > -1) {
+                        left[own[i][j][6]][j] = 1;
+                    }
+                    if (own[i][j][7] > -1) {
+                        right[own[i][j][7]][j] = 1;
+                    }
                 }
             }
 
@@ -2880,13 +2880,13 @@ class Game {
                     right[i][j] = 0;
                     left[i][j] = 0;
                 }
-            }
-            for (int j=0; j<4; j++) { // suit
-                if (own[dealer][j][6] > -1) {
-                    left[own[dealer][j][6]][j] = 1;
-                }
-                if (own[dealer][j][7] > -1) {
-                    right[own[dealer][j][7]][j] = 1;
+                for (int j=0; j<4; j++) { // suit
+                    if (own[i][j][6] > -1) {
+                        left[own[i][j][6]][j] = 1;
+                    }
+                    if (own[i][j][7] > -1) {
+                        right[own[i][j][7]][j] = 1;
+                    }
                 }
             }
 
@@ -3692,6 +3692,9 @@ class Deal {
     static int playfirst(int play, int fintp, int hitrump, int sectrump, int lotrump, int lead,
                          int maxsuit, int minsuit, int suitace, int worsts, int worstr, int who,
                          int slength, int cards[]) {
+        if (worsts < 0 || worstr < 0) {
+            assert (play >= 0 && play < 6) || (play == 5 && suitace != -1);
+        }
         int cardplay = -1;
         int m = -1;
         int n = -1;
@@ -3767,7 +3770,7 @@ class Deal {
             }
         }
         for (int i=0; i<4; i++) {  // find lowest card from shortest suit (lowest cv[0] value)
-            for (int j=0; j<6; j++) {
+            for (int j=0; j<8; j++) {
                 if (p11 > cv[0][i][j] && cv[0][i][j] > 0 && own[aa][i][j] == aa) {
                     p11 = cv[0][i][j];
                     worsts = i;
@@ -4334,14 +4337,14 @@ class Deal {
                 }
             }
         }
-        for (int j=0; j<6; j++) { // find max rank of same suit to re-play
+        for (int j=0; j<8; j++) { // find max rank of same suit to re-play
             if (own[win1][suit[0][aa]][j] == win1) { // find highest of same suit to lead
                 maxsuit = j;
                 minsuit = suit[0][aa]; // suit that win1 played on 1st trick
             }
         }
         for (int i=0; i<4; i++) {  // find lowest card from shortest suit (lowest cv[0] value)
-            for (int j=0; j<6; j++) {
+            for (int j=0; j<8; j++) {
                 if (p21 > cv[0][i][j] && cv[0][i][j] > 0 && own[win1][i][j] == win1) {
                     p21 = cv[0][i][j];
                     worsts = i;
@@ -4886,7 +4889,7 @@ class Deal {
                 cv[0][i][boss[aa3][i]] = .95; // make this boss card the best one to lead
             }
         }
-        for (int j=0; j<6; j++) { // find max rank of same suit to re-play
+        for (int j=0; j<8; j++) { // find max rank of same suit to re-play
             if (own[aa3][suit[1][(win2-win1+4)%4]][j] == aa3) { // find highest of same suit to lead
                 maxsuit = j; // actually the rank
                 minsuit = suit[1][(win2-win1+4)%4]; // the suit
@@ -5349,7 +5352,7 @@ class Deal {
                 cv[0][i][boss[aa4][i]] = .95; // make this boss card the best one to lead
             }
         }
-        for (int j=0; j<6; j++) { // find max rank of same suit to re-play
+        for (int j=0; j<8; j++) { // find max rank of same suit to re-play
             if (own[aa4][suit[2][(win3-win2+4)%4]][j] == aa4) { // find highest of same suit to lead
                 maxsuit = j;
                 minsuit = suit[2][(win3-win2+4)%4];
