@@ -723,6 +723,9 @@ public class EuchreBeta {
     // *** Method "playfirst" for play of cards ***
     public static int playfirst(int play, int fintp, int hitrump, int sectrump, int lotrump, int lead,
                                 int maxsuit, int minsuit, int suitace, int worsts, int worstr, int who, int slength, int cards[]) {
+        if (worsts < 0 || worstr < 0) {
+            assert (play >= 0 && play < 6) || (play == 5 && suitace != -1);
+        }
         int cardplay = -1;
         int m = -1;
         int n = -1;
@@ -764,7 +767,7 @@ public class EuchreBeta {
 
     // *** Method "wintrick" to tally tricks won ***
     public static int wintrick(int winner, int turn) {
-        System.out.println("Player " + position[winner] + " wins trick " + turn + "." + "\n");
+        System.out.println("Player " + position[winner] + " wins trick " + turn + ".\n");
         System.out.println("----------------------------------------------------------");
         int result = -1;
         if (winner == 0 || winner == 2) {
@@ -1138,7 +1141,7 @@ public class EuchreBeta {
         }
         // adjust for singleton suits
         for (int i=0; i<4; i++) { // suit
-            for (int j=0; j<6; j++) { // rank
+            for (int j=0; j<8; j++) { // rank
                 if (own[dealer][i][j] > -1 && own[dealer][i][j] < 4) {
                     if (i != fintp && playst[own[dealer][i][j]][i] == 1) { // non-trump, singleton suit
                         if (i == 3-fintp) { // next suit, every card but L
@@ -2558,7 +2561,7 @@ public class EuchreBeta {
                         }
                     }
                     for (int i=0; i<4; i++) {  // find lowest card from shortest suit (lowest cv[0] value)
-                        for (int j=0; j<6; j++) {
+                        for (int j=0; j<8; j++) {
                             if (p11 > cv[0][i][j] && cv[0][i][j] > 0 && own[aa][i][j] == aa) {
                                 p11 = cv[0][i][j];
                                 worsts = i;
@@ -2693,7 +2696,7 @@ public class EuchreBeta {
                     m11 = cardplay%10;
                     n11 = (cardplay/10)%10;
 
-                    System.out.println("Player " + position[aa] + " leads the " + cardname[m11][n11] + "\n");
+                    System.out.println("Player " + position[aa] + " leads the " + cardname[m11][n11] + " (" + play1 + ").\n");
                     for (int i=0; i<4; i++) {
                         own[i][m11][n11] = -1;
                         length[i][m11]--;
@@ -2854,7 +2857,7 @@ public class EuchreBeta {
                         m11 = m12;
                     }
 
-                    System.out.println("Player " + position[bb] + " plays the " + cardname[m12][n12] + "." + "\n");
+                    System.out.println("Player " + position[bb] + " plays the " + cardname[m12][n12] + " (" + play1 + ").\n");
                     for (int i=0; i<4; i++) {
                         own[i][m12][n12] = -1;
                         length[i][m12]--;
@@ -3004,7 +3007,7 @@ public class EuchreBeta {
                     m13 = cardplay%10;
                     n13 = (cardplay/10)%10;
 
-                    System.out.println("Player " + position[cc] + " plays the " + cardname[m13][n13] + "." + "\n");
+                    System.out.println("Player " + position[cc] + " plays the " + cardname[m13][n13] + " (" + play1 + ").\n");
                     for (int i=0; i<4; i++) {
                         own[i][m13][n13] = -1;
                         length[i][m13]--;
@@ -3162,7 +3165,7 @@ public class EuchreBeta {
                     m14 = cardplay%10;
                     n14 = (cardplay/10)%10;
 
-                    System.out.println("Player " + position[dd] + " plays the " + cardname[m14][n14] + "." + "\n");
+                    System.out.println("Player " + position[dd] + " plays the " + cardname[m14][n14] + " (" + play1 + ").\n");
                     for (int i=0; i<4; i++) {
                         own[i][m14][n14] = -1;
                         length[i][m14]--;
@@ -3256,13 +3259,13 @@ public class EuchreBeta {
                         right[i][j] = 0;
                         left[i][j] = 0;
                     }
-                }
-                for (int j=0; j<4; j++) { // suit
-                    if (own[dealer][j][6] > -1) {
-                        left[own[dealer][j][6]][j] = 1;
-                    }
-                    if (own[dealer][j][7] > -1) {
-                        right[own[dealer][j][7]][j] = 1;
+                    for (int j=0; j<4; j++) { // suit
+                        if (own[i][j][6] > -1) {
+                            left[own[i][j][6]][j] = 1;
+                        }
+                        if (own[i][j][7] > -1) {
+                            right[own[i][j][7]][j] = 1;
+                        }
                     }
                 }
 
@@ -3306,14 +3309,14 @@ public class EuchreBeta {
                         }
                     }
                 }
-                for (int j=0; j<6; j++) { // find max rank of same suit to re-play
+                for (int j=0; j<8; j++) { // find max rank of same suit to re-play
                     if (own[win1][suit[0][aa]][j] == win1) { // find highest of same suit to lead
                         maxsuit = j;
                         minsuit = suit[0][aa]; // suit that win1 played on 1st trick
                     }
                 }
                 for (int i=0; i<4; i++) {  // find lowest card from shortest suit (lowest cv[0] value)
-                    for (int j=0; j<6; j++) {
+                    for (int j=0; j<8; j++) {
                         if (p21 > cv[0][i][j] && cv[0][i][j] > 0 && own[win1][i][j] == win1) {
                             p21 = cv[0][i][j];
                             worsts = i;
@@ -3465,7 +3468,7 @@ public class EuchreBeta {
                 m21 = cardplay%10;
                 n21 = (cardplay/10)%10;
 
-                System.out.println("Player " + position[win1] + " leads the " + cardname[m21][n21] + "." + "\n");
+                System.out.println("Player " + position[win1] + " leads the " + cardname[m21][n21] + " (" + play1 + ").\n");
                 for (int i=0; i<4; i++) {
                     own[i][m21][n21] = -1;
                     length[i][m21]--;
@@ -3588,7 +3591,7 @@ public class EuchreBeta {
                     m22 = cardplay%10;
                     n22 = (cardplay/10)%10;
 
-                    System.out.println("Player " + position[bb2] + " plays the " + cardname[m22][n22] + "." + "\n");
+                    System.out.println("Player " + position[bb2] + " plays the " + cardname[m22][n22] + " (" + play1 + ").\n");
                     for (int i=0; i<4; i++) {
                         own[i][m22][n22] = -1;
                         length[i][m22]--;
@@ -3748,7 +3751,7 @@ public class EuchreBeta {
                     m23 = cardplay%10;
                     n23 = (cardplay/10)%10;
 
-                    System.out.println("Player " + position[cc2] + " plays the " + cardname[m23][n23] + "." + "\n");
+                    System.out.println("Player " + position[cc2] + " plays the " + cardname[m23][n23] + " (" + play1 + ").\n");
                     for (int i=0; i<4; i++) {
                         own[i][m23][n23] = -1;
                         length[i][m23]--;
@@ -3866,7 +3869,7 @@ public class EuchreBeta {
                     m24 = cardplay%10;
                     n24 = (cardplay/10)%10;
 
-                    System.out.println("Player " + position[dd2] + " plays the " + cardname[m24][n24] + "." + "\n");
+                    System.out.println("Player " + position[dd2] + " plays the " + cardname[m24][n24] + " (" + play1 + ").\n");
                     for (int i=0; i<4; i++) {
                         own[i][m24][n24] = -1;
                         length[i][m24]--;
@@ -3976,13 +3979,13 @@ public class EuchreBeta {
                         right[i][j] = 0;
                         left[i][j] = 0;
                     }
-                }
-                for (int j=0; j<4; j++) { // suit
-                    if (own[dealer][j][6] > -1) {
-                        left[own[dealer][j][6]][j] = 1;
-                    }
-                    if (own[dealer][j][7] > -1) {
-                        right[own[dealer][j][7]][j] = 1;
+                    for (int j=0; j<4; j++) { // suit
+                        if (own[i][j][6] > -1) {
+                            left[own[i][j][6]][j] = 1;
+                        }
+                        if (own[i][j][7] > -1) {
+                            right[own[i][j][7]][j] = 1;
+                        }
                     }
                 }
 
@@ -4008,6 +4011,8 @@ public class EuchreBeta {
                 minsuit = suit[1][(win2-win1+4)%4];
                 int bos = -1;
                 suitace = -1;
+                worsts = -1; // worst suit
+                worstr = -1; // worst rank
                 win3 = win2;
 
                 for (int j=0; j<8; j++) { // calculate highest and lowest trump
@@ -4026,7 +4031,7 @@ public class EuchreBeta {
                         cv[0][i][boss[aa3][i]] = .95; // make this boss card the best one to lead
                     }
                 }
-                for (int j=0; j<6; j++) { // find max rank of same suit to re-play
+                for (int j=0; j<8; j++) { // find max rank of same suit to re-play
                     if (own[aa3][suit[1][(win2-win1+4)%4]][j] == aa3) { // find highest of same suit to lead
                         maxsuit = j; // actually the rank
                         minsuit = suit[1][(win2-win1+4)%4]; // the suit
@@ -4115,7 +4120,7 @@ public class EuchreBeta {
                 m31 = cardplay%10;
                 n31 = (cardplay/10)%10;
 
-                System.out.println("Player " + position[aa3] + " leads the " + cardname[m31][n31] + "." + "\n");//
+                System.out.println("Player " + position[aa3] + " leads the " + cardname[m31][n31] + " (" + play1 + ").\n");
                 for (int i=0; i<4; i++) {
                     own[i][m31][n31] = -1;
                     length[i][m31]--;
@@ -4240,7 +4245,7 @@ public class EuchreBeta {
                     m32 = cardplay%10;
                     n32 = (cardplay/10)%10;
 
-                    System.out.println("Player " + position[bb3] + " plays the " + cardname[m32][n32] + "." + "\n");
+                    System.out.println("Player " + position[bb3] + " plays the " + cardname[m32][n32] + " (" + play1 + ").\n");
                     for (int i=0; i<4; i++) {
                         own[i][m32][n32] = -1;
                         length[i][m32]--;
@@ -4375,7 +4380,7 @@ public class EuchreBeta {
                     m33 = cardplay%10;
                     n33 = (cardplay/10)%10;
 
-                    System.out.println("Player " + position[cc3] + " plays the " + cardname[m33][n33] + "." + "\n");
+                    System.out.println("Player " + position[cc3] + " plays the " + cardname[m33][n33] + " (" + play1 + ").\n");
                     for (int i=0; i<4; i++) {
                         own[i][m33][n33] = -1;
                         length[i][m33]--;
@@ -4410,6 +4415,8 @@ public class EuchreBeta {
                 lotrump = 20;
                 maxsuit = -1; // highest trump
                 minsuit = 20; // lowest trump
+                worsts = -1; // worst suit
+                worstr = -1; // worst rank
 
                 if (lone == bb3) {
                     m34 = m32;  // if partner going alone, skip me, pretend I played 9 of led suit
@@ -4494,7 +4501,7 @@ public class EuchreBeta {
                     m34 = cardplay%10;
                     n34 = (cardplay/10)%10;
 
-                    System.out.println("Player " + position[dd3] + " plays the " + cardname[m34][n34] + "." + "\n");
+                    System.out.println("Player " + position[dd3] + " plays the " + cardname[m34][n34] + " (" + play1 + ").\n");
                     for (int i=0; i<4; i++) {
                         own[i][m34][n34] = -1;
                         length[i][m34]--;
@@ -4593,13 +4600,13 @@ public class EuchreBeta {
                         right[i][j] = 0;
                         left[i][j] = 0;
                     }
-                }
-                for (int j=0; j<4; j++) { // suit
-                    if (own[dealer][j][6] > -1) {
-                        left[own[dealer][j][6]][j] = 1;
-                    }
-                    if (own[dealer][j][7] > -1) {
-                        right[own[dealer][j][7]][j] = 1;
+                    for (int j=0; j<4; j++) { // suit
+                        if (own[i][j][6] > -1) {
+                            left[own[i][j][6]][j] = 1;
+                        }
+                        if (own[i][j][7] > -1) {
+                            right[own[i][j][7]][j] = 1;
+                        }
                     }
                 }
 
@@ -4625,6 +4632,8 @@ public class EuchreBeta {
                 playace = 1.195;
                 suitace = -1;
                 bos = -1;
+                worsts = -1; // worst suit
+                worstr = -1; // worst rank
                 win4 = win3;
 
                 for (int j=0; j<8; j++) { // calculate highest and lowest trump
@@ -4643,7 +4652,7 @@ public class EuchreBeta {
                         cv[0][i][boss[aa4][i]] = .95; // make this boss card the best one to lead
                     }
                 }
-                for (int j=0; j<6; j++) { // find max rank of same suit to re-play
+                for (int j=0; j<8; j++) { // find max rank of same suit to re-play
                     if (own[aa4][suit[2][(win3-win2+4)%4]][j] == aa4) { // find highest of same suit to lead
                         maxsuit = j;
                         minsuit = suit[2][(win3-win2+4)%4];
@@ -4740,7 +4749,7 @@ public class EuchreBeta {
                 m41 = cardplay%10;
                 n41 = (cardplay/10)%10;
 
-                System.out.println("Player " + position[aa4] + " plays the " + cardname[m41][n41] + "." + "\n");//
+                System.out.println("Player " + position[aa4] + " leads the " + cardname[m41][n41] + " (" + play1 + ").\n");
                 for (int i=0; i<4; i++) {
                     own[i][m41][n41] = -1;
                     length[i][m41]--;
@@ -4845,7 +4854,7 @@ public class EuchreBeta {
                     m42 = cardplay%10;
                     n42 = (cardplay/10)%10;
 
-                    System.out.println("Player " + position[bb4] + " plays the " + cardname[m42][n42] + "." + "\n");
+                    System.out.println("Player " + position[bb4] + " plays the " + cardname[m42][n42] + " (" + play1 + ").\n");
                     for (int i=0; i<4; i++) {
                         own[i][m42][n42] = -1;
                         length[i][m42]--;
@@ -4959,7 +4968,7 @@ public class EuchreBeta {
                     m43 = cardplay%10;
                     n43 = (cardplay/10)%10;
 
-                    System.out.println("Player " + position[cc4] + " plays the " + cardname[m43][n43] + "." + "\n");
+                    System.out.println("Player " + position[cc4] + " plays the " + cardname[m43][n43] + " (" + play1 + ").\n");
                     for (int i=0; i<4; i++) {
                         own[i][m43][n43] = -1;
                         length[i][m43]--;
@@ -4994,6 +5003,8 @@ public class EuchreBeta {
                 lotrump = 20;
                 maxsuit = -1; // highest trump
                 minsuit = 20; // lowest trump
+                worsts = -1; // worst suit
+                worstr = -1; // worst rank
 
                 if (lone == bb4) {
                     m44 = m42;  // if partner going alone, skip me, pretend I played 9 of led suit
@@ -5065,7 +5076,7 @@ public class EuchreBeta {
                     m44 = cardplay%10;
                     n44 = (cardplay/10)%10;
 
-                    System.out.println("Player " + position[dd4] + " plays the " + cardname[m44][n44] + "." + "\n");
+                    System.out.println("Player " + position[dd4] + " plays the " + cardname[m44][n44] + " (" + play1 + ").\n");
                     for (int i=0; i<4; i++) {
                         own[i][m44][n44] = -1;
                         length[i][m44]--;
@@ -5122,7 +5133,7 @@ public class EuchreBeta {
                     }
                 }
 
-                System.out.println("Player " + position[win4] + " leads the " + cardname[m51][n51] + "." + "\n");
+                System.out.println("Player " + position[win4] + " leads the " + cardname[m51][n51] + ".\n");
                 suit[4][0] = m51;
                 rank[4][0] = n51;
                 if (m51 == fintp) {
@@ -5149,7 +5160,7 @@ public class EuchreBeta {
                         }
                     }
 
-                    System.out.println("Player " + position[(win4+1)%4] + " plays the " + cardname[m52][n52] + "." + "\n");
+                    System.out.println("Player " + position[(win4+1)%4] + " plays the " + cardname[m52][n52] + ".\n");
                     suit[4][1] = m52;
                     rank[4][1] = n52;
                     if (m52 == fintp) {
@@ -5182,7 +5193,7 @@ public class EuchreBeta {
                         }
                     }
 
-                    System.out.println("Player " + position[(win4+2)%4] + " plays the " + cardname[m53][n53] + "." + "\n");
+                    System.out.println("Player " + position[(win4+2)%4] + " plays the " + cardname[m53][n53] + ".\n");
                     suit[4][2] = m53;
                     rank[4][2] = n53;
                     if (m53 == fintp) {
@@ -5215,7 +5226,7 @@ public class EuchreBeta {
                         }
                     }
 
-                    System.out.println("Player " + position[(win4+3)%4] + " plays the " + cardname[m54][n54] + "." + "\n");
+                    System.out.println("Player " + position[(win4+3)%4] + " plays the " + cardname[m54][n54] + ".\n");
                     suit[4][3] = m54;
                     rank[4][3] = n54;
                     if (m54 == fintp) {
