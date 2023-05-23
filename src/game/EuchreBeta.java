@@ -2140,27 +2140,13 @@ class Game {
             deal.preparePlay(declarer, fintp, lone, round);
 
             int[][][] own = deal.own;
-            int[][] right = deal.right;
-            int[][] left = deal.left;
             int[][] acet = deal.acet;
-            int[][] kingt = deal.kingt;
-            int[][] ace = deal.ace;
-            int[][] king = deal.king;
-            int[][] queen = deal.queen;
             int[][] aces = deal.aces;
             int[][] length = deal.length;
             int[][] playst = deal.playst;
-            int[][] boss = deal.boss;
             double[][][] cv = deal.cv;
             int[][] suit = deal.suit;
             int[][] rank = deal.rank;
-            int[][] voids = deal.voids;
-            int[][] solo = deal.solo;
-            int[][] hint = deal.hint;
-            int[] sit = deal.sit;
-            int[] vd = deal.vd;
-            int[] ss = deal.ss;
-            int[] cksuit = deal.cksuit;
 
             // put each players cards in order (trump suit first, then spades - hearts - diamond - clubs in that order;
             // highest to lowest rank within each suit
@@ -2237,14 +2223,15 @@ class Game {
             }
 
             //  second to play, 1st trick
-            if (lone == cc) {// 3rd seat going alone, assign m11 a temp value to avoid errors
-                m1[1] = m11 = 0;
-            }
             if (lone == dd) {
                 m1[2] = m12 = m11;  // if dealer going alone, skip North, so assign same value to their 'play' as West
                 n1[2] = n12 = n11;
                 v12 = v11-1;
             } else { // dealer NOT going alone
+                if (lone == cc) { // 3rd seat going alone, assign m11 a temp value to avoid errors
+                    m1[1] = m11 = 0;
+                }
+
                 cardplay = deal.player12(m1, n1, null, null, pos, win, trick);
                 m1[2] = m12 = cardplay%10;
                 n1[2] = n12 = (cardplay/10)%10;
@@ -2361,77 +2348,13 @@ class Game {
             int tricktally = wintrick(win1, wturn);
             trick[tricktally]++;
             trick[tricktally+2]++;
-
             if (tricktally == 0) {
                 tns++;
             } else {
                 tew++;
             }
 
-            //  if defending against lone, modify priority of discards
-            if (lone > -1) {
-                for (int i=0; i<4; i++) { // cycle through players
-                    for (int j=0; j<4; j++) { // cycle through suits
-                        if (voids[i][j] == 1 && lone == i) {
-                            for (int k=0; k<8; k++) { // cycle through ranks
-                                cv[1][j][k] = cv[1][j][k]/10;
-                            }
-                        }
-                    }
-                }
-            }
-
-            // calculate boss (highest) rank in each suit; first reset to zero
-            for (int i=0; i<4; i++) { // player
-                for (int j=0; j<4; j++) { // suit
-                    solo[i][j] = 0;
-                    solo[i][j] = 0;
-                    solo[i][j] = 0;
-                    solo[i][j] = 0;
-                    boss[i][j] = 0;
-                }
-            }
-            for (int i=0; i<4; i++) { // player
-                for (int j=0; j<4; j++) { // suit
-                    for (int k=0; k<8; k++) { // rank
-                        if (own[i][j][k] > -1 && own[i][j][k] < 4 && k > boss[i][j]) {
-                            boss[i][j] = k;
-                        }
-                    }
-                }
-            }
-
-            // check if any player is the only one with a particular suit
-            for (int i=0; i<4; i++) { // suit
-                if (playst[0][i] > 0 && ((voids[1][i] + voids[2][i] + voids[3][i] == 3) || length[0][i] == playst[0][i])) {
-                    solo[0][i] = 1;
-                }
-                if (playst[1][i] > 0 && ((voids[0][i] + voids[2][i] + voids[3][i] == 3) || length[1][i] == playst[1][i])) {
-                    solo[1][i] = 1;
-                }
-                if (playst[2][i] > 0 && ((voids[0][i] + voids[1][i] + voids[3][i] == 3) || length[2][i] == playst[2][i])) {
-                    solo[2][i] = 1;
-                }
-                if (playst[3][i] > 0 && ((voids[0][i] + voids[1][i] + voids[2][i] == 3) || length[3][i] == playst[3][i])) {
-                    solo[3][i] = 1;
-                }
-            }
-
-            // re-check who holds bowers; first re-set to zero
-            for (int i=0; i<4; i++) { // player
-                for (int j=0; j<4; j++) { // suit
-                    right[i][j] = 0;
-                    left[i][j] = 0;
-                }
-                for (int j=0; j<4; j++) { // suit
-                    if (own[i][j][6] > -1) {
-                        left[own[i][j][6]][j] = 1;
-                    }
-                    if (own[i][j][7] > -1) {
-                        right[own[i][j][7]][j] = 1;
-                    }
-                }
-            }
+            deal.updatePlay1();
 
             // establish new final shortcuts for second trick
             final int aa2 = win1; // 2nd trick lead
@@ -2583,90 +2506,7 @@ class Game {
                 tew++;
             }
 
-            //  if defending against lone, modify priority of discards
-            if (lone > -1) {
-                for (int j=0; j<4; j++) { // cycle through suits
-                    for (int k=0; k<8; k++) { // cycle through ranks
-                        if (own[dealer][j][k] != lone && voids[lone][j] == 1) {
-                            cv[1][j][k] = cv[1][j][k]/10;
-                        }
-                    }
-                }
-            }
-
-            // calculate if any player is single suited
-            for (int i=0; i<4; i++) {
-                cksuit[i] = -1;
-                ss[i] = -1;
-            }
-            for (int i=0; i<4; i++) { // player
-                for (int j=0; j<4; j++) { // suit
-                    for (int k=0; k<8; k++) { // rank
-                        if (own[i][j][k] == i) {
-                            if (cksuit[i] == -1 || cksuit[i] == j) {
-                                cksuit[i] = j;
-                            } else {
-                                cksuit[i] = -2;
-                            }
-                        }
-                    }
-                }
-                if (cksuit[i] > -1) {
-                    ss[i] = cksuit[i];
-                }
-            }
-
-            // calculate boss (highest) rank in each suit; first reset to zero
-            for (int i=0; i<4; i++) { // player
-                for (int j=0; j<4; j++) { // suit
-                    solo[i][j] = 0;
-                    solo[i][j] = 0;
-                    solo[i][j] = 0;
-                    solo[i][j] = 0;
-                    boss[i][j] = 0;
-                }
-            }
-            for (int i=0; i<4; i++) { // player
-                for (int j=0; j<4; j++) { // suit
-                    for (int k=0; k<8; k++) { // rank
-                        if (own[i][j][k] > -1 && own[i][j][k] < 4 && k > boss[i][j]) {
-                            boss[i][j] = k;
-                        }
-                    }
-                }
-            }
-
-            // check if any player is the only one with a particular suit
-            for (int i=0; i<4; i++) { // suit
-                if (playst[0][i] > 0 && ((voids[1][i] + voids[2][i] + voids[3][i] == 3) || length[0][i] == playst[0][i])) {
-                    solo[0][i] = 1;
-                }
-                if (playst[1][i] > 0 && ((voids[0][i] + voids[2][i] + voids[3][i] == 3) || length[1][i] == playst[1][i])) {
-                    solo[1][i] = 1;
-                }
-                if (playst[2][i] > 0 && ((voids[0][i] + voids[1][i] + voids[3][i] == 3) || length[2][i] == playst[2][i])) {
-                    solo[2][i] = 1;
-                }
-                if (playst[3][i] > 0 && ((voids[0][i] + voids[1][i] + voids[2][i] == 3) || length[3][i] == playst[3][i])) {
-                    solo[3][i] = 1;
-                }
-            }
-
-            // re-check who holds bowers; first re-set to zero
-            for (int i=0; i<4; i++) { // player
-                for (int j=0; j<4; j++) { // suit
-                    right[i][j] = 0;
-                    left[i][j] = 0;
-                }
-                for (int j=0; j<4; j++) { // suit
-                    if (own[i][j][6] > -1) {
-                        left[own[i][j][6]][j] = 1;
-                    }
-                    if (own[i][j][7] > -1) {
-                        right[own[i][j][7]][j] = 1;
-                    }
-                }
-            }
+            deal.updatePlay2();
 
             // establish new final shortcuts for third trick
             final int aa3 = win2; // 3rd trick lead
@@ -2818,79 +2658,7 @@ class Game {
                 tew++;
             }
 
-            // calculate if any player is single suited
-            for (int i=0; i<4; i++) {
-                cksuit[i] = -1;
-                ss[i] = -1;
-            }
-            for (int i=0; i<4; i++) { // player
-                for (int j=0; j<4; j++) { // suit
-                    for (int k=0; k<8; k++) { // rank
-                        if (own[i][j][k] == i) {
-                            if (cksuit[i] == -1 || cksuit[i] == j) {
-                                cksuit[i] = j;
-                            } else {
-                                cksuit[i] = -2;
-                            }
-                        }
-                    }
-                }
-                if (cksuit[i] > -1) {
-                    ss[i] = cksuit[i];
-                }
-            }
-
-            // calculate boss (highest) rank in each suit; first reset to zero
-            for (int i=0; i<4; i++) { // player
-                for (int j=0; j<4; j++) { // suit
-                    solo[i][j] = 0;
-                    solo[i][j] = 0;
-                    solo[i][j] = 0;
-                    solo[i][j] = 0;
-                    boss[i][j] = 0;
-                }
-            }
-            for (int i=0; i<4; i++) { // player
-                for (int j=0; j<4; j++) { // suit
-                    for (int k=0; k<8; k++) { // rank
-                        if (own[i][j][k] > -1 && own[i][j][k] < 4 && k > boss[i][j]) {
-                            boss[i][j] = k;
-                        }
-                    }
-                }
-            }
-
-            // check if any player is the only one with a particular suit
-            for (int i=0; i<4; i++) { // suit
-                if (playst[0][i] > 0 && ((voids[1][i] + voids[2][i] + voids[3][i] == 3) || length[0][i] == playst[0][i])) {
-                    solo[0][i] = 1;
-                }
-                if (playst[1][i] > 0 && ((voids[0][i] + voids[2][i] + voids[3][i] == 3) || length[1][i] == playst[1][i])) {
-                    solo[1][i] = 1;
-                }
-                if (playst[2][i] > 0 && ((voids[0][i] + voids[1][i] + voids[3][i] == 3) || length[2][i] == playst[2][i])) {
-                    solo[2][i] = 1;
-                }
-                if (playst[3][i] > 0 && ((voids[0][i] + voids[1][i] + voids[2][i] == 3) || length[3][i] == playst[3][i])) {
-                    solo[3][i] = 1;
-                }
-            }
-
-            // re-check who holds bowers; first re-set to zero
-            for (int i=0; i<4; i++) { // player
-                for (int j=0; j<4; j++) { // suit
-                    right[i][j] = 0;
-                    left[i][j] = 0;
-                }
-                for (int j=0; j<4; j++) { // suit
-                    if (own[i][j][6] > -1) {
-                        left[own[i][j][6]][j] = 1;
-                    }
-                    if (own[i][j][7] > -1) {
-                        right[own[i][j][7]][j] = 1;
-                    }
-                }
-            }
+            deal.updatePlay3();
 
             // establish new final shortcuts for fourth trick
             final int aa4 = win3; // 4th trick lead
@@ -3042,6 +2810,8 @@ class Game {
                 tew++;
             }
 
+            deal.updatePlay4();
+
             // establish new final shortcuts for fourth trick
             final int aa5 = win4; // 2nd trick lead
             final int bb5 = (win4+1)%4; // second to play
@@ -3171,6 +2941,8 @@ class Game {
             } else {
                 tew++;
             }
+
+            deal.updatePlay5();
 
             // calculate winner of round, and points
             int pp = 0;
@@ -3686,6 +3458,244 @@ class Deal {
                 }
             }
         }
+    }
+
+    public void updatePlay1() {
+        //  if defending against lone, modify priority of discards
+        if (lone > -1) {
+            for (int i=0; i<4; i++) { // cycle through players
+                for (int j=0; j<4; j++) { // cycle through suits
+                    if (voids[i][j] == 1 && lone == i) {
+                        for (int k=0; k<8; k++) { // cycle through ranks
+                            cv[1][j][k] = cv[1][j][k]/10;
+                        }
+                    }
+                }
+            }
+        }
+
+        // calculate boss (highest) rank in each suit; first reset to zero
+        for (int i=0; i<4; i++) { // player
+            for (int j=0; j<4; j++) { // suit
+                solo[i][j] = 0;
+                solo[i][j] = 0;
+                solo[i][j] = 0;
+                solo[i][j] = 0;
+                boss[i][j] = 0;
+            }
+        }
+        for (int i=0; i<4; i++) { // player
+            for (int j=0; j<4; j++) { // suit
+                for (int k=0; k<8; k++) { // rank
+                    if (own[i][j][k] > -1 && own[i][j][k] < 4 && k > boss[i][j]) {
+                        boss[i][j] = k;
+                    }
+                }
+            }
+        }
+
+        // check if any player is the only one with a particular suit
+        for (int i=0; i<4; i++) { // suit
+            if (playst[0][i] > 0 && ((voids[1][i] + voids[2][i] + voids[3][i] == 3) || length[0][i] == playst[0][i])) {
+                solo[0][i] = 1;
+            }
+            if (playst[1][i] > 0 && ((voids[0][i] + voids[2][i] + voids[3][i] == 3) || length[1][i] == playst[1][i])) {
+                solo[1][i] = 1;
+            }
+            if (playst[2][i] > 0 && ((voids[0][i] + voids[1][i] + voids[3][i] == 3) || length[2][i] == playst[2][i])) {
+                solo[2][i] = 1;
+            }
+            if (playst[3][i] > 0 && ((voids[0][i] + voids[1][i] + voids[2][i] == 3) || length[3][i] == playst[3][i])) {
+                solo[3][i] = 1;
+            }
+        }
+
+        // re-check who holds bowers; first re-set to zero
+        for (int i=0; i<4; i++) { // player
+            for (int j=0; j<4; j++) { // suit
+                right[i][j] = 0;
+                left[i][j] = 0;
+            }
+            for (int j=0; j<4; j++) { // suit
+                if (own[i][j][6] > -1) {
+                    left[own[i][j][6]][j] = 1;
+                }
+                if (own[i][j][7] > -1) {
+                    right[own[i][j][7]][j] = 1;
+                }
+            }
+        }
+    }
+
+    public void updatePlay2() {
+        //  if defending against lone, modify priority of discards
+        if (lone > -1) {
+            for (int j=0; j<4; j++) { // cycle through suits
+                for (int k=0; k<8; k++) { // cycle through ranks
+                    if (own[dealer][j][k] != lone && voids[lone][j] == 1) {
+                        cv[1][j][k] = cv[1][j][k]/10;
+                    }
+                }
+            }
+        }
+
+        // calculate if any player is single suited
+        for (int i=0; i<4; i++) {
+            cksuit[i] = -1;
+            ss[i] = -1;
+        }
+        for (int i=0; i<4; i++) { // player
+            for (int j=0; j<4; j++) { // suit
+                for (int k=0; k<8; k++) { // rank
+                    if (own[i][j][k] == i) {
+                        if (cksuit[i] == -1 || cksuit[i] == j) {
+                            cksuit[i] = j;
+                        } else {
+                            cksuit[i] = -2;
+                        }
+                    }
+                }
+            }
+            if (cksuit[i] > -1) {
+                ss[i] = cksuit[i];
+            }
+        }
+
+        // calculate boss (highest) rank in each suit; first reset to zero
+        for (int i=0; i<4; i++) { // player
+            for (int j=0; j<4; j++) { // suit
+                solo[i][j] = 0;
+                solo[i][j] = 0;
+                solo[i][j] = 0;
+                solo[i][j] = 0;
+                boss[i][j] = 0;
+            }
+        }
+        for (int i=0; i<4; i++) { // player
+            for (int j=0; j<4; j++) { // suit
+                for (int k=0; k<8; k++) { // rank
+                    if (own[i][j][k] > -1 && own[i][j][k] < 4 && k > boss[i][j]) {
+                        boss[i][j] = k;
+                    }
+                }
+            }
+        }
+
+        // check if any player is the only one with a particular suit
+        for (int i=0; i<4; i++) { // suit
+            if (playst[0][i] > 0 && ((voids[1][i] + voids[2][i] + voids[3][i] == 3) || length[0][i] == playst[0][i])) {
+                solo[0][i] = 1;
+            }
+            if (playst[1][i] > 0 && ((voids[0][i] + voids[2][i] + voids[3][i] == 3) || length[1][i] == playst[1][i])) {
+                solo[1][i] = 1;
+            }
+            if (playst[2][i] > 0 && ((voids[0][i] + voids[1][i] + voids[3][i] == 3) || length[2][i] == playst[2][i])) {
+                solo[2][i] = 1;
+            }
+            if (playst[3][i] > 0 && ((voids[0][i] + voids[1][i] + voids[2][i] == 3) || length[3][i] == playst[3][i])) {
+                solo[3][i] = 1;
+            }
+        }
+
+        // re-check who holds bowers; first re-set to zero
+        for (int i=0; i<4; i++) { // player
+            for (int j=0; j<4; j++) { // suit
+                right[i][j] = 0;
+                left[i][j] = 0;
+            }
+            for (int j=0; j<4; j++) { // suit
+                if (own[i][j][6] > -1) {
+                    left[own[i][j][6]][j] = 1;
+                }
+                if (own[i][j][7] > -1) {
+                    right[own[i][j][7]][j] = 1;
+                }
+            }
+        }
+    }
+
+    public void updatePlay3() {
+        // calculate if any player is single suited
+        for (int i=0; i<4; i++) {
+            cksuit[i] = -1;
+            ss[i] = -1;
+        }
+        for (int i=0; i<4; i++) { // player
+            for (int j=0; j<4; j++) { // suit
+                for (int k=0; k<8; k++) { // rank
+                    if (own[i][j][k] == i) {
+                        if (cksuit[i] == -1 || cksuit[i] == j) {
+                            cksuit[i] = j;
+                        } else {
+                            cksuit[i] = -2;
+                        }
+                    }
+                }
+            }
+            if (cksuit[i] > -1) {
+                ss[i] = cksuit[i];
+            }
+        }
+
+        // calculate boss (highest) rank in each suit; first reset to zero
+        for (int i=0; i<4; i++) { // player
+            for (int j=0; j<4; j++) { // suit
+                solo[i][j] = 0;
+                solo[i][j] = 0;
+                solo[i][j] = 0;
+                solo[i][j] = 0;
+                boss[i][j] = 0;
+            }
+        }
+        for (int i=0; i<4; i++) { // player
+            for (int j=0; j<4; j++) { // suit
+                for (int k=0; k<8; k++) { // rank
+                    if (own[i][j][k] > -1 && own[i][j][k] < 4 && k > boss[i][j]) {
+                        boss[i][j] = k;
+                    }
+                }
+            }
+        }
+
+        // check if any player is the only one with a particular suit
+        for (int i=0; i<4; i++) { // suit
+            if (playst[0][i] > 0 && ((voids[1][i] + voids[2][i] + voids[3][i] == 3) || length[0][i] == playst[0][i])) {
+                solo[0][i] = 1;
+            }
+            if (playst[1][i] > 0 && ((voids[0][i] + voids[2][i] + voids[3][i] == 3) || length[1][i] == playst[1][i])) {
+                solo[1][i] = 1;
+            }
+            if (playst[2][i] > 0 && ((voids[0][i] + voids[1][i] + voids[3][i] == 3) || length[2][i] == playst[2][i])) {
+                solo[2][i] = 1;
+            }
+            if (playst[3][i] > 0 && ((voids[0][i] + voids[1][i] + voids[2][i] == 3) || length[3][i] == playst[3][i])) {
+                solo[3][i] = 1;
+            }
+        }
+
+        // re-check who holds bowers; first re-set to zero
+        for (int i=0; i<4; i++) { // player
+            for (int j=0; j<4; j++) { // suit
+                right[i][j] = 0;
+                left[i][j] = 0;
+            }
+            for (int j=0; j<4; j++) { // suit
+                if (own[i][j][6] > -1) {
+                    left[own[i][j][6]][j] = 1;
+                }
+                if (own[i][j][7] > -1) {
+                    right[own[i][j][7]][j] = 1;
+                }
+            }
+        }
+    }
+
+    public void updatePlay4() {
+        // nothing to do
+    }
+
+    public void updatePlay5() {
+        // nothing to do
     }
 
     // *** Method "playfirst" for play of cards ***

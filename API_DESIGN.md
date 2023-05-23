@@ -15,26 +15,29 @@ between hands (i.e. cheating) on the server side.
 
 **Request**
 
+- Session Token - string
+- Status - string
+    - "new"
+
 **Response**
 
-- Session Token - string
 - Card Representation - int[24]
     - 9C, 10C, JC, ... 9D, 10D, JD, ... QS, KS, AS
 - Suit Representation - int[4]
     - Clubs, Diamonds, Hearts, Spades
-- Position Representation - int[4]
-    - West, North, East, South
 
 #### PATCH - Notification of Session Status Update ####
 
 **Request**
 
 - Session Token - string
-- Type - string
+- Status - string
     - "complete" - Session Complete
-- Info - string (json)
+- Info - string
 
 **Response**
+
+*null*
 
 ### Game ###
 
@@ -43,23 +46,28 @@ between hands (i.e. cheating) on the server side.
 **Request**
 
 - Session Token - string
+- Game - int (0-n)
+- Status
+    - "new"
 
 **Response**
 
-- Game Token - string
+*null*
 
 #### PATCH - Notification of Game Status Update ####
 
 **Request**
 
 - Session Token - string
-- Game Token - string
-- Type - string
+- Game - int (0-n)
+- Status - string
     - "update" - Score Update
     - "complete" - Game Complete
-- Info - string (json)
+- Info - string
 
 **Response**
+
+*null*
 
 ### Deal ###
 
@@ -68,71 +76,94 @@ between hands (i.e. cheating) on the server side.
 **Request**
 
 - Session Token - string
-- Game Token - string
+- Game - int (0-n)
+- Deal - int (1-n)
+- Status - string
+    - "new"
 - Cards - int[24]
     - 0-4  : Position 0 Hand
     - 5-9  : Position 1 Hand
     - 10-14: Position 2 Hand
-    - 15-19: Position 3 Hand
+    - 15-19: Position 3 Hand (dealer)
     - 20   : Turn Card
     - 21-23: Buries
-- Dealer Position - int (0-3)
+- Position (player) - int (0-3)
 
 **Response**
+
+*null*
 
 #### PATCH - Notification of Deal Status Update ####
 
 **Request**
 
 - Session Token - string
-- Game Token - string
-- Type - string
+- Game - int (0-n)
+- Deal - int (0-n)
+- Status - string
     - "complete" - Deal Complete
-- Info - string (json)
+- Info - string
 
 **Response**
+
+*null*
 
 ### Bid ###
-
-#### POST - Notification of a Bid ####
-
-**Request**
-
-- Session Token - string
-- Game Token - string
-- Round - int (0-1)
-- Position - int (0-3)
-- Suit - int (0-3)
-- Alone - boolean
-
-**Response**
-
-- Suggested Suit - int (0-3)
-- Suggested Alone - boolean
 
 #### GET - Request for a Bid ####
 
 **Request**
 
 - Session Token - string
-- Game Token - string
+- Game - int (0-n)
+- Deal - int (0-n)
 - Round - int (0-1)
 - Position - int (0-3)
 
 **Response**
 
-- Suit - int (0-3)
+- Suit - int (0-3) or -1 = pass
 - Alone - boolean
 
-### Pick Up ###
-
-#### POST - Notification of Pick Up ####
+#### POST - Notification of a Bid ####
 
 **Request**
 
 - Session Token - string
-- Game Token - string
+- Game - int (0-n)
+- Deal - int (0-n)
 - Round - int (0-1)
+- Position - int (0-3)
+- Suit - int (0-3)
+- Alone - boolean
+
+**Response**
+
+- Suggested Suit - int (0-3) or -1 = pass
+- Suggested Alone - boolean
+
+### Swap ###
+
+#### GET - Request for Swap ####
+
+**Request**
+
+- Session Token - string
+- Game - int (0-n)
+- Deal - int (0-n)
+- Position - int (0-3)
+
+**Response**
+
+- Swap Card - int (0-24)
+
+#### POST - Notification of Swap ####
+
+**Request**
+
+- Session Token - string
+- Game - int (0-n)
+- Deal - int (0-n)
 - Position - int (0-3)
 - Swap Card - int (0-24)
 
@@ -140,28 +171,28 @@ between hands (i.e. cheating) on the server side.
 
 - Suggested Swap Card - int (0-24)
 
-#### GET - Request for Pick Up ####
+### Defense ###
+
+#### GET - Request for a Defense ####
 
 **Request**
 
 - Session Token - string
-- Game Token - string
-- Round - int (0-1)
+- Game - int (0-n)
+- Deal - int (0-n)
 - Position - int (0-3)
 
 **Response**
 
-- Swap Card - int (0-24)
-
-### Defense ###
+- Alone - boolean
 
 #### POST - Notification of a Defense ####
 
 **Request**
 
 - Session Token - string
-- Game Token - string
-- Round - int (0-1)
+- Game - int (0-n)
+- Deal - int (0-n)
 - Position - int (0-3)
 - Alone - boolean
 
@@ -169,44 +200,35 @@ between hands (i.e. cheating) on the server side.
 
 - Suggested Alone - boolean
 
-#### GET - Request for a Defense ####
-
-**Request**
-
-- Session Token - string
-- Game Token - string
-- Round - int (0-1)
-- Position - int (0-3)
-
-**Response**
-
-- Alone - boolean
-
 ### Play ###
-
-#### POST - Notification of a Card Played ####
-
-**Request**
-
-- Session Token - string
-- Game Token - string
-- Trick - int (0-4)
-- Position - int (0-3)
-- Card - int (0-23)
-
-**Response**
-
-- Suggested Card - int (0-23)
 
 #### GET - Request for a Card to be Played ####
 
 **Request**
 
 - Session Token - string
-- Game Token - string
+- Game - int (0-n)
+- Deal - int (0-n)
 - Trick - int (0-4)
-- Position - int (0-3)
+- Trick Seq - int (0-3)
+- Position (player) - int (0-3)
 
 **Response**
 
 - Card - int (0-23)
+
+#### POST - Notification of a Card Played ####
+
+**Request**
+
+- Session Token - string
+- Game - int (0-n)
+- Deal - int (0-n)
+- Trick - int (0-4)
+- Trick Seq - int (0-3)
+- Position (player) - int (0-3)
+- Card - int (0-23)
+
+**Response**
+
+- Suggested Card - int (0-23)
