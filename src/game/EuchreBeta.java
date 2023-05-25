@@ -1677,6 +1677,7 @@ public class EuchreBeta {
             lone = -1; // reset value of 'lone'
             round = 0; // reset value of 'round'
             declarer = -1; // reset value of 'declarer'
+            fintp = 4; // reset value of 'fintp'
             dealer = dealer%4;
             final int aa = (dealer+1)%4; // position after dealer
             final int bb = (dealer+2)%4; // position of dealer's partner
