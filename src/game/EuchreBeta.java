@@ -1709,16 +1709,16 @@ class Game {
         int dealer = -1; // which player is dealer for current hand (0 = South, etc.)
         int top = 0; // points of currently winning team
         int[] points = new int[4]; // points for each player
-        int fintp = 4; //  marker denoting the suit which is declared trump (spades = 0, hearts = 1, diamonds = 2,
 
         // Assign random seat as first dealer
         dealer = EuchreBeta.rgen.nextInt(4);
 
         while (top < game) { // play until one team reaches the threshold winning score
             int round = 0; // bid 1st round (0) or 2nd round (1)
-            int declarer = -1; //  marker denoting which player is declarer (0 = South, 1 = West, 2 = North, 3 = East)
+            int declarer = -1; // marker denoting which player is declarer (0 = South, 1 = West, 2 = North, 3 = East)
             int lone = -1; // will get value if a player goes lone (0 = South, etc.)
-                            // clubs = 3, 4 = trump not declared)
+            int fintp = 4; // marker denoting the suit which is declared trump (spades = 0, hearts = 1, diamonds = 2,
+                           // clubs = 3, 4 = trump not declared)
             int call = -1; // bid call: 0 = pass, 1 = bid with partner, 2 = bid alone
             int[] trick = new int[4]; // tricks won (initialized to zeros)
 
@@ -1795,7 +1795,6 @@ class Game {
                 if (bidx[3] > 0) {
                     break;
                 }
-                fintp = bidx[2]; // !!!TEMP!!!
                 //  if all players pass, have second round of bidding
                 if (i == 3 && declarer < 0) {
                     System.out.println("No one bids in the first round");
