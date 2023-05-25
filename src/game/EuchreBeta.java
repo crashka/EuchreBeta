@@ -2,6 +2,7 @@ package game;
 
 import java.lang.Math;
 import java.util.*;
+import java.util.function.BiFunction;
 
 
 public class EuchreBeta {
@@ -10,7 +11,8 @@ public class EuchreBeta {
     public static final Random rgen = new Random();
 
     // *** Method "naming" for assigning names to cards ***
-    public static String[][] naming(String cardname[][], String suit[], String rank[]) {
+    public static String[][] naming(String suit[], String rank[]) {
+        String cardname[][] = new String[4][8];
         for (int i=0; i<4; i++) {
             for (int j=0; j<8; j++) {
                 cardname[i][j] = (rank[j] + " of " + suit[i]);
@@ -1637,12 +1639,14 @@ class Game {
     static final String[] suitx = {"spades", "hearts", "diamonds", "clubs"};
     static final String[] rankx = {"9", "10", "Jack", "Queen", "King", "Ace", "Jack", "Jack"};
 
+    // invoke method for naming cards
+    static final String cardname[][] = EuchreBeta.naming(suitx, rankx);
+
     // define a few more global variables
     static final int game = 10; // points needed to win a game (can modify this to extend play)
 
     // allocate space for instance variables
-    int[] cards = new int[28];        // 24 cards + 4 placeholders for suit images
-    String cardname[][] = new String[4][8];
+    int[] cards = new int[28]; // 24 cards + 4 placeholders for suit images
 
     // *** Method "bid" for declaring bid, first bidding round ***
     int[] bid1(int docall, int dlr, String cname, int turns) {
@@ -1701,42 +1705,29 @@ class Game {
 
     // *** Method "go" for running game ***
     public void go() {
-
         // Variables for shell program
-        int declarer = 0;  //  marker denoting which player is declarer (0 = South, 1 = West, 2 = North, 3 = East)
-        int dealer = 0;  // which player is dealer for current hand (0 = South, etc.)
-        int docall = 0; // how computer player bids
+        int dealer = -1; // which player is dealer for current hand (0 = South, etc.)
         int top = 0; // points of currently winning team
-        int round = 0; // bid 1st round (0) or 2nd round (1)
-        int lone = -1; // will get value if a player goes lone (0 = South, etc.)
-        int[] points = new int[4];  // points for each player
-        int[] trick = new int[4]; // tricks won
-        int fintp = 4;  //  marker denoting the suit which is declared trump (spades = 0, hearts = 1, diamonds = 2,
-                        // clubs = 3, 4 = trump not declared)
+        int[] points = new int[4]; // points for each player
+        int fintp = 4; //  marker denoting the suit which is declared trump (spades = 0, hearts = 1, diamonds = 2,
 
         // Assign random seat as first dealer
-        int randomDealer = EuchreBeta.rgen.nextInt(4);
-        dealer = randomDealer;
-
-        // these variables don't reset when new hand is played (same game)
-        int pns = 0; // N/S game pts
-        int pew = 0; // E/W game pts
+        dealer = EuchreBeta.rgen.nextInt(4);
 
         while (top < game) { // play until one team reaches the threshold winning score
-            lone = -1; // reset value of 'lone'
-            round = 0; // reset value of 'round'
-            declarer = -1; // reset value of 'declarer'
+            int round = 0; // bid 1st round (0) or 2nd round (1)
+            int declarer = -1; //  marker denoting which player is declarer (0 = South, 1 = West, 2 = North, 3 = East)
+            int lone = -1; // will get value if a player goes lone (0 = South, etc.)
+                            // clubs = 3, 4 = trump not declared)
+            int call = -1; // bid call: 0 = pass, 1 = bid with partner, 2 = bid alone
+            int[] trick = new int[4]; // tricks won (initialized to zeros)
+
             dealer = dealer%4;
             final int aa = (dealer+1)%4; // position after dealer
             final int bb = (dealer+2)%4; // position of dealer's partner
             final int cc = (dealer+3)%4; // position before dealer
             final int dd = dealer; // dealer
             final int[] pos = {aa, bb, cc, dd};
-
-            // Reset trick count to zero
-            for (int i=0; i<4; i++) {
-                trick[i] = 0;
-            }
 
             // initialize card values for deck
             for (int i=0; i<24; i++) {
@@ -1750,9 +1741,6 @@ class Game {
             for (int i=0; i<24; i++) {
                 System.out.println(cards[i]);
             }
-
-            // invoke method for naming cards
-            cardname = EuchreBeta.naming(cardname, suitx, rankx);
 
             // invoke method to put cards in order
             cards = EuchreBeta.order(cards, fintp);
@@ -1770,9 +1758,6 @@ class Game {
             Deal deal = new Deal(cards, dealer);
             deal.prepareBid();
 
-            int[] bidx = new int[4]; // results of bidding method which gives lone, declarer and fintp for each bid
-            int[][] potbid = new int[2][4]; // bidding for [round][player; 0 = pass, 1 = wp, 2 = alone
-
             //  List human player's cards
             System.out.println("\n" + "South's cards:");
             for (int i=0; i<5; i++) {
@@ -1784,359 +1769,52 @@ class Game {
             // ********************************************************
             // ********************************************************
 
-            // use booleans to track who has bid what and when
-            boolean bidround = false; // bid round 1 or 2
-            boolean bidyes = false; // pass or bid
-            boolean wpalone = false; // bid wp or alone
-            boolean bidder1 = false; // 0/0 = W; 0/1 = N; 1/0 = E; 1/1 = S
-            boolean bidder2 = false;
-            boolean bidsuit1 = false; // 0/0 = spades; 0/1 = hearts; 1/0 = diamonds; 1/1 = clubs
-            boolean bidsuit2 = false;
-
-            // use booleans to see if thread t1 has dealt with these bidders
-            boolean firstbid1 = false;
-            boolean secondbid1 = false;
-            boolean thirdbid1 = false;
-            boolean fourthbid1 = false;
-            boolean firstbid2 = false;
-            boolean secondbid2 = false;
-            boolean thirdbid2 = false;
-            boolean fourthbid2 = false;
-
-            // use booleans to see if player has bid
-            boolean[] bidwp = new boolean[4];
-            boolean[] bidalone = new boolean[4];
-            for (int i=0; i<4; i++) {
-                bidwp[i] = false;
-                bidalone[i] = false;
-            }
-
-            // game and trick tally table
-            int tns = 0; // N/S tricks
-            int tew = 0; // E/W tricks
+            int[] bidx = null; // results of bidding method which gives lone, declarer and fintp for each bid
 
             // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
-            // first bidder
-            docall = deal.bidder11(points[aa], game);
-            bidx = bid1(docall%10, aa, cardname[upst][uprk], upst);
+            List<BiFunction<Integer, Integer, Integer>> bidderList =
+                List.of(deal::bidder11,
+                        deal::bidder12,
+                        deal::bidder13,
+                        deal::bidder14,
+                        deal::bidder21,
+                        deal::bidder22,
+                        deal::bidder23,
+                        deal::bidder24);
 
-            potbid[0][aa] = bidx[3];
-            if (bidx[3] == 1) {
-                bidwp[aa] = true;
-                bidyes = true;
-            }
-            if (bidx[3] == 2) {
-                bidalone[aa] = true;
-                bidyes = true;
-                wpalone = true;
-            }
-            if (bidx[3] > 0) { // some bid made
-                if (aa == 3) {
-                    bidder1 = true; // East bids
-                } else if (aa == 2) {
-                    bidder2 = true; // North bids
+            // loop through bidders
+            for (int i=0; i<8; i++) {
+                int bidpos = pos[i%4]; // one of: aa, bb, cc, dd
+                int docall = bidderList.get(i).apply(points[bidpos], game); // get computer bid
+                if (round == 0) {
+                    bidx = bid1(docall%10, bidpos, cardname[upst][uprk], upst);
+                } else {
+                    bidx = bid2(docall%10, bidpos, docall/10);
+                }
+                if (bidx[3] > 0) {
+                    break;
+                }
+                fintp = bidx[2]; // !!!TEMP!!!
+                //  if all players pass, have second round of bidding
+                if (i == 3 && declarer < 0) {
+                    System.out.println("No one bids in the first round");
+                    round = 1;
                 }
             }
-            if (bidx[2] < 1) {
-                bidsuit1 = true; // diamonds or clubs bid
-            }
-            if (bidx[2] == 1 || bidx[2] == 3) {
-                bidsuit2 = true; // hearts or clubs bid
+            assert bidx != null;
+
+            // skip play if no one bids second round
+            if (bidx[3] == 0) {
+                System.out.println("No one bids in second round\n");
+                continue;
             }
 
             lone = bidx[0];
             declarer = bidx[1];
             fintp = bidx[2];
-            firstbid1 = true; // signal of having reached this point
-
-            // second bidder
-            // only need to proceed if previous players passed
-            if (!bidyes) {
-                docall = deal.bidder12(points[bb], game);
-                bidx = bid1(docall%10, bb, cardname[upst][uprk], upst);
-
-                potbid[0][bb] = bidx[3];
-                if (bidx[3] == 1) {
-                    bidwp[bb] = true;
-                    bidyes = true;
-                }
-                if (bidx[3] == 2) {
-                    bidalone[bb] = true;
-                    bidyes = true;
-                    wpalone = true;
-                }
-                if (bidx[3] > 0) { // some bid made
-                    if (bb == 3) {
-                        bidder1 = true; // East bids
-                    } else if (bb == 2) {
-                        bidder2 = true; // North bids
-                    }
-                }
-                if (bidx[2] < 1) {
-                    bidsuit1 = true; // diamonds or clubs bid
-                }
-                if (bidx[2] == 1 || bidx[2] == 3) {
-                    bidsuit2 = true; // hearts or clubs bid
-                }
-
-                lone = bidx[0];
-                declarer = bidx[1];
-                fintp = bidx[2];
-                secondbid1 = true; // signal of having reached this point
-            }
-
-            // third bidder
-            // only need to proceed if previous players passed
-            if (!bidyes) {
-                docall = deal.bidder13(points[cc], game);
-                bidx = bid1(docall%10, cc, cardname[upst][uprk], upst);
-
-                potbid[0][cc] = bidx[3];
-                if (bidx[3] == 1) {
-                    bidwp[cc] = true;
-                    bidyes = true;
-                }
-                if (bidx[3] == 2) {
-                    bidalone[cc] = true;
-                    bidyes = true;
-                    wpalone = true;
-                }
-                if (bidx[3] > 0) { // some bid made
-                    if (cc == 3) {
-                        bidder1 = true; // East bids
-                    } else if (cc == 2) {
-                        bidder2 = true; // North bids
-                    }
-                }
-                if (bidx[2] < 1) {
-                    bidsuit1 = true; // diamonds or clubs bid
-                }
-                if (bidx[2] == 1 || bidx[2] == 3) {
-                    bidsuit2 = true; // hearts or clubs bid
-                }
-
-                lone = bidx[0];
-                declarer = bidx[1];
-                fintp = bidx[2];
-                thirdbid1 = true; // signal of having reached this point
-            }
-
-            // dealer
-            // only need to proceed if previous players passed
-            if (!bidyes) {
-                docall = deal.bidder14(points[dd], game);
-                bidx = bid1(docall%10, dd, cardname[upst][uprk], upst);
-
-                potbid[0][dd] = bidx[3];
-                if (bidx[3] == 1) {
-                    bidwp[dd] = true;
-                    bidyes = true;
-                }
-                if (bidx[3] == 2) {
-                    bidalone[dd] = true;
-                    bidyes = true;
-                    wpalone = true;
-                }
-                if (bidx[3] > 0) { // some bid made
-                    if (dd == 3) {
-                        bidder1 = true; // East bids
-                    } else if (dd == 2) {
-                        bidder2 = true; // North bids
-                    }
-                }
-                if (bidx[2] < 1) {
-                    bidsuit1 = true; // diamonds or clubs bid
-                }
-                if (bidx[2] == 1 || bidx[2] == 3) {
-                    bidsuit2 = true; // hearts or clubs bid
-                }
-
-                lone = bidx[0];
-                declarer = bidx[1];
-                fintp = bidx[2];
-                fourthbid1 = true; // signal of having reached this point
-            }
-
-            //  if all players pass, have second round of bidding
-            if (!bidyes) {
-                System.out.println("No one bids in the first round");
-                round = 1;
-            }
-
-            // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-            //  second round of bidding, if necessary
-
-            // first bidder
-            // only need to proceed if previous players passed
-            if (!bidyes) {
-                docall = deal.bidder21(points[aa], game);
-                bidx = bid2(docall%10, aa, docall/10);
-
-                potbid[1][aa] = bidx[3];
-                if (bidx[3] == 1) {
-                    bidwp[aa] = true;
-                    bidyes = true;
-                }
-                if (bidx[3] == 2) {
-                    bidalone[aa] = true;
-                    bidyes = true;
-                    wpalone = true;
-                }
-                if (bidx[3] > 0) { // some bid made
-                    if (aa == 3) {
-                        bidder1 = true; // East bids
-                    } else if (aa == 2) {
-                        bidder2 = true; // North bids
-                    }
-                }
-
-                lone = bidx[0];
-                declarer = bidx[1];
-                fintp = bidx[2];
-                // now code for which suit was declared
-                if (bidx[2] == 1) { // hearts
-                    bidsuit2 = true;
-                } else if (bidx[2] == 2) { // diamonds
-                    bidsuit1 = true;
-                } else if (bidx[2] == 3) { // clubs
-                    bidsuit2 = true;
-                    bidsuit1 = true;
-                } else {
-                }
-                firstbid2 = true; // signal of having reached this point
-                bidround = true;
-            }
-
-            // second bidder
-            // only need to proceed if previous players passed
-            if (!bidyes) {
-                docall = deal.bidder22(points[bb], game);
-                bidx = bid2(docall%10, bb, docall/10);
-
-                potbid[1][bb] = bidx[3];
-                if (bidx[3] == 1) {
-                    bidwp[bb] = true;
-                    bidyes = true;
-                }
-                if (bidx[3] == 2) {
-                    bidalone[bb] = true;
-                    bidyes = true;
-                    wpalone = true;
-                }
-                if (bidx[3] > 0) { // some bid made
-                    if (bb == 3) {
-                        bidder1 = true; // East bids
-                    } else if (bb == 2) {
-                        bidder2 = true; // North bids
-                    }
-                }
-
-                lone = bidx[0];
-                declarer = bidx[1];
-                fintp = bidx[2];
-                // now code for which suit was declared
-                if (bidx[2] == 1) {
-                    bidsuit2 = true;
-                } else if (bidx[2] == 2) {
-                    bidsuit1 = true;
-                } else if (bidx[2] == 3) {
-                    bidsuit2 = true;
-                    bidsuit1 = true;
-                } else {
-                }
-                secondbid2 = true; // signal of having reached this point
-                bidround = true;
-            }
-
-            // third bidder
-            // only need to proceed if previous players passed
-            if (!bidyes) {
-                docall = deal.bidder23(points[cc], game);
-                bidx = bid2(docall%10, cc, docall/10);
-
-                potbid[1][cc] = bidx[3];
-                if (bidx[3] == 1) {
-                    bidwp[cc] = true;
-                    bidyes = true;
-                }
-                if (bidx[3] == 2) {
-                    bidalone[cc] = true;
-                    bidyes = true;
-                    wpalone = true;
-                }
-                if (bidx[3] > 0) { // some bid made
-                    if (cc == 3) {
-                        bidder1 = true; // East bids
-                    } else if (cc == 2) {
-                        bidder2 = true; // North bids
-                    }
-                }
-
-                lone = bidx[0];
-                declarer = bidx[1];
-                fintp = bidx[2];
-                // now code for which suit was declared
-                if (bidx[2] == 1) {
-                    bidsuit2 = true;
-                } else if (bidx[2] == 2) {
-                    bidsuit1 = true;
-                } else if (bidx[2] == 3) {
-                    bidsuit2 = true;
-                    bidsuit1 = true;
-                } else {
-                }
-                thirdbid2 = true; // signal of having reached this point
-                bidround = true;
-            }
-
-            // last bidder (dealer)
-            // only need to proceed if previous players passed
-            if (!bidyes) {
-                docall = deal.bidder24(points[dd], game);
-                bidx = bid2(docall%10, dd, docall/10);
-
-                potbid[1][dd] = bidx[3];
-                if (bidx[3] == 1) {
-                    bidwp[dd] = true;
-                    bidyes = true;
-                }
-                if (bidx[3] == 2) {
-                    bidalone[dd] = true;
-                    bidyes = true;
-                    wpalone = true;
-                }
-                if (bidx[3] > 0) { // some bid made
-                    if (dd == 3) {
-                        bidder1 = true; // East bids
-                    } else if (dd == 2) {
-                        bidder2 = true; // North bids
-                    }
-                }
-
-                lone = bidx[0];
-                declarer = bidx[1];
-                fintp = bidx[2];
-                // now code for which suit was declared
-                if (bidx[2] == 1) {
-                    bidsuit2 = true;
-                } else if (bidx[2] == 2) {
-                    bidsuit1 = true;
-                } else if (bidx[2] == 3) {
-                    bidsuit2 = true;
-                    bidsuit1 = true;
-                } else {
-                }
-                fourthbid2 = true; // signal of having reached this point
-                bidround = true;
-            }
-
-            // skip play if no one bids second round
-            if (declarer == -1) {
-                System.out.println("No one bids in second round\n");
-                continue;
-            }
-
+            call = bidx[3];
+            assert call == 1 || lone > -1;
             deal.preparePlay(declarer, fintp, lone, round);
 
             int[][][] own = deal.own;
@@ -2348,11 +2026,6 @@ class Game {
             int tricktally = wintrick(win1, wturn);
             trick[tricktally]++;
             trick[tricktally+2]++;
-            if (tricktally == 0) {
-                tns++;
-            } else {
-                tew++;
-            }
 
             deal.updatePlay1();
 
@@ -2500,11 +2173,6 @@ class Game {
             tricktally = wintrick(win2, wturn);
             trick[tricktally]++;
             trick[tricktally+2]++;
-            if (tricktally == 0) {
-                tns++;
-            } else {
-                tew++;
-            }
 
             deal.updatePlay2();
 
@@ -2652,11 +2320,6 @@ class Game {
             tricktally = wintrick(win3, wturn);
             trick[tricktally]++;
             trick[tricktally+2]++;
-            if (tricktally == 0) {
-                tns++;
-            } else {
-                tew++;
-            }
 
             deal.updatePlay3();
 
@@ -2804,11 +2467,6 @@ class Game {
             tricktally = wintrick(win4, wturn);
             trick[tricktally]++;
             trick[tricktally+2]++;
-            if (tricktally == 0) {
-                tns++;
-            } else {
-                tew++;
-            }
 
             deal.updatePlay4();
 
@@ -2936,11 +2594,6 @@ class Game {
             tricktally = wintrick(win5, wturn);
             trick[tricktally]++;
             trick[tricktally+2]++;
-            if (tricktally == 0) {
-                tns++;
-            } else {
-                tew++;
-            }
 
             deal.updatePlay5();
 
@@ -2951,11 +2604,6 @@ class Game {
                     points[i] = points[i] + 4;
                     points[(i+2)%4] = points[(i+2)%4] + 4;
                     System.out.println("Player " + position[i] + " wins the hand with a lone: 4 pts!" + "\n");
-                    if ((i+2)%2 == 0) {
-                        pns = pns+4;
-                    } else {
-                        pew = pew+4;
-                    }
                     pp = 1;
                 }
             }
@@ -2966,31 +2614,16 @@ class Game {
                         points[(i+2)%4] = points[(i+2)%4] + 2;
                         System.out.println("Players " + position[i] + " and " + position[(i+2)%4] + " win the hand with"
                                            + " 5 tricks: 2 pts!" + "\n");
-                        if (i == 0) {
-                            pns = pns+2;
-                        } else {
-                            pew = pew+2;
-                        }
                     } else if (trick[i] > 2 && (declarer == i || declarer == (i+2)%4)) {
                         points[i] = points[i] + 1;
                         points[(i+2)%4] = points[(i+2)%4] + 1;
                         System.out.println("Players " + position[i] + " and " + position[(i+2)%4] + " win the hand: "
                                            + "1 pt." + "\n");
-                        if (i == 0) {
-                            pns++;
-                        } else {
-                            pew++;
-                        }
                     } else if (trick[i] > 2 && (declarer == (i+1)%4 || declarer == (i+3)%4)) {
                         points[i] = points[i] + 2;
                         points[(i+2)%4] = points[(i+2)%4] + 2;
                         System.out.println("Players " + position[i] + " and " + position[(i+2)%4] + " euchre: "
                                            + "2 pts!" + "\n");
-                        if (i == 0) {
-                            pns = pns+2;
-                        } else {
-                            pew = pew+2;
-                        }
                     }
                 }
             }
