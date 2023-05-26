@@ -1724,10 +1724,6 @@ class Game {
 
         while (top < game) { // play until one team reaches the threshold winning score
             dealer = dealer%4;
-            final int aa = (dealer+1)%4; // position after dealer
-            final int bb = (dealer+2)%4; // position of dealer's partner
-            final int cc = (dealer+3)%4; // position before dealer
-            final int dd = dealer; // dealer
 
             // initialize card values for deck
             for (int i=0; i<24; i++) {
@@ -1745,13 +1741,6 @@ class Game {
             // invoke method to put cards in order
             cards = EuchreBeta.order(cards, 4);
 
-            //  Initialize counter for who is dealer (starts with South player at 0) and bidding position
-            int win1 = 5;  // winner of 1st trick
-            int win2 = 5;  // winner of 2nd trick
-            int win3 = 5;  // winner of 3rd trick
-            int win4 = 5;  // winner of 4th trick
-            int win5 = 5;  // winner of 5th trick
-
             final int upst = cards[20]%4; // suit of turned card
             final int uprk = cards[20]/4; // rank of turned card
 
@@ -1764,7 +1753,7 @@ class Game {
                 System.out.println(cardname[cards[(i)]%4][cards[(i)]/4]);
             }
 
-            System.out.println("\n" + "turn card: " + cardname[cards[20]%4][cards[20]/4] + "\n");
+            System.out.println("\n" + "turn card: " + cardname[upst][uprk] + "\n");
 
             // ********************************************************
             // ********************************************************
@@ -1787,7 +1776,7 @@ class Game {
                     break;
                 }
                 //  if all players pass, have second round of bidding
-                if (i == 3 && declarer < 0) {
+                if (i == 3) {
                     System.out.println("No one bids in the first round");
                     round = 1;
                 }
@@ -1800,9 +1789,6 @@ class Game {
                 continue;
             }
 
-            // ********************************************************
-            // ********************************************************
-
             lone = bidx[0];
             declarer = bidx[1];
             fintp = bidx[2];
@@ -1810,14 +1796,8 @@ class Game {
             assert call == 1 || lone > -1;
             deal.preparePlay(declarer, fintp, lone, round);
 
-            int[][][] own = deal.own;
-            int[][] acet = deal.acet;
-            int[][] aces = deal.aces;
-            int[][] length = deal.length;
-            int[][] playst = deal.playst;
-            double[][][] cv = deal.cv;
-            int[][] suit = deal.suit;
-            int[][] rank = deal.rank;
+            // ********************************************************
+            // ********************************************************
 
             // put each players cards in order (trump suit first, then spades - hearts - diamond - clubs in that order;
             // highest to lowest rank within each suit
@@ -1830,28 +1810,14 @@ class Game {
             //  play out the hand
             // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
-            int[] m1  = deal.m1;
-            int[] n1  = deal.n1;
-            int[] m2  = deal.m2;
-            int[] n2  = deal.n2;
-            int[] m3  = deal.m3;
-            int[] n3  = deal.n3;
-            int[] m4  = deal.m4;
-            int[] n4  = deal.n4;
-            int[] m5  = deal.m5;
-            int[] n5  = deal.n5;
-
             // one-based indexing for subscript match (trick number)
-            int[] win = {aa, -1, -1, -1, -1, -1}; // fake value for index 0 (first lead)
-            int[] lead = {-1, -1, -1, -1, -1, -1};
-            int[][] mall = {null, m1, m2, m3, m4, m5};
-            int[][] nall = {null, n1, n2, n3, n4, n5};
+            int[] win = {(dealer+1)%4, -1, -1, -1, -1, -1}; // fake value for index 0 (first lead)
+            int[] lead = {-1, -1, -1, -1, -1, -1}; // suit led
 
             int[] trick = new int[4]; // tricks won (initialized to zeros)
             DealState dealState = new DealState(win, lead, trick);
 
             int cardplay;
-            int[] playerMap;
 
             // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
@@ -1860,8 +1826,6 @@ class Game {
                 int leadsuit = -1;
                 int winpos   = -1;
                 int winval   = -1;
-                int prevsuit = -1;
-                int prevval  = -1;
 
                 // establish shortcuts for this trick
                 int curaa = win[tr];     // lead (previous winner)
@@ -1879,68 +1843,30 @@ class Game {
                     int currank = -1;
                     int curval  = -1;
 
-                    if (lone != partpos) { // partner NOT going alone
-                        if (pl > 0 && leadsuit == -1) { // special case for second position if initial lead skipped
-                            assert tr == 0 && pl == 1;
-                            mall[1][1] = 0; // assign m11 a temp value to avoid errors
-                        }
-
-                        cardplay = deal.player(playnum, dealState);
-                        mall[tr+1][pl+1] = cursuit = cardplay%10;
-                        nall[tr+1][pl+1] = currank = (cardplay/10)%10;
-
-                        if (pl == 1 && leadsuit == -1) { // assign m11 the value of m12, the true lead
-                            mall[1][1] = mall[1][2];
-                        }
-
-                        System.out.println("Player " + position[curpos] + (pl == 0 ? " leads the " : " plays the ") +
-                                           cardname[cursuit][currank] + ".\n");
-
-                        // adjust deal state
-                        for (int i=0; i<4; i++) {
-                            own[i][cursuit][currank] = -1;
-                            length[i][cursuit]--;
-                        }
-                        playst[curpos][cursuit] -= 1;
-                        cv[0][cursuit][currank] = 0;
-                        cv[1][cursuit][currank] = 0;
-                        if (currank == 5 && cursuit != fintp) {
-                            aces[curpos][fintp]--;
-                        }
-                        if (tr == 0) {
-                            if (currank == 5 && cursuit == fintp) {
-                                acet[curpos][fintp] = 0;
-                            }
-                        }
-                        suit[tr][pl] = cursuit;
-                        rank[tr][pl] = currank;
-
-                        // compute card value
-                        if (cursuit == fintp) {
-                            curval = 10+currank;
-                        } else if (leadsuit == -1) {
-                            curval = currank;
-                        } else if (cursuit == leadsuit) {
-                            curval = currank;
-                        } else {
-                            curval = -1;
-                        }
-
-                        // evaluate if winning
-                        if (curval > winval) {
-                            win[tr+1] = winpos = curpos;
-                            winval = curval;
-                        }
-                    }
-                    else { // partner IS going alone
-                        if (tr > 0) {
-                            cursuit = prevsuit;
-                            curval = prevval-1;
-                        }
+                    if (lone == partpos) { // partner NOT going alone
+                        continue;
                     }
 
-                    prevsuit = cursuit;
-                    prevval = curval;
+                    cardplay = deal.player(playnum, dealState);
+                    cursuit = cardplay%10;
+                    currank = cardplay/10;
+
+                    // compute card value
+                    if (cursuit == fintp) {
+                        curval = 10+currank;
+                    } else if (leadsuit == -1) {
+                        curval = currank;
+                    } else if (cursuit == leadsuit) {
+                        curval = currank;
+                    } else {
+                        curval = -1;
+                    }
+
+                    // evaluate if winning
+                    if (curval > winval) {
+                        win[tr+1] = winpos = curpos;
+                        winval = curval;
+                    }
 
                     if (leadsuit == -1) {
                         lead[tr+1] = leadsuit = cursuit;
@@ -2011,6 +1937,7 @@ class Deal {
     int dealer;
     int upst; // suit of turned card
     int uprk; // rank of turned card
+
     List<BiFunction<Integer, Integer, Integer>> bidderList =
         List.of(this::bidder11,
                 this::bidder12,
@@ -2059,6 +1986,9 @@ class Deal {
     int[] n4 = {-1, -1, -1, -1, -1};
     int[] m5 = {-1, -1, -1, -1, -1};
     int[] n5 = {-1, -1, -1, -1, -1};
+
+    int[][] mall = {null, m1, m2, m3, m4, m5};
+    int[][] nall = {null, n1, n2, n3, n4, n5};
 
     int aa; // position after dealer
     int bb; // position of dealer's partner
@@ -2768,6 +2698,9 @@ class Deal {
         if (worsts < 0 || worstr < 0) {
             assert (play >= 0 && play < 6) || (play == 5 && suitace != -1);
         }
+        if (lead == -1) {
+            assert play != 4;
+        }
         int cardplay = -1;
         int m = -1;
         int n = -1;
@@ -2808,13 +2741,36 @@ class Deal {
     }
 
     public int player(int playnum, DealState dealState) {
-        int trickno = playnum/4;
-        int playseq = playnum%4;
+        int tr = playnum/4;
+        int pl = playnum%4;
+        int plpos  = pos[tr+1][pl];
         Function<DealState, Integer> playFunc = playerList.get(playnum);
 
         int cardplay = playFunc.apply(dealState);
         int m = cardplay%10;
-        int n = (cardplay/10)%10;
+        int n = cardplay/10;
+
+        mall[tr+1][pl+1] = suit[tr][pl] = m;
+        nall[tr+1][pl+1] = rank[tr][pl] = n;
+
+        System.out.println("Player " + Game.position[plpos] + (pl == 0 ? " leads the " : " plays the ") +
+                           Game.cardname[m][n] + ".\n");
+
+        // adjust deal state
+        for (int i=0; i<4; i++) {
+            own[i][m][n] = -1;
+            length[i][m]--;
+        }
+        playst[plpos][m] -= 1;
+        cv[0][m][n] = 0;
+        cv[1][m][n] = 0;
+        if (n == 5) {
+            if (m == fintp) {
+                acet[plpos][fintp] = 0;
+            } else {
+                aces[plpos][fintp]--;
+            }
+        }
         return cardplay;
     }
 
@@ -2834,7 +2790,7 @@ class Deal {
 
         double p11 = 20;
         double p11a = 20;
-        int m11 = m1[1];
+        int m11 = dealState.lead()[1];
         int[] trick = dealState.trick();
 
         for (int i=0; i<4; i++) { // establishes best ace to lead; not trump AND 5+ length suit
@@ -3002,7 +2958,7 @@ class Deal {
         int play1 = -1;
 
         double p12 = 20;
-        int m11 = m1[1];
+        int m11 = dealState.lead()[1];
         int n11 = n1[1];
         int[] trick = dealState.trick();
 
@@ -3129,7 +3085,7 @@ class Deal {
 
         double p13 = 20;
         int lowtrump = 0; // lowest trump that beats 2nd seat if 2nd seat trumped
-        int m11 = m1[1];
+        int m11 = dealState.lead()[1];
         int n11 = n1[1];
         int m12 = m1[2];
         int n12 = n1[2];
@@ -3253,7 +3209,7 @@ class Deal {
         int play1 = -1;
 
         double p14 = 20;
-        int m11 = m1[1];
+        int m11 = dealState.lead()[1];
         int n11 = n1[1];
         int m12 = m1[2];
         int n12 = n1[2];
@@ -3391,7 +3347,7 @@ class Deal {
         int play1 = -1;
 
         double p21 = 20;
-        int m21 = m2[1];
+        int m21 = dealState.lead()[2];
         int n21 = n2[1];
         int m12 = m1[2];
         int n12 = n1[2];
@@ -3597,7 +3553,7 @@ class Deal {
         int play1 = -1;
 
         double p22 = 20;
-        int m21 = m2[1];
+        int m21 = dealState.lead()[2];
         int n21 = n2[1];
         int aa2 = pos[2][0];
         int bb2 = pos[2][1];
@@ -3703,7 +3659,7 @@ class Deal {
         int play1 = -1;
 
         double p23 = 20;
-        int m21 = m2[1];
+        int m21 = dealState.lead()[2];
         int n21 = n2[1];
         int m22 = m2[2];
         int n22 = n2[2];
@@ -3845,7 +3801,7 @@ class Deal {
         int play1 = -1;
 
         double p24 = 20;
-        int m21 = m2[1];
+        int m21 = dealState.lead()[2];
         int n21 = n2[1];
         int m22 = m2[2];
         int n22 = n2[2];
@@ -3952,7 +3908,7 @@ class Deal {
         double p31 = 20;
         double p31a = -1;
         int bos = -1;
-        int m31 = m3[1];
+        int m31 = dealState.lead()[3];
         int n31 = n3[1];
         int aa3 = pos[3][0];
         int bb3 = pos[3][1];
@@ -4083,7 +4039,7 @@ class Deal {
         int play1 = -1;
 
         double p32 = 20;
-        int m31 = m3[1];
+        int m31 = dealState.lead()[3];
         int n31 = n3[1];
         int aa3 = pos[3][0];
         int bb3 = pos[3][1];
@@ -4192,7 +4148,7 @@ class Deal {
         int play1 = -1;
 
         double p33 = 20;
-        int m31 = m3[1];
+        int m31 = dealState.lead()[3];
         int n31 = n3[1];
         int m32 = m3[2];
         int n32 = n3[2];
@@ -4307,7 +4263,7 @@ class Deal {
         int play1 = -1;
 
         double p34 = 20;
-        int m31 = m3[1];
+        int m31 = dealState.lead()[3];
         int n31 = n3[1];
         int m32 = m3[2];
         int n32 = n3[2];
@@ -4417,7 +4373,7 @@ class Deal {
         double p41 = 20;
         double p41a = -1;
         int bos = -1;
-        int m41 = m4[1];
+        int m41 = dealState.lead()[4];
         int n41 = n4[1];
         int aa4 = pos[4][0];
         int bb4 = pos[4][1];
@@ -4558,7 +4514,7 @@ class Deal {
         int play1 = -1;
 
         double p42 = 20;
-        int m41 = m4[1];
+        int m41 = dealState.lead()[4];
         int n41 = n4[1];
         int aa4 = pos[4][0];
         int bb4 = pos[4][1];
@@ -4648,7 +4604,7 @@ class Deal {
         int play1 = -1;
 
         double p43 = 20;
-        int m41 = m4[1];
+        int m41 = dealState.lead()[4];
         int n41 = n4[1];
         int m42 = m4[2];
         int n42 = n4[2];
@@ -4743,7 +4699,7 @@ class Deal {
         int play1 = -1;
 
         double p44 = 20;
-        int m41 = m4[1];
+        int m41 = dealState.lead()[4];
         int n41 = n4[1];
         int m42 = m4[2];
         int n42 = n4[2];
