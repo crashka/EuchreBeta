@@ -1,7 +1,8 @@
 package game;
 
-import java.lang.Math;
-import java.util.*;
+import java.util.List;
+import java.util.Random;
+import java.util.function.Function;
 import java.util.function.BiFunction;
 
 
@@ -1632,6 +1633,14 @@ class PlayStrategy {
 }
 
 
+record GameState(int[] points, int gamePts) {
+}
+
+
+record DealState(int[] win, int[] lead, int[] trick) {
+}
+
+
 class Game {
 
     // define strings for card ranks, suits and players
@@ -1649,7 +1658,7 @@ class Game {
     int[] cards = new int[28]; // 24 cards + 4 placeholders for suit images
 
     // *** Method "bid" for declaring bid, first bidding round ***
-    int[] bid1(int docall, int dlr, String cname, int turns) {
+    static int[] bid1(int docall, int dlr, String cname, int turns) {
         int bidtest[] = {-1,-1,4,0}; // lone, declarer, trump suit, bid
         if (docall == 2) {
             System.out.println(position[dlr] + " calls " + cname + " as trump, going alone. " + "\n");
@@ -1670,7 +1679,7 @@ class Game {
     }
 
     // *** Method "bid" for declaring bid, second bidding round ***
-    int[] bid2(int docall, int dlr, int dlrs) {
+    static int[] bid2(int docall, int dlr, int dlrs) {
         int[] bidtest = {-1,-1,4,0};
         if (docall == 2) {
             System.out.println(position[dlr] + " calls " + suitx[dlrs] + " as trump, going alone. " + "\n");
@@ -1714,20 +1723,11 @@ class Game {
         dealer = EuchreBeta.rgen.nextInt(4);
 
         while (top < game) { // play until one team reaches the threshold winning score
-            int round = 0; // bid 1st round (0) or 2nd round (1)
-            int declarer = -1; // marker denoting which player is declarer (0 = South, 1 = West, 2 = North, 3 = East)
-            int lone = -1; // will get value if a player goes lone (0 = South, etc.)
-            int fintp = 4; // marker denoting the suit which is declared trump (spades = 0, hearts = 1, diamonds = 2,
-                           // clubs = 3, 4 = trump not declared)
-            int call = -1; // bid call: 0 = pass, 1 = bid with partner, 2 = bid alone
-            int[] trick = new int[4]; // tricks won (initialized to zeros)
-
             dealer = dealer%4;
             final int aa = (dealer+1)%4; // position after dealer
             final int bb = (dealer+2)%4; // position of dealer's partner
             final int cc = (dealer+3)%4; // position before dealer
             final int dd = dealer; // dealer
-            final int[] pos = {aa, bb, cc, dd};
 
             // initialize card values for deck
             for (int i=0; i<24; i++) {
@@ -1743,7 +1743,7 @@ class Game {
             }
 
             // invoke method to put cards in order
-            cards = EuchreBeta.order(cards, fintp);
+            cards = EuchreBeta.order(cards, 4);
 
             //  Initialize counter for who is dealer (starts with South player at 0) and bidding position
             int win1 = 5;  // winner of 1st trick
@@ -1769,29 +1769,20 @@ class Game {
             // ********************************************************
             // ********************************************************
 
+            int round = 0; // bid 1st round (0) or 2nd round (1)
+            int declarer = -1; // marker denoting which player is declarer (0 = South, 1 = West, 2 = North, 3 = East)
+            int lone = -1; // will get value if a player goes lone (0 = South, etc.)
+            int fintp = 4; // marker denoting the suit which is declared trump (spades = 0, hearts = 1, diamonds = 2,
+                           // clubs = 3, 4 = trump not declared)
+            int call = -1; // bid call: 0 = pass, 1 = bid with partner, 2 = bid alone
             int[] bidx = null; // results of bidding method which gives lone, declarer and fintp for each bid
+            GameState gameState = new GameState(points, game); // points is a reference, game is final
 
             // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
-            List<BiFunction<Integer, Integer, Integer>> bidderList =
-                List.of(deal::bidder11,
-                        deal::bidder12,
-                        deal::bidder13,
-                        deal::bidder14,
-                        deal::bidder21,
-                        deal::bidder22,
-                        deal::bidder23,
-                        deal::bidder24);
-
             // loop through bidders
             for (int i=0; i<8; i++) {
-                int bidpos = pos[i%4]; // one of: aa, bb, cc, dd
-                int docall = bidderList.get(i).apply(points[bidpos], game); // get computer bid
-                if (round == 0) {
-                    bidx = bid1(docall%10, bidpos, cardname[upst][uprk], upst);
-                } else {
-                    bidx = bid2(docall%10, bidpos, docall/10);
-                }
+                bidx = deal.bidder(i, gameState);
                 if (bidx[3] > 0) {
                     break;
                 }
@@ -1808,6 +1799,9 @@ class Game {
                 System.out.println("No one bids in second round\n");
                 continue;
             }
+
+            // ********************************************************
+            // ********************************************************
 
             lone = bidx[0];
             declarer = bidx[1];
@@ -1836,765 +1830,130 @@ class Game {
             //  play out the hand
             // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
-            int m11 = -1, m12 = -1, m13 = -1, m14 = -1;
-            int n11 = -1, n12 = -1, n13 = -1, n14 = -1;
-            int v11 = -1, v12 = -1, v13 = -1, v14 = -1;
-            int m21 = -1, m22 = -1, m23 = -1, m24 = -1;
-            int n21 = -1, n22 = -1, n23 = -1, n24 = -1;
-            int v21 = -1, v22 = -1, v23 = -1, v24 = -1;
-            int m31 = -1, m32 = -1, m33 = -1, m34 = -1;
-            int n31 = -1, n32 = -1, n33 = -1, n34 = -1;
-            int v31 = -1, v32 = -1, v33 = -1, v34 = -1;
-            int m41 = -1, m42 = -1, m43 = -1, m44 = -1;
-            int n41 = -1, n42 = -1, n43 = -1, n44 = -1;
-            int v41 = -1, v42 = -1, v43 = -1, v44 = -1;
-            int m51 = -1, m52 = -1, m53 = -1, m54 = -1;
-            int n51 = -1, n52 = -1, n53 = -1, n54 = -1;
-            int v51 = -1, v52 = -1, v53 = -1, v54 = -1;
+            int[] m1  = deal.m1;
+            int[] n1  = deal.n1;
+            int[] m2  = deal.m2;
+            int[] n2  = deal.n2;
+            int[] m3  = deal.m3;
+            int[] n3  = deal.n3;
+            int[] m4  = deal.m4;
+            int[] n4  = deal.n4;
+            int[] m5  = deal.m5;
+            int[] n5  = deal.n5;
 
-            // one-based indexing for subscript match
-            int[] m1 = {-1, m11, m12, m13, m14};
-            int[] n1 = {-1, n11, n12, n13, n14};
-            int[] m2 = {-1, m21, m22, m23, m24};
-            int[] n2 = {-1, n21, n22, n23, n24};
-            int[] m3 = {-1, m31, m32, m33, m34};
-            int[] n3 = {-1, n31, n32, n33, n34};
-            int[] m4 = {-1, m41, m42, m43, m44};
-            int[] n4 = {-1, n41, n42, n43, n44};
-            int[] m5 = {-1, m51, m52, m53, m54};
-            int[] n5 = {-1, n51, n52, n53, n54};
-            int[] win = {-1, win1, win2, win3, win4, win5};
+            // one-based indexing for subscript match (trick number)
+            int[] win = {aa, -1, -1, -1, -1, -1}; // fake value for index 0 (first lead)
+            int[] lead = {-1, -1, -1, -1, -1, -1};
+            int[][] mall = {null, m1, m2, m3, m4, m5};
+            int[][] nall = {null, n1, n2, n3, n4, n5};
+
+            int[] trick = new int[4]; // tricks won (initialized to zeros)
+            DealState dealState = new DealState(win, lead, trick);
 
             int cardplay;
+            int[] playerMap;
 
-            //  first to play is left of the dealer
-            int wturn = 1; // trick 1
+            // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
-            if (lone != cc) { // partner in 3rd seat NOT going alone
-                cardplay = deal.player11(m1, n1, null, null, pos, win, trick);
-                m1[1] = m11 = cardplay%10;
-                n1[1] = n11 = (cardplay/10)%10;
+            // loop through tricks
+            for (int tr=0; tr<5; tr++) {
+                int leadsuit = -1;
+                int winpos   = -1;
+                int winval   = -1;
+                int prevsuit = -1;
+                int prevval  = -1;
 
-                System.out.println("Player " + position[aa] + " leads the " + cardname[m11][n11] + ".\n");
-                for (int i=0; i<4; i++) {
-                    own[i][m11][n11] = -1;
-                    length[i][m11]--;
-                }
-                playst[aa][m11] = playst[aa][m11] - 1;
-                cv[0][m11][n11] = 0;
-                cv[1][m11][n11] = 0;
-                if (n11 == 5 && m11 != fintp) {
-                    aces[aa][fintp]--;
-                }
-                if (n11 == 5 && m11 == fintp) {
-                    acet[aa][fintp] = 0;
-                }
-                suit[0][0] = m11;
-                rank[0][0] = n11;
-                if (m11 == fintp) {
-                    v11 = 10+n11;
-                } else {
-                    v11 = n11;
-                }
-                win[1] = win1 = aa;
-            }
+                // establish shortcuts for this trick
+                int curaa = win[tr];     // lead (previous winner)
+                int curbb = (curaa+1)%4; // second to play
+                int curcc = (curaa+2)%4; // third to play
+                int curdd = (curaa+3)%4; // fourth to play
+                deal.pos[tr+1] = new int[] {curaa, curbb, curcc, curdd};
 
-            //  second to play, 1st trick
-            if (lone == dd) {
-                m1[2] = m12 = m11;  // if dealer going alone, skip North, so assign same value to their 'play' as West
-                n1[2] = n12 = n11;
-                v12 = v11-1;
-            } else { // dealer NOT going alone
-                if (lone == cc) { // 3rd seat going alone, assign m11 a temp value to avoid errors
-                    m1[1] = m11 = 0;
-                }
+                // loop through players
+                for (int pl=0; pl<4; pl++) {
+                    int playnum = tr*4+pl;
+                    int curpos  = deal.pos[tr+1][pl];
+                    int partpos = (curpos+2)%4;
+                    int cursuit = -1;
+                    int currank = -1;
+                    int curval  = -1;
 
-                cardplay = deal.player12(m1, n1, null, null, pos, win, trick);
-                m1[2] = m12 = cardplay%10;
-                n1[2] = n12 = (cardplay/10)%10;
+                    if (lone != partpos) { // partner NOT going alone
+                        if (pl > 0 && leadsuit == -1) { // special case for second position if initial lead skipped
+                            assert tr == 0 && pl == 1;
+                            mall[1][1] = 0; // assign m11 a temp value to avoid errors
+                        }
 
-                if (lone == cc) { // if 3rd seat going alone, assign m11 the value of m12, the true lead
-                    m1[1] = m11 = m12;
-                }
+                        cardplay = deal.player(playnum, dealState);
+                        mall[tr+1][pl+1] = cursuit = cardplay%10;
+                        nall[tr+1][pl+1] = currank = (cardplay/10)%10;
 
-                System.out.println("Player " + position[bb] + " plays the " + cardname[m12][n12] + ".\n");
-                for (int i=0; i<4; i++) {
-                    own[i][m12][n12] = -1;
-                    length[i][m12]--;
-                }
-                playst[bb][m12] = playst[bb][m12] - 1;
-                cv[0][m12][n12] = 0;
-                cv[1][m12][n12] = 0;
-                if (n12 == 5 && m12 != fintp) {
-                    aces[bb][fintp]--;
-                }
-                if (n12 == 5 && m12 == fintp) {
-                    acet[bb][fintp] = 0;
-                }
-                suit[0][1] = m12;
-                rank[0][1] = n12;
-                if (m12 == fintp) {
-                    v12 = 10+n12;
-                } else if (m12 == m11) {
-                    v12 = n12;
-                } else {
-                    v12 = -1;
-                }
-                if (v12 > v11) {
-                    win[1] = win1 = bb;
-                }
-            }
+                        if (pl == 1 && leadsuit == -1) { // assign m11 the value of m12, the true lead
+                            mall[1][1] = mall[1][2];
+                        }
 
-            //  third to play, 1st trick
-            if (lone == aa) { // if 1st seat going alone (3rd seat skipped), pretend both played same cards
-                m1[3] = m13 = m11;
-                n1[3] = n13 = n11;
-                v13 = v12-1;
-            } else {
-                cardplay = deal.player13(m1, n1, null, null, pos, win, trick);
-                m1[3] = m13 = cardplay%10;
-                n1[3] = n13 = (cardplay/10)%10;
+                        System.out.println("Player " + position[curpos] + (pl == 0 ? " leads the " : " plays the ") +
+                                           cardname[cursuit][currank] + ".\n");
 
-                System.out.println("Player " + position[cc] + " plays the " + cardname[m13][n13] + ".\n");
-                for (int i=0; i<4; i++) {
-                    own[i][m13][n13] = -1;
-                    length[i][m13]--;
-                }
-                playst[cc][m13] = playst[cc][m13] - 1;
-                cv[0][m13][n13] = 0;
-                cv[1][m13][n13] = 0;
-                if (n13 == 5 && m13 != fintp) {
-                    aces[cc][fintp]--;
-                }
-                if (n13 == 5 && m13 == fintp) {
-                    acet[cc][fintp] = 0;
-                }
-                suit[0][2] = m13;
-                rank[0][2] = n13;
-                if (m13 == fintp) {
-                    v13 = 10+n13;
-                } else if (m13 == m11) {
-                    v13 = n13;
-                } else {
-                    v13 = -1;
-                }
-                if (v13 > v11 && v13 > v12) {
-                    win[1] = win1 = cc;
-                }
-            }
+                        // adjust deal state
+                        for (int i=0; i<4; i++) {
+                            own[i][cursuit][currank] = -1;
+                            length[i][cursuit]--;
+                        }
+                        playst[curpos][cursuit] -= 1;
+                        cv[0][cursuit][currank] = 0;
+                        cv[1][cursuit][currank] = 0;
+                        if (currank == 5 && cursuit != fintp) {
+                            aces[curpos][fintp]--;
+                        }
+                        if (tr == 0) {
+                            if (currank == 5 && cursuit == fintp) {
+                                acet[curpos][fintp] = 0;
+                            }
+                        }
+                        suit[tr][pl] = cursuit;
+                        rank[tr][pl] = currank;
 
-            //  fourth to play (dealer), 1st trick
-            if (lone == bb) { // if 2nd seat going alone (dealer skipped), pretend dealer played 9 of led suit
-                m1[4] = m14 = m11;
-                n1[4] = n14 = 0;
-                v14 = v13-1;
-            } else {
-                cardplay = deal.player14(m1, n1, null, null, pos, win, trick);
-                m1[4] = m14 = cardplay%10;
-                n1[4] = n14 = (cardplay/10)%10;
+                        // compute card value
+                        if (cursuit == fintp) {
+                            curval = 10+currank;
+                        } else if (leadsuit == -1) {
+                            curval = currank;
+                        } else if (cursuit == leadsuit) {
+                            curval = currank;
+                        } else {
+                            curval = -1;
+                        }
 
-                System.out.println("Player " + position[dd] + " plays the " + cardname[m14][n14] + ".\n");
-                for (int i=0; i<4; i++) {
-                    own[i][m14][n14] = -1;
-                    length[i][m14]--;
-                }
-                playst[dd][m14] = playst[dd][m14] - 1;
-                cv[0][m14][n14] = 0;
-                cv[1][m14][n14] = 0;
-                if (n14 == 5 && m14 != fintp) {
-                    aces[dd][fintp]--;
-                }
-                if (n14 == 5 && m14 == fintp) {
-                    acet[dd][fintp] = 0;
-                }
-                suit[0][3] = m14;
-                rank[0][3] = n14;
-                if (m14 == fintp) {
-                    v14 = 10+n14;
-                } else if (m14 == m11) {
-                    v14 = n14;
-                } else {
-                    v14 = -1;
-                }
-                if (v14 > v11 && v14 > v12 && v14 > v13) {
-                    win[1] = win1 = dd;
-                }
-            }
-
-            // calculate stats for first trick
-            int tricktally = wintrick(win1, wturn);
-            trick[tricktally]++;
-            trick[tricktally+2]++;
-
-            deal.updatePlay1();
-
-            // establish new final shortcuts for second trick
-            final int aa2 = win1; // 2nd trick lead
-            final int bb2 = (win1+1)%4; // second to play
-            final int cc2 = (win1+2)%4; // third to play
-            final int dd2 = (win1+3)%4; // fourth to play
-            final int[] pos2 = {aa2, bb2, cc2, dd2};
-
-            // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-            // play out second trick; first to play is winner of first trick
-            wturn = 2; // trick 2
-
-            cardplay = deal.player21(m2, n2, m1, n1, pos2, win, trick);
-            m2[1] = m21 = cardplay%10;
-            n2[1] = n21 = (cardplay/10)%10;
-
-            System.out.println("Player " + position[aa2] + " leads the " + cardname[m21][n21] + ".\n");
-            for (int i=0; i<4; i++) {
-                own[i][m21][n21] = -1;
-                length[i][m21]--;
-            }
-            playst[aa2][m21] = playst[aa2][m21] - 1;
-            cv[0][m21][n21] = 0;
-            cv[1][m21][n21] = 0;
-            if (n21 == 5 && m21 != fintp) {
-                aces[aa2][fintp]--;
-            }
-            suit[1][0] = m21;
-            rank[1][0] = n21;
-            if (m21 == fintp) {
-                v21 = 10+n21;
-            } else {
-                v21 = n21;
-            }
-            win[2] = win2 = aa2;
-
-            // second to play, 2nd trick
-            if (lone == dd2) {
-                m2[2] = m22 = m21;  // if partner going alone, skip me, so assign same value to my 'play' as win2
-                n2[2] = n22 = n21;
-                v22 = v21-1;
-            } else {  // partner not going alone
-                cardplay = deal.player22(m2, n2, m1, n1, pos2, win, trick);
-                m2[2] = m22 = cardplay%10;
-                n2[2] = n22 = (cardplay/10)%10;
-
-                System.out.println("Player " + position[bb2] + " plays the " + cardname[m22][n22] + ".\n");
-                for (int i=0; i<4; i++) {
-                    own[i][m22][n22] = -1;
-                    length[i][m22]--;
-                }
-                playst[bb2][m22] = playst[bb2][m22] - 1;
-                cv[0][m22][n22] = 0;
-                cv[1][m22][n22] = 0;
-                if (n22 == 5 && m22 != fintp) {
-                    aces[bb2][fintp]--;
-                }
-                suit[1][1] = m22;
-                rank[1][1] = n22;
-                if (m22 == fintp) {
-                    v22 = 10+n22;
-                } else if (m22 == m21) {
-                    v22 = n22;
-                } else {
-                    v22 = -1;
-                }
-                if (v22 > v21) {
-                    win[2] = win2 = bb2;
-                }
-            }
-
-            // third to play, 2nd trick
-            if (lone == aa2) {
-                m2[3] = m23 = m21;  // if partner going alone, skip me, so assign same value to my 'play' as win2
-                n2[3] = n23 = n21;
-                v23 = v22-1;
-            } else { // partner not going alone
-                cardplay = deal.player23(m2, n2, m1, n1, pos2, win, trick);
-                m2[3] = m23 = cardplay%10;
-                n2[3] = n23 = (cardplay/10)%10;
-
-                System.out.println("Player " + position[cc2] + " plays the " + cardname[m23][n23] + ".\n");
-                for (int i=0; i<4; i++) {
-                    own[i][m23][n23] = -1;
-                    length[i][m23]--;
-                }
-                playst[cc2][m23] = playst[cc2][m23] - 1;
-                cv[0][m23][n23] = 0;
-                cv[1][m23][n23] = 0;
-                if (n23 == 5 && m23 != fintp) {
-                    aces[cc2][fintp]--;
-                }
-                suit[1][2] = m23;
-                rank[1][2] = n23;
-                if (m23 == fintp) {
-                    v23 = 10+n23;
-                } else if (m23 == m21) {
-                    v23 = n23;
-                } else {
-                    v23 = -1;
-                }
-                if (v23 > v21 && v23 > v22) {
-                    win[2] = win2 = cc2;
-                }
-            }
-
-            // fourth to play, 2nd trick
-            if (lone == bb2) {
-                m2[4] = m24 = m22;  // if partner going alone, skip me, pretend I played 9 of led suit
-                n2[4] = n24 = 0;
-                v24 = v23-1;
-            } else { // partner not going alone
-                cardplay = deal.player24(m2, n2, m1, n1, pos2, win, trick);
-                m2[4] = m24 = cardplay%10;
-                n2[4] = n24 = (cardplay/10)%10;
-
-                System.out.println("Player " + position[dd2] + " plays the " + cardname[m24][n24] + ".\n");
-                for (int i=0; i<4; i++) {
-                    own[i][m24][n24] = -1;
-                    length[i][m24]--;
-                }
-                playst[dd2][m24] = playst[dd2][m24] - 1;
-                cv[0][m24][n24] = 0;
-                cv[1][m24][n24] = 0;
-                if (n24 == 5 && m24 != fintp) {
-                    aces[dd2][fintp]--;
-                }
-                suit[1][3] = m24;
-                rank[1][3] = n24;
-                if (m24 == fintp) {
-                    v24 = 10+n24;
-                } else if (m24 == m21) {
-                    v24 = n24;
-                } else {
-                    v24 = -1;
-                }
-                if (v24 > v21 && v24 > v22 && v24 > v23) {
-                    win[2] = win2 = dd2;
-                }
-            }
-
-            // calculate stats for second trick
-            tricktally = wintrick(win2, wturn);
-            trick[tricktally]++;
-            trick[tricktally+2]++;
-
-            deal.updatePlay2();
-
-            // establish new final shortcuts for third trick
-            final int aa3 = win2; // 3rd trick lead
-            final int bb3 = (win2+1)%4; // second to play
-            final int cc3 = (win2+2)%4; // third to play
-            final int dd3 = (win2+3)%4; // fourth to play
-            final int[] pos3 = {aa3, bb3, cc3, dd3};
-
-            // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-            // play out third trick; first to play is winner of second trick
-            wturn = 3; // trick 3
-
-            cardplay = deal.player31(m3, n3, m2, n2, pos3, win, trick);
-            m3[1] = m31 = cardplay%10;
-            n3[1] = n31 = (cardplay/10)%10;
-
-            System.out.println("Player " + position[aa3] + " leads the " + cardname[m31][n31] + ".\n");
-            for (int i=0; i<4; i++) {
-                own[i][m31][n31] = -1;
-                length[i][m31]--;
-            }
-            playst[aa3][m31] = playst[aa3][m31] - 1;
-            cv[0][m31][n31] = 0;
-            cv[1][m31][n31] = 0;
-            if (n31 == 5 && m31 != fintp) {
-                aces[aa3][fintp]--;
-            }
-            suit[2][0] = m31;
-            rank[2][0] = n31;
-            if (m31 == fintp) {
-                v31 = 10+n31;
-            } else {
-                v31 = n31;
-            }
-            win[3] = win3 = aa3;
-
-            // second to play, 3rd trick
-            if (lone == dd3) {
-                m3[2] = m32 = m31;  // if partner going alone, skip me, so assign same value to my 'play' as win3
-                n3[2] = n32 = n31;
-                v32 = v31-1;
-            } else {  // partner not going alone
-                cardplay = deal.player32(m3, n3, m2, n2, pos3, win, trick);
-                m3[2] = m32 = cardplay%10;
-                n3[2] = n32 = (cardplay/10)%10;
-
-                System.out.println("Player " + position[bb3] + " plays the " + cardname[m32][n32] + ".\n");
-                for (int i=0; i<4; i++) {
-                    own[i][m32][n32] = -1;
-                    length[i][m32]--;
-                }
-                playst[bb3][m32] = playst[bb3][m32] - 1;
-                cv[0][m32][n32] = 0;
-                cv[1][m32][n32] = 0;
-                if (n32 == 5 && m32 != fintp) {
-                    aces[bb3][fintp]--;
-                }
-                suit[2][1] = m32;
-                rank[2][1] = n32;
-                if (m32 == fintp) {
-                    v32 = 10+n32;
-                } else if (m32 == m31) {
-                    v32 = n32;
-                } else {
-                    v32 = -1;
-                }
-                if (v32 > v31) {
-                    win[3] = win3 = bb3;
-                }
-            }
-
-            // third to play, 3rd trick
-            if (lone == aa3) {
-                m3[3] = m33 = m31;  // if partner going alone, skip me, so assign same value to my 'play' as win3
-                n3[3] = n33 = n31;
-                v33 = v32-1;
-            } else { // partner not going alone
-                cardplay = deal.player33(m3, n3, m2, n2, pos3, win, trick);
-                m3[3] = m33 = cardplay%10;
-                n3[3] = n33 = (cardplay/10)%10;
-
-                System.out.println("Player " + position[cc3] + " plays the " + cardname[m33][n33] + ".\n");
-                for (int i=0; i<4; i++) {
-                    own[i][m33][n33] = -1;
-                    length[i][m33]--;
-                }
-                playst[cc3][m33] = playst[cc3][m33] - 1;
-                cv[0][m33][n33] = 0;
-                cv[1][m33][n33] = 0;
-                if (n33 == 5 && m33 != fintp) {
-                    aces[cc3][fintp]--;
-                }
-                suit[2][2] = m33;
-                rank[2][2] = n33;
-                if (m33 == fintp) {
-                    v33 = 10+n33;
-                } else if (m33 == m31) {
-                    v33 = n33;
-                } else {
-                    v33 = -1;
-                }
-                if (v33 > v31 && v33 > v32) {
-                    win[3] = win3 = cc3;
-                }
-            }
-
-            // fourth to play, 3rd trick
-            if (lone == bb3) {
-                m3[4] = m34 = m32;  // if partner going alone, skip me, pretend I played 9 of led suit
-                n3[4] = n34 = 0;
-                v34 = v33-1;
-            } else { // partner not going alone
-                cardplay = deal.player34(m3, n3, m2, n2, pos3, win, trick);
-                m3[4] = m34 = cardplay%10;
-                n3[4] = n34 = (cardplay/10)%10;
-
-                System.out.println("Player " + position[dd3] + " plays the " + cardname[m34][n34] + ".\n");
-                for (int i=0; i<4; i++) {
-                    own[i][m34][n34] = -1;
-                    length[i][m34]--;
-                }
-                playst[dd3][m34] = playst[dd3][m34] - 1;
-                cv[0][m34][n34] = 0;
-                cv[1][m34][n34] = 0;
-                if (n34 == 5 && m34 != fintp) {
-                    aces[dd3][fintp]--;
-                }
-                suit[2][3] = m34;
-                rank[2][3] = n34;
-                if (m34 == fintp) {
-                    v34 = 10+n34;
-                } else if (m34 == m31) {
-                    v34 = n34;
-                } else {
-                    v34 = -1;
-                }
-                if (v34 > v31 && v34 > v32 && v34 > v33) {
-                    win[3] = win3 = dd3;
-                }
-            }
-
-            // calculate stats for third trick
-            tricktally = wintrick(win3, wturn);
-            trick[tricktally]++;
-            trick[tricktally+2]++;
-
-            deal.updatePlay3();
-
-            // establish new final shortcuts for fourth trick
-            final int aa4 = win3; // 4th trick lead
-            final int bb4 = (win3+1)%4; // second to play
-            final int cc4 = (win3+2)%4; // third to play
-            final int dd4 = (win3+3)%4; // fourth to play
-            final int[] pos4 = {aa4, bb4, cc4, dd4};
-
-            // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-            // play out fourth trick; first to play is winner of third trick
-            wturn = 4; // turn 4
-
-            cardplay = deal.player41(m4, n4, m3, n3, pos4, win, trick);
-            m4[1] = m41 = cardplay%10;
-            n4[1] = n41 = (cardplay/10)%10;
-
-            System.out.println("Player " + position[aa4] + " leads the " + cardname[m41][n41] + ".\n");
-            for (int i=0; i<4; i++) {
-                own[i][m41][n41] = -1;
-                length[i][m41]--;
-            }
-            playst[aa4][m41] = playst[aa4][m41] - 1;
-            cv[0][m41][n41] = 0;
-            cv[1][m41][n41] = 0;
-            if (n41 == 5 && m41 != fintp) {
-                aces[aa4][fintp]--;
-            }
-            suit[3][0] = m41;
-            rank[3][0] = n41;
-            if (m41 == fintp) {
-                v41 = 10+n41;
-            } else {
-                v41 = n41;
-            }
-            win[4] = win4 = aa4;
-
-            // second to play, 4th trick
-            if (lone == dd4) {
-                m4[2] = m42 = m41;  // if partner going alone, skip me, so assign same value to my 'play' as win4
-                n4[2] = n42 = n41;
-                v42 = v41-2;
-            } else { // partner not going alone
-                cardplay = deal.player42(m4, n4, m3, n3, pos4, win, trick);
-                m4[2] = m42 = cardplay%10;
-                n4[2] = n42 = (cardplay/10)%10;
-
-                System.out.println("Player " + position[bb4] + " plays the " + cardname[m42][n42] + ".\n");
-                for (int i=0; i<4; i++) {
-                    own[i][m42][n42] = -1;
-                    length[i][m42]--;
-                }
-                playst[bb4][m42] = playst[bb4][m42] - 1;
-                cv[0][m42][n42] = 0;
-                cv[1][m42][n42] = 0;
-                if (n42 == 5 && m42 != fintp) {
-                    aces[bb4][fintp]--;
-                }
-                suit[3][1] = m42;
-                rank[3][1] = n42;
-                if (m42 == fintp) {
-                    v42 = 10+n42;
-                } else if (m42 == m41) {
-                    v42 = n42;
-                } else {
-                    v42 = -1;
-                }
-                if (v42 > v41) {
-                    win[4] = win4 = bb4;
-                }
-            }
-
-            // third to play, 4th trick
-            if (lone == aa4) {
-                m4[3] = m43 = m41;  // if partner going alone, skip me, so assign same value to my 'play' as win4
-                n4[3] = n43 = n41;
-                v43 = v42-1;
-            } else { // partner not going alone
-                cardplay = deal.player43(m4, n4, m3, n3, pos4, win, trick);
-                m4[3] = m43 = cardplay%10;
-                n4[3] = n43 = (cardplay/10)%10;
-
-                System.out.println("Player " + position[cc4] + " plays the " + cardname[m43][n43] + ".\n");
-                for (int i=0; i<4; i++) {
-                    own[i][m43][n43] = -1;
-                    length[i][m43]--;
-                }
-                playst[cc4][m43] = playst[cc4][m43] - 1;
-                cv[0][m43][n43] = 0;
-                cv[1][m43][n43] = 0;
-                if (n43 == 5 && m43 != fintp) {
-                    aces[cc4][fintp]--;
-                }
-                suit[3][2] = m43;
-                rank[3][2] = n43;
-                if (m43 == fintp) {
-                    v43 = 10+n43;
-                } else if (m43 == m41) {
-                    v43 = n43;
-                } else {
-                    v43 = -1;
-                }
-                if (v43 > v41 && v43 > v42) {
-                    win[4] = win4 = cc4;
-                }
-            }
-
-            // fourth to play, 4th trick
-            if (lone == bb4) {
-                m4[4] = m44 = m42;  // if partner going alone, skip me, pretend I played 9 of led suit
-                n4[4] = n44 = 0;
-                v44 = v43-1;
-            } else { // partner not going alone
-                cardplay = deal.player44(m4, n4, m3, n3, pos4, win, trick);
-                m4[4] = m44 = cardplay%10;
-                n4[4] = n44 = (cardplay/10)%10;
-
-                System.out.println("Player " + position[dd4] + " plays the " + cardname[m44][n44] + ".\n");
-                for (int i=0; i<4; i++) {
-                    own[i][m44][n44] = -1;
-                    length[i][m44]--;
-                }
-                playst[dd3][m44] = playst[dd4][m44] - 1;
-                cv[0][m44][n44] = 0;
-                cv[1][m44][n44] = 0;
-                if (n44 == 5 && m44 != fintp) {
-                    aces[dd4][fintp]--;
-                }
-                suit[3][3] = m44;
-                rank[3][3] = n44;
-                if (m44 == fintp) {
-                    v44 = 10+n44;
-                } else if (m44 == m41) {
-                    v44 = n44;
-                } else {
-                    v44 = -1;
-                }
-                if (v44 > v41 && v44 > v42 && v44 > v43) {
-                    win[4] = win4 = dd4;
-                }
-            }
-
-            // calculate stats for fourth trick
-            tricktally = wintrick(win4, wturn);
-            trick[tricktally]++;
-            trick[tricktally+2]++;
-
-            deal.updatePlay4();
-
-            // establish new final shortcuts for fourth trick
-            final int aa5 = win4; // 2nd trick lead
-            final int bb5 = (win4+1)%4; // second to play
-            final int cc5 = (win4+2)%4; // third to play
-            final int dd5 = (win4+3)%4; // fourth to play
-            final int[] pos5 = {aa5, bb5, cc5, dd5};
-
-            // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-            // play out fifth trick; first to play is winner of fourth trick
-            wturn = 5; // trick 5
-
-            for (int i=0; i<4; i++) {
-                for (int j=0; j<8; j++) {
-                    if (own[win4][i][j] == win4) {
-                        m5[1] = m51 = i;
-                        n5[1] = n51 = j;
-                    }
-                }
-            }
-
-            System.out.println("Player " + position[aa5] + " leads the " + cardname[m51][n51] + ".\n");
-            suit[4][0] = m51;
-            rank[4][0] = n51;
-            if (m51 == fintp) {
-                v51 = 10+n51;
-            } else {
-                v51 = n51;
-            }
-            win[5] = win5 = aa5;
-
-            // second to play, fifth trick
-            if (lone == dd5) {
-                m5[2] = m52 = m51;  // if partner going alone, skip me, so assign same value to my 'play' as win5
-                n5[2] = n52 = n51;
-            } else {  // partner not going alone
-                for (int i=0; i<4; i++) {
-                    for (int j=0; j<8; j++) {
-                        if (own[bb5][i][j] == bb5) {
-                            m5[2] = m52 = i;
-                            n5[2] = n52 = j;
-                            v52 = v51-2;
+                        // evaluate if winning
+                        if (curval > winval) {
+                            win[tr+1] = winpos = curpos;
+                            winval = curval;
                         }
                     }
-                }
-
-                System.out.println("Player " + position[bb5] + " plays the " + cardname[m52][n52] + ".\n");
-                suit[4][1] = m52;
-                rank[4][1] = n52;
-                if (m52 == fintp) {
-                    v52 = 10+n52;
-                } else if (m52 == m51) {
-                    v52 = n52;
-                } else {
-                    v52 = -1;
-                }
-                if (v52 > v51) {
-                    win[5] = win5 = bb5;
-                }
-            }
-
-            // third to play, fifth trick
-            if (lone == win4) {
-                m5[3] = m53 = m51;  // if partner going alone, skip me, so assign same value to my 'play' as win5
-                n5[3] = n53 = n51;
-            } else {  // partner not going alone
-                for (int i=0; i<4; i++) {
-                    for (int j=0; j<8; j++) {
-                        if (own[cc5][i][j] == cc5) {
-                            m5[3] = m53 = i;
-                            n5[3] = n53 = j;
-                            v53 = v52-2;
+                    else { // partner IS going alone
+                        if (tr > 0) {
+                            cursuit = prevsuit;
+                            curval = prevval-1;
                         }
+                    }
+
+                    prevsuit = cursuit;
+                    prevval = curval;
+
+                    if (leadsuit == -1) {
+                        lead[tr+1] = leadsuit = cursuit;
                     }
                 }
 
-                System.out.println("Player " + position[cc5] + " plays the " + cardname[m53][n53] + ".\n");
-                suit[4][2] = m53;
-                rank[4][2] = n53;
-                if (m53 == fintp) {
-                    v53 = 10+n53;
-                } else if (m53 == m51) {
-                    v53 = n53;
-                } else {
-                    v53 = -1;
-                }
-                if (v53 > v51 && v53 > v52) {
-                    win[5] = win5 = cc5;
-                }
+                deal.updatePlay(tr);
+
+                // calculate stats for the trick
+                int tricktally = wintrick(winpos, tr+1);
+                trick[tricktally]++;
+                trick[tricktally+2]++;
             }
-
-            // fourth to play, fifth trick
-            if (lone == bb5) {
-                m5[4] = m54 = m52;  // if partner going alone, skip me, so assign same value to my 'play' as partner
-                n5[4] = n54 = n52;
-            } else {  // partner not going alone
-                for (int i=0; i<4; i++) {
-                    for (int j=0; j<8; j++) {
-                        if (own[dd5][i][j] == dd5) {
-                            m5[4] = m54 = i;
-                            n5[4] = n54 = j;
-                            v54 = v53-2;
-                        }
-                    }
-                }
-
-                System.out.println("Player " + position[dd5] + " plays the " + cardname[m54][n54] + ".\n");
-                suit[4][3] = m54;
-                rank[4][3] = n54;
-                if (m54 == fintp) {
-                    v54 = 10+n54;
-                } else if (m54 == m51) {
-                    v54 = n54;
-                } else {
-                    v54 = -1;
-                }
-                if (v54 > v51 && v54 > v52 && v54 > v53) {
-                    win[5] = win5 = dd5;
-                }
-            }
-
-            // calculate stats for fifth trick
-            tricktally = wintrick(win5, wturn);
-            trick[tricktally]++;
-            trick[tricktally+2]++;
-
-            deal.updatePlay5();
 
             // calculate winner of round, and points
             int pp = 0;
@@ -2652,10 +2011,62 @@ class Deal {
     int dealer;
     int upst; // suit of turned card
     int uprk; // rank of turned card
+    List<BiFunction<Integer, Integer, Integer>> bidderList =
+        List.of(this::bidder11,
+                this::bidder12,
+                this::bidder13,
+                this::bidder14,
+                this::bidder21,
+                this::bidder22,
+                this::bidder23,
+                this::bidder24);
+    List<Function<DealState, Integer>> playerList =
+        List.of(this::player11,
+                this::player12,
+                this::player13,
+                this::player14,
+                this::player21,
+                this::player22,
+                this::player23,
+                this::player24,
+                this::player31,
+                this::player32,
+                this::player33,
+                this::player34,
+                this::player41,
+                this::player42,
+                this::player43,
+                this::player44,
+                this::player51,
+                this::player52,
+                this::player53,
+                this::player54);
+    List<Runnable> updateList =
+        List.of(this::updatePlay1,
+                this::updatePlay2,
+                this::updatePlay3,
+                this::updatePlay4,
+                this::updatePlay5);
+
+    // one-based indexing for subscript match
+    int[] m1 = {-1, -1, -1, -1, -1};
+    int[] n1 = {-1, -1, -1, -1, -1};
+    int[] m2 = {-1, -1, -1, -1, -1};
+    int[] n2 = {-1, -1, -1, -1, -1};
+    int[] m3 = {-1, -1, -1, -1, -1};
+    int[] n3 = {-1, -1, -1, -1, -1};
+    int[] m4 = {-1, -1, -1, -1, -1};
+    int[] n4 = {-1, -1, -1, -1, -1};
+    int[] m5 = {-1, -1, -1, -1, -1};
+    int[] n5 = {-1, -1, -1, -1, -1};
+
     int aa; // position after dealer
     int bb; // position of dealer's partner
     int cc; // position before dealer
     int dd; // position of dealer
+
+    // position for each round of play (zero index for bidding)
+    int[][] pos = {null, null, null, null, null, null};
 
     // Initialized in preparePlay()
     int declarer;
@@ -2720,6 +2131,7 @@ class Deal {
         this.bb = (dealer+2)%4;
         this.cc = (dealer+3)%4;
         this.dd = dealer;
+        this.pos[0] = new int[] {aa, bb, cc, dd};
     }
 
     // *** Method "prepareBid" for initializing variables used in bidding ***
@@ -2879,6 +2291,20 @@ class Deal {
                     bests[i] = j;
                 }
             }
+        }
+    }
+
+    public int[] bidder(int bidnum, GameState gameState) {
+        int round = bidnum/4;
+        int bidpos = pos[0][bidnum%4]; // one of: aa, bb, cc, dd
+        int bidpts = gameState.points()[bidpos];
+        BiFunction<Integer, Integer, Integer> bidFunc = bidderList.get(bidnum);
+
+        int docall = bidFunc.apply(bidpts, gameState.gamePts()); // get computer bid
+        if (round == 0) {
+            return Game.bid1(docall%10, bidpos, Game.cardname[upst][uprk], upst);
+        } else {
+            return Game.bid2(docall%10, bidpos, docall/10);
         }
     }
 
@@ -3090,6 +2516,11 @@ class Deal {
                 }
             }
         }
+    }
+
+    public void updatePlay(int trickno) {
+        Runnable updateFunc = updateList.get(trickno);
+        updateFunc.run();
     }
 
     public void updatePlay1() {
@@ -3376,7 +2807,18 @@ class Deal {
         return cardplay;
     }
 
-    public int player11(int[] m1, int[] n1, int[] m0, int[] n0, int[] pos, int[] win, int[] trick) {
+    public int player(int playnum, DealState dealState) {
+        int trickno = playnum/4;
+        int playseq = playnum%4;
+        Function<DealState, Integer> playFunc = playerList.get(playnum);
+
+        int cardplay = playFunc.apply(dealState);
+        int m = cardplay%10;
+        int n = (cardplay/10)%10;
+        return cardplay;
+    }
+
+    public int player11(DealState dealState) {
         int hitrump = -1;
         int sectrump = -1;
         int lotrump = 20;
@@ -3393,6 +2835,7 @@ class Deal {
         double p11 = 20;
         double p11a = 20;
         int m11 = m1[1];
+        int[] trick = dealState.trick();
 
         for (int i=0; i<4; i++) { // establishes best ace to lead; not trump AND 5+ length suit
             if (own[aa][i][5] == aa && cv[0][i][5] > playace && i != fintp && length[aa][i] > 4 &&
@@ -3546,7 +2989,7 @@ class Deal {
                          worsts, worstr, aa, 0, cards);
     }
 
-    public int player12(int[] m1, int[] n1, int[] m0, int[] n0, int[] pos, int[] win, int[] trick) {
+    public int player12(DealState dealState) {
         int hitrump = -1;
         int sectrump = -1;
         int lotrump = 20;
@@ -3561,6 +3004,7 @@ class Deal {
         double p12 = 20;
         int m11 = m1[1];
         int n11 = n1[1];
+        int[] trick = dealState.trick();
 
         if (lone != cc && playst[bb][m11] == 0) { // void in led suit
             voids[bb][m11] = 1;
@@ -3671,7 +3115,7 @@ class Deal {
                          worstr, bb, playst[bb][m11], cards);
     }
 
-    public int player13(int[] m1, int[] n1, int[] m0, int[] n0, int[] pos, int[] win, int[] trick) {
+    public int player13(DealState dealState) {
         int hitrump = -1;
         int sectrump = -1;
         int lotrump = 20;
@@ -3689,7 +3133,8 @@ class Deal {
         int n11 = n1[1];
         int m12 = m1[2];
         int n12 = n1[2];
-        int win1 = win[1];
+        int win1 = dealState.win()[1];
+        int[] trick = dealState.trick();
 
         // overrides
         play1 = 6;
@@ -3795,7 +3240,7 @@ class Deal {
                          worstr, cc, playst[cc][m11], cards);
     }
 
-    public int player14(int[] m1, int[] n1, int[] m0, int[] n0, int[] pos, int[] win, int[] trick) {
+    public int player14(DealState dealState) {
         int hitrump = -1;
         int sectrump = -1;
         int lotrump = 20;
@@ -3814,7 +3259,8 @@ class Deal {
         int n12 = n1[2];
         int m13 = m1[3];
         int n13 = n1[3];
-        int win1 = win[1];
+        int win1 = dealState.win()[1];
+        int[] trick = dealState.trick();
 
         // overrides
         play1 = 6;
@@ -3932,7 +3378,7 @@ class Deal {
                          worstr, dd, playst[dd][m11], cards);
     }
 
-    public int player21(int[] m2, int[] n2, int[] m1, int[] n1, int[] pos2, int[] win, int[] trick) {
+    public int player21(DealState dealState) {
         int hitrump = -1;
         int sectrump = -1;
         int lotrump = 20;
@@ -3951,11 +3397,12 @@ class Deal {
         int n12 = n1[2];
         int m14 = m1[4];
         int n14 = n1[4];
-        int aa2 = pos2[0];
-        int bb2 = pos2[1];
-        int cc2 = pos2[2];
-        int dd2 = pos2[3];
-        int win1 = win[1];
+        int aa2 = pos[2][0];
+        int bb2 = pos[2][1];
+        int cc2 = pos[2][2];
+        int dd2 = pos[2][3];
+        int win1 = dealState.win()[1];
+        int[] trick = dealState.trick();
 
         // overrides
         maxsuit = -1;
@@ -4137,7 +3584,7 @@ class Deal {
                          worstr, win1, 0, cards);
     }
 
-    public int player22(int[] m2, int[] n2, int[] m1, int[] n1, int[] pos2, int[] win, int[] trick) {
+    public int player22(DealState dealState) {
         int hitrump = -1;
         int sectrump = -1;
         int lotrump = 20;
@@ -4152,11 +3599,12 @@ class Deal {
         double p22 = 20;
         int m21 = m2[1];
         int n21 = n2[1];
-        int aa2 = pos2[0];
-        int bb2 = pos2[1];
-        int cc2 = pos2[2];
-        int dd2 = pos2[3];
-        int win1 = win[1];
+        int aa2 = pos[2][0];
+        int bb2 = pos[2][1];
+        int cc2 = pos[2][2];
+        int dd2 = pos[2][3];
+        int win1 = dealState.win()[1];
+        int[] trick = dealState.trick();
 
         if (playst[bb2][m21] == 0) { // void in led suit
             voids[bb2][m21] = 1;
@@ -4242,7 +3690,7 @@ class Deal {
                          worstr, bb2, playst[bb2][m21], cards);
     }
 
-    public int player23(int[] m2, int[] n2, int[] m1, int[] n1, int[] pos2, int[] win, int[] trick) {
+    public int player23(DealState dealState) {
         int hitrump = -1;
         int sectrump = -1;
         int lotrump = 20;
@@ -4261,12 +3709,13 @@ class Deal {
         int n22 = n2[2];
         int m11 = m1[1];
         int n11 = n1[1];
-        int aa2 = pos2[0];
-        int bb2 = pos2[1];
-        int cc2 = pos2[2];
-        int dd2 = pos2[3];
-        int win1 = win[1];
-        int win2 = win[2];
+        int aa2 = pos[2][0];
+        int bb2 = pos[2][1];
+        int cc2 = pos[2][2];
+        int dd2 = pos[2][3];
+        int win1 = dealState.win()[1];
+        int win2 = dealState.win()[2];
+        int[] trick = dealState.trick();
 
         if (playst[cc2][m21] == 0) { // void in led suit
             voids[cc2][m21] = 1;
@@ -4383,7 +3832,7 @@ class Deal {
                          worstr, cc2, playst[cc2][m21], cards);
     }
 
-    public int player24(int[] m2, int[] n2, int[] m1, int[] n1, int[] pos2, int[] win, int[] trick) {
+    public int player24(DealState dealState) {
         int hitrump = -1;
         int sectrump = -1;
         int lotrump = 20;
@@ -4402,12 +3851,13 @@ class Deal {
         int n22 = n2[2];
         int m23 = m2[3];
         int n23 = n2[3];
-        int aa2 = pos2[0];
-        int bb2 = pos2[1];
-        int cc2 = pos2[2];
-        int dd2 = pos2[3];
-        int win1 = win[1];
-        int win2 = win[2];
+        int aa2 = pos[2][0];
+        int bb2 = pos[2][1];
+        int cc2 = pos[2][2];
+        int dd2 = pos[2][3];
+        int win1 = dealState.win()[1];
+        int win2 = dealState.win()[2];
+        int[] trick = dealState.trick();
 
         // overrides
         hitrump = 20;
@@ -4487,7 +3937,7 @@ class Deal {
                          worstr, dd2, playst[dd2][m21], cards);
     }
 
-    public int player31(int[] m3, int[] n3, int[] m2, int[] n2, int[] pos3, int[] win, int[] trick) {
+    public int player31(DealState dealState) {
         int hitrump = -1;
         int sectrump = -1;
         int lotrump = 20;
@@ -4504,12 +3954,13 @@ class Deal {
         int bos = -1;
         int m31 = m3[1];
         int n31 = n3[1];
-        int aa3 = pos3[0];
-        int bb3 = pos3[1];
-        int cc3 = pos3[2];
-        int dd3 = pos3[3];
-        int win1 = win[1];
-        int win2 = win[2];
+        int aa3 = pos[3][0];
+        int bb3 = pos[3][1];
+        int cc3 = pos[3][2];
+        int dd3 = pos[3][3];
+        int win1 = dealState.win()[1];
+        int win2 = dealState.win()[2];
+        int[] trick = dealState.trick();
 
         // overrides
         maxsuit = -1;
@@ -4619,7 +4070,7 @@ class Deal {
                          worstr, aa3, -1, cards);
     }
 
-    public int player32(int[] m3, int[] n3, int[] m2, int[] n2, int[] pos3, int[] win, int[] trick) {
+    public int player32(DealState dealState) {
         int hitrump = -1;
         int sectrump = -1;
         int lotrump = 20;
@@ -4634,11 +4085,12 @@ class Deal {
         double p32 = 20;
         int m31 = m3[1];
         int n31 = n3[1];
-        int aa3 = pos3[0];
-        int bb3 = pos3[1];
-        int cc3 = pos3[2];
-        int dd3 = pos3[3];
+        int aa3 = pos[3][0];
+        int bb3 = pos[3][1];
+        int cc3 = pos[3][2];
+        int dd3 = pos[3][3];
         //int keep = 0; // if have 2 trump AND a boss card off-suit, trump low if can ??
+        int[] trick = dealState.trick();
 
         //overrides
         suitace = -1;
@@ -4727,7 +4179,7 @@ class Deal {
                          worstr, bb3, playst[bb3][m31], cards);
     }
 
-    public int player33(int[] m3, int[] n3, int[] m2, int[] n2, int[] pos3, int[] win, int[] trick) {
+    public int player33(DealState dealState) {
         int hitrump = -1;
         int sectrump = -1;
         int lotrump = 20;
@@ -4744,12 +4196,13 @@ class Deal {
         int n31 = n3[1];
         int m32 = m3[2];
         int n32 = n3[2];
-        int aa3 = pos3[0];
-        int bb3 = pos3[1];
-        int cc3 = pos3[2];
-        int dd3 = pos3[3];
-        int win2 = win[2];
-        int win3 = win[3];
+        int aa3 = pos[3][0];
+        int bb3 = pos[3][1];
+        int cc3 = pos[3][2];
+        int dd3 = pos[3][3];
+        int win2 = dealState.win()[2];
+        int win3 = dealState.win()[3];
+        int[] trick = dealState.trick();
 
         if (playst[cc3][m31] == 0) { // void in led suit
             voids[cc3][m31] = 1;
@@ -4841,7 +4294,7 @@ class Deal {
                          worstr, cc3, playst[cc3][m31], cards);
     }
 
-    public int player34(int[] m3, int[] n3, int[] m2, int[] n2, int[] pos3, int[] win, int[] trick) {
+    public int player34(DealState dealState) {
         int hitrump = -1;
         int sectrump = -1;
         int lotrump = 20;
@@ -4860,12 +4313,13 @@ class Deal {
         int n32 = n3[2];
         int m33 = m3[3];
         int n33 = n3[3];
-        int aa3 = pos3[0];
-        int bb3 = pos3[1];
-        int cc3 = pos3[2];
-        int dd3 = pos3[3];
-        int win2 = win[2];
-        int win3 = win[3];
+        int aa3 = pos[3][0];
+        int bb3 = pos[3][1];
+        int cc3 = pos[3][2];
+        int dd3 = pos[3][3];
+        int win2 = dealState.win()[2];
+        int win3 = dealState.win()[3];
+        int[] trick = dealState.trick();
 
         // overrides
         hitrump = 20;
@@ -4948,7 +4402,7 @@ class Deal {
                          worstr, dd3, playst[dd3][m31], cards);
     }
 
-    public int player41(int[] m4, int[] n4, int[] m3, int[] n3, int[] pos4, int[] win, int[] trick) {
+    public int player41(DealState dealState) {
         int hitrump = -1;
         int sectrump = -1;
         int lotrump = 20;
@@ -4965,12 +4419,13 @@ class Deal {
         int bos = -1;
         int m41 = m4[1];
         int n41 = n4[1];
-        int aa4 = pos4[0];
-        int bb4 = pos4[1];
-        int cc4 = pos4[2];
-        int dd4 = pos4[3];
-        int win2 = win[2];
-        int win3 = win[3];
+        int aa4 = pos[4][0];
+        int bb4 = pos[4][1];
+        int cc4 = pos[4][2];
+        int dd4 = pos[4][3];
+        int win2 = dealState.win()[2];
+        int win3 = dealState.win()[3];
+        int[] trick = dealState.trick();
 
         // overrides
         maxsuit = -1;
@@ -5090,7 +4545,7 @@ class Deal {
                          worstr, aa4, -1, cards);
     }
 
-    public int player42(int[] m4, int[] n4, int[] m3, int[] n3, int[] pos4, int[] win, int[] trick) {
+    public int player42(DealState dealState) {
         int hitrump = -1;
         int sectrump = -1;
         int lotrump = 20;
@@ -5105,10 +4560,11 @@ class Deal {
         double p42 = 20;
         int m41 = m4[1];
         int n41 = n4[1];
-        int aa4 = pos4[0];
-        int bb4 = pos4[1];
-        int cc4 = pos4[2];
-        int dd4 = pos4[3];
+        int aa4 = pos[4][0];
+        int bb4 = pos[4][1];
+        int cc4 = pos[4][2];
+        int dd4 = pos[4][3];
+        int[] trick = dealState.trick();
 
         // overrides
         suitace = -1;
@@ -5179,7 +4635,7 @@ class Deal {
                          worstr, bb4, playst[bb4][m41], cards);
     }
 
-    public int player43(int[] m4, int[] n4, int[] m3, int[] n3, int[] pos4, int[] win, int[] trick) {
+    public int player43(DealState dealState) {
         int hitrump = -1;
         int sectrump = -1;
         int lotrump = 20;
@@ -5196,12 +4652,13 @@ class Deal {
         int n41 = n4[1];
         int m42 = m4[2];
         int n42 = n4[2];
-        int aa4 = pos4[0];
-        int bb4 = pos4[1];
-        int cc4 = pos4[2];
-        int dd4 = pos4[3];
-        int win3 = win[3];
-        int win4 = win[4];
+        int aa4 = pos[4][0];
+        int bb4 = pos[4][1];
+        int cc4 = pos[4][2];
+        int dd4 = pos[4][3];
+        int win3 = dealState.win()[3];
+        int win4 = dealState.win()[4];
+        int[] trick = dealState.trick();
 
         if (playst[cc4][m41] == 0) { // void in led suit
             voids[cc4][m41] = 1;
@@ -5273,7 +4730,7 @@ class Deal {
                          worstr, cc4, playst[cc4][m41], cards);
     }
 
-    public int player44(int[] m4, int[] n4, int[] m3, int[] n3, int[] pos4, int[] win, int[] trick) {
+    public int player44(DealState dealState) {
         int hitrump = -1;
         int sectrump = -1;
         int lotrump = 20;
@@ -5292,12 +4749,13 @@ class Deal {
         int n42 = n4[2];
         int m43 = m4[3];
         int n43 = n4[3];
-        int aa4 = pos4[0];
-        int bb4 = pos4[1];
-        int cc4 = pos4[2];
-        int dd4 = pos4[3];
-        int win3 = win[3];
-        int win4 = win[4];
+        int aa4 = pos[4][0];
+        int bb4 = pos[4][1];
+        int cc4 = pos[4][2];
+        int dd4 = pos[4][3];
+        int win3 = dealState.win()[3];
+        int win4 = dealState.win()[4];
+        int[] trick = dealState.trick();
 
         // overrides
         hitrump = 20;
@@ -5365,5 +4823,77 @@ class Deal {
 
         return playfirst(play1, fintp, hitrump, sectrump, lotrump, m41, maxsuit, minsuit, suitace, worsts,
                          worstr, dd4, playst[dd4][m41], cards);
+    }
+
+    public int player51(DealState dealState) {
+        int aa5 = pos[5][0];
+        int m = -1;
+        int n = -1;
+
+        for (int i=0; i<4; i++) {
+            for (int j=0; j<8; j++) {
+                if (own[aa5][i][j] == aa5) {
+                    m = i;
+                    n = j;
+                }
+            }
+        }
+
+        assert m != -1 && n != -1;
+        return m + n*10;
+    }
+
+    public int player52(DealState dealState) {
+        int bb5 = pos[5][1];
+        int m = -1;
+        int n = -1;
+
+        for (int i=0; i<4; i++) {
+            for (int j=0; j<8; j++) {
+                if (own[bb5][i][j] == bb5) {
+                    m = i;
+                    n = j;
+                }
+            }
+        }
+
+        assert m != -1 && n != -1;
+        return m + n*10;
+    }
+
+    public int player53(DealState dealState) {
+        int cc5 = pos[5][2];
+        int m = -1;
+        int n = -1;
+
+        for (int i=0; i<4; i++) {
+            for (int j=0; j<8; j++) {
+                if (own[cc5][i][j] == cc5) {
+                    m = i;
+                    n = j;
+                }
+            }
+        }
+
+        assert m != -1 && n != -1;
+        return m + n*10;
+    }
+
+    public int player54(DealState dealState) {
+        int dd5 = pos[5][3];
+        int m = -1;
+        int n = -1;
+
+        for (int i=0; i<4; i++) {
+            for (int j=0; j<8; j++) {
+                if (own[dd5][i][j] == dd5) {
+                    m = i;
+                    n = j;
+                }
+            }
+        }
+
+        assert m != -1 && n != -1;
+        return m + n*10;
     }
 }
