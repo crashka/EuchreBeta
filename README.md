@@ -38,9 +38,11 @@ in identifying bugs (mostly minor).  I have tried my hardest to preserve all of 
 comments and his overall style in the code.  The refactoring for this branch was like
 having a long conversation with Ray, and getting a glimpse into the mind of Ray.
 
-**To do**: validate bug fix represented by commit
+**To Do**
+
+- Validate bug fix represented by commit
 [47f73ad](https://github.com/crashka/EuchreBeta/commit/47f73ad63f94b22dcd5064a349235191fc86204d)
-\[can someone help with this?].
+*\[can someone help with this?]*
 
 ### [bug_fixes](https://github.com/crashka/EuchreBeta/tree/bug_fixes)
 
