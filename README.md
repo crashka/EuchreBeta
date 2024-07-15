@@ -76,8 +76,8 @@ euchre tournament-hosting platforms
 
 ### Teaching/Learning Tool
 
-Ray wanted to add a "tutorial" option which would intervene whenever a player would make a
-move different that that the algorithm would have played.  As he described it:
+Ray wanted to add a "tutorial" option which would intervene whenever a player made a move
+different from the one the algorithm would have played.  As he described it:
 
 > I think this will provide an excellent basis for improving my algorithm, as users will
 > be able to take issue with my suggested play and we can discuss. Coupled with this will
