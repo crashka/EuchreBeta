@@ -1658,45 +1658,29 @@ class Game {
     int[] cards = new int[28]; // 24 cards + 4 placeholders for suit images
 
     // *** Method "bid" for declaring bid, first bidding round ***
-    static int[] bid1(int docall, int dlr, String cname, int turns) {
+    static int[] bid1(int docall, int dclr, String call, int tps) {
         int bidtest[] = {-1,-1,4,0}; // lone, declarer, trump suit, bid
         if (docall == 2) {
-            System.out.println(position[dlr] + " calls " + cname + " as trump, going alone. " + "\n");
-            bidtest[0] = dlr;
-            bidtest[1] = dlr;
-            bidtest[2] = turns;
+            System.out.println(position[dclr] + " calls " + call + " as trump, going alone. \n");
+            bidtest[0] = dclr;
+            bidtest[1] = dclr;
+            bidtest[2] = tps;
             bidtest[3] = 2;
         } else if (docall == 1) {
-            System.out.println(position[dlr] + " calls " + cname + " as trump. " + "\n");
-            bidtest[1] = dlr;
-            bidtest[2] = turns;
+            System.out.println(position[dclr] + " calls " + call + " as trump. \n");
+            bidtest[1] = dclr;
+            bidtest[2] = tps;
             bidtest[3] = 1;
         } else {
             bidtest[3] = 0;
-            System.out.println(position[dlr] + " passes" + "\n");
+            System.out.println(position[dclr] + " passes\n");
         }
         return bidtest;
     }
 
     // *** Method "bid" for declaring bid, second bidding round ***
-    static int[] bid2(int docall, int dlr, int dlrs) {
-        int[] bidtest = {-1,-1,4,0};
-        if (docall == 2) {
-            System.out.println(position[dlr] + " calls " + suitx[dlrs] + " as trump, going alone. " + "\n");
-            bidtest[0] = dlr;
-            bidtest[1] = dlr;
-            bidtest[2] = dlrs;
-            bidtest[3] = 2;
-        } else if (docall == 1) {
-            System.out.println(position[dlr] + " calls " + suitx[dlrs] + " as trump. " + "\n");
-            bidtest[1] = dlr;
-            bidtest[2] = dlrs;
-            bidtest[3] = 1;
-        } else {
-            bidtest[3] = 0;
-            System.out.println(position[dlr] + " passes" + "\n");
-        }
-        return bidtest;
+    static int[] bid2(int docall, int dclr, int dclrs) {
+        return bid1(docall, dclr, suitx[dclrs], dclrs);
     }
 
     // *** Method "wintrick" to tally tricks won ***
@@ -1786,6 +1770,7 @@ class Game {
             // skip play if no one bids second round
             if (bidx[3] == 0) {
                 System.out.println("No one bids in second round\n");
+                dealer++;
                 continue;
             }
 
