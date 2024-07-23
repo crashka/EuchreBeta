@@ -1723,7 +1723,7 @@ class Game {
             }
 
             // invoke method to put cards in order
-            cards = EuchreBeta.order(cards, 4);
+            //cards = EuchreBeta.order(cards, 4);
 
             final int upst = cards[20]%4; // suit of turned card
             final int uprk = cards[20]/4; // rank of turned card
@@ -1786,7 +1786,7 @@ class Game {
 
             // put each players cards in order (trump suit first, then spades - hearts - diamond - clubs in that order;
             // highest to lowest rank within each suit
-            cards = EuchreBeta.order(cards, fintp);
+            //cards = EuchreBeta.order(cards, fintp);
 
             // establish name of left bower
             cardname[fintp][6] = "Jack of " + suitx[3-fintp];
