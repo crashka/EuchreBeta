@@ -1779,6 +1779,7 @@ class Game {
             fintp = bidx[2];
             call = bidx[3];
             assert call == 1 || lone > -1;
+            deal.swapCard(declarer, lone, round);
             deal.preparePlay(declarer, fintp, lone, round);
 
             // ********************************************************
@@ -2210,12 +2211,17 @@ class Deal {
     }
 
     public int[] bidder(int bidnum, GameState gameState) {
+        return bidder(bidnum, gameState, -1);
+    }
+
+    public int[] bidder(int bidnum, GameState gameState, int docall) {
         int round = bidnum/4;
         int bidpos = pos[0][bidnum%4]; // one of: aa, bb, cc, dd
-        int bidpts = gameState.points()[bidpos];
-        BiFunction<Integer, Integer, Integer> bidFunc = bidderList.get(bidnum);
-
-        int docall = bidFunc.apply(bidpts, gameState.gamePts()); // get computer bid
+        if (docall < 0) {
+            int bidpts = gameState.points()[bidpos];
+            BiFunction<Integer, Integer, Integer> bidFunc = bidderList.get(bidnum);
+            docall = bidFunc.apply(bidpts, gameState.gamePts()); // get computer bid
+        }
         if (round == 0) {
             return Game.bid1(docall%10, bidpos, Game.cardname[upst][uprk], upst);
         } else {
@@ -2271,6 +2277,31 @@ class Deal {
         return call + suit*10;
     }
 
+    // *** Method "swapCard" for dealer to swap turn card with discard ***
+    public int swapCard(int declarer, int lone, int round) {
+        // if first round contract AND seat 2 didn't call lone, have dealer swap cards
+        if (round == 0 && lone != bb) {
+            return swapCard(declarer, lone, round, -1);
+        }
+        return -1;
+    }
+
+    public int swapCard(int declarer, int lone, int round, int cardswap) {
+        if (cardswap < 0) {
+            // Re-calculate of best card to discard
+            int seat = ((declarer-dealer+4)%4)*2 + 1 - (lone+6)/6; // see spreadsheet for meaning
+            cswap = BidStrategy.swapcard(cards, seat, dealer); // determines # of card swapped by dealer for turn card
+        }
+        else {
+            cswap = cardswap;
+        }
+
+        int temp = cards[cswap]; // dealer swaps cards
+        cards[cswap] = cards[20];
+        cards[20] = temp;
+        return cswap;
+    }
+
     // *** Method "preparePlay" for initializing variables used in playing ***
     public void preparePlay(int declarer, int fintp, int lone, int round) {
 
@@ -2278,17 +2309,6 @@ class Deal {
         this.fintp = fintp;
         this.lone = lone;
         this.round = round;
-
-        // if first round contract AND seat 2 didn't call lone, have dealer swap cards
-        if (round == 0 && lone != bb) {
-            // Re-calculate of best card to discard
-            int seat = ((declarer-dealer+4)%4)*2 + 1 - (lone+6)/6; // see spreadsheet for meaning
-            cswap = BidStrategy.swapcard(cards, seat, dealer); // determines # of card swapped by dealer for turn card
-
-            int temp = cards[cswap]; // dealer swaps cards
-            cards[cswap] = cards[20];
-            cards[20] = temp;
-        }
 
         // change value of bowers to reflect proper suit and hierarchy
         for (int i=0; i<24; i++) {
@@ -2726,12 +2746,17 @@ class Deal {
     }
 
     public int player(int playnum, DealState dealState) {
+        return player(playnum, dealState, -1);
+    }
+
+    public int player(int playnum, DealState dealState, int cardplay) {
         int tr = playnum/4;
         int pl = playnum%4;
         int plpos  = pos[tr+1][pl];
-        Function<DealState, Integer> playFunc = playerList.get(playnum);
-
-        int cardplay = playFunc.apply(dealState);
+        if (cardplay < 0) {
+            Function<DealState, Integer> playFunc = playerList.get(playnum);
+            cardplay = playFunc.apply(dealState);
+        }
         int m = cardplay%10;
         int n = cardplay/10;
 
