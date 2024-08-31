@@ -2991,7 +2991,7 @@ class Deal {
         int n11 = n1[1];
         int[] trick = dealState.trick();
 
-        if (lone != cc && playst[bb][m11] == 0) { // void in led suit
+        if (m11 >= 0 && playst[bb][m11] == 0) { // void in led suit
             voids[bb][m11] = 1;
         }
         for (int i=0; i<4; i++) { // identify best ace
@@ -3017,7 +3017,7 @@ class Deal {
                 }
             }
         }
-        if (lone != cc) { // only do calculation if 3rd seat not going lone
+        if (m11 >= 0) { // only do calculation if 3rd seat not going (or defending) alone
             for (int j=0; j<8; j++) { // calculate highest and lowest of led suit
                 if (own[bb][m11][j] == bb) {
                     if (j > maxsuit) {
@@ -3044,10 +3044,7 @@ class Deal {
             }
         }
 
-        if (lone == bb && playst[bb][m11] == 0 && playst[bb][fintp] > 0) { // 2nd seat going alone
-            // and can't follow suit but have trump
-            play1 = 1;
-        } else if (lone == cc) { // 3rd seat going alone, so 2nd seat is first lead
+        if (m11 < 0) { // 3rd seat going (or defending) alone, so 2nd seat is first lead
             if (playst[bb][3-fintp] > 0) {
                 worsts = 3-fintp;
                 for (int i=0; i<8; i++) { // play highest of next suit (hopefully partner [dealer] is void and not declarer)
@@ -3063,6 +3060,9 @@ class Deal {
             }
             m11 = worsts; // pretend West played North's worst suit (irrelevant)
             n11 = 0; // pretend West played a 9
+        } else if (lone == bb && playst[bb][m11] == 0 && playst[bb][fintp] > 0) { // 2nd seat going alone
+            // and can't follow suit but have trump
+            play1 = 1;
         } else if (playst[bb][m11] > 0) { // can follow suit
             if (fintp == upst && uprk == 2 && m11 == upst) { // trump led and know partner has R
                 play1 = 4;
@@ -3124,7 +3124,7 @@ class Deal {
         // overrides
         play1 = 6;
 
-        if (playst[cc][m11] == 0) { // void in led suit
+        if (m11 >= 0 && playst[cc][m11] == 0) { // void in led suit
             voids[cc][m11] = 1;
         }
         for (int i=0; i<4; i++) {  // identify worst card
@@ -3144,13 +3144,15 @@ class Deal {
                 }
             }
         }
-        for (int j=0; j<8; j++) {
-            if (own[cc][m11][j] == cc) { // find best and worst card if following suit
-                if (j > maxsuit) {
-                    maxsuit = j;
-                }
-                if (j < minsuit) {
-                    minsuit = j;
+        if (m11 >= 0) {
+            for (int j=0; j<8; j++) {
+                if (own[cc][m11][j] == cc) { // find best and worst card if following suit
+                    if (j > maxsuit) {
+                        maxsuit = j;
+                    }
+                    if (j < minsuit) {
+                        minsuit = j;
+                    }
                 }
             }
         }
@@ -3169,7 +3171,23 @@ class Deal {
             }
         }
 
-        if (playst[cc][m11] > 0) { // can follow suit
+        if (m11 < 0) {  // borrow this case from player12(), if South is defending alone
+            if (playst[cc][3-fintp] > 0) {
+                worsts = 3-fintp;
+                for (int i=0; i<8; i++) { // play highest of next suit (hopefully partner [dealer] is void and not declarer)
+                    if (own[cc][3-fintp][i] == cc) {
+                        worstr = i;
+                        play1 = 6; // special case: play 'worst card' but assign proper values
+                    }
+                }
+            } else if (aces[cc][fintp] > 1) { // have 2+ aces, then play one
+                play1 = 5;
+            } else { // otherwise play worst card
+                play1 = 6;
+            }
+            m11 = worsts; // pretend West played North's worst suit (irrelevant)
+            n11 = 0; // pretend West played a 9
+        } else if (playst[cc][m11] > 0) { // can follow suit
             if ((maxsuit > n11+1 && win1 == aa) || (win1 == bb && maxsuit > n12 && m12 == m11)) {
                 play1 = 3; // play highest card of suit to take lead if:
                 // partner winning AND can beat by 2 ranks, OR opponent winning and can beat (and they followed suit)
