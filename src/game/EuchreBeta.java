@@ -1,6 +1,7 @@
 package game;
 
 import java.util.List;
+import java.util.Arrays;
 import java.util.Random;
 import java.util.function.Function;
 import java.util.function.BiFunction;
@@ -2448,6 +2449,24 @@ class Deal {
             for (int j=0; j<4; j++) {
                 if (playst[i][j] == 0 && j != fintp) {
                     vd[i]++;
+                }
+            }
+        }
+    }
+
+    public void validateHands() {
+        for (int i = 0; i < 4; i++) {  // position
+            for (int j = 0 ; j < 4; j++) {  // suit
+                int count = 0;
+                for (int k = 0; k < 8; k++) {  //rank
+                    if (own[i][j][k] == i) {
+                        count++;
+                    }
+                }
+                if (count != playst[i][j]) {
+                    System.out.println(String.format("Mismatch playst[%d][%d] = %d and own[%d][%d] = %s",
+                                                     i, j, playst[i][j], i, j, Arrays.toString(own[i][j])));
+                    assert false;
                 }
             }
         }
