@@ -1,5 +1,7 @@
+*.class
 *.jar
 *.jar-*
 *.java-*
 *.txt
 *.lst
+old/

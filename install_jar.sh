@@ -5,7 +5,7 @@ scriptdir="$(dirname $(readlink -f $0))"
 path_to_file="${scriptdir}"/EuchreBeta.jar
 group_id=game
 artifact_id=euchrebeta
-version=0.9
+version=1.0
 packaging=jar
 
 mvn install:install-file         \

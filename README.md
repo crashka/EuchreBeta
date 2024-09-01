@@ -60,17 +60,25 @@ since it represents a distinct use case (even if `autoplay` never has additional
 
 **Versions**
 
-- **v0.9** – Working version during development of initial integration with
-[EuchreEndpoint](https://github.com/crashka/EuchreEndpoint) (completed integration will be
-v1.0)
+- **v1.0** – Completed integration with
+  [EuchreEndpoint](https://github.com/crashka/EuchreEndpoint) (and
+  [euchre-plt](https://github.com/crashka/euchre-plt)).
 
 ## Related Projects
 
 ### [EuchreEndpoint](https://github.com/crashka/EuchreEndpoint)
 
 HTTP-based wrapper for the EuchreBeta game-playing engine, which can then be invoked by
-euchre tournament-hosting platforms
-(e.g. [euchre-plt](https://github.com/crashka/euchre-plt))
+euchre tournament-hosting platforms.
+
+Here are the results of a sample tournament run on the
+[euchre-plt](https://github.com/crashka/euchre-plt) platform, with EuchreBeta running away
+with the win:
+
+<p align="center">
+  <img src="examples/round_robin_euchrebeta_win.png" alt="Round Robin - EuchreBeta win"
+       style="width: 75%;">
+</p>
 
 ## Additional Work
 
