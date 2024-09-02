@@ -103,7 +103,7 @@ the basis for training machine learning models that would either assimilate aspe
 strategies and capabilities, or develop the ability to outplay it.  He was excited by the
 prospect.
 
-Once the EuchreBeta engine is wired into the
+Now that the EuchreBeta engine is wired into the
 [euchre-plt](https://github.com/crashka/euchre-plt) framework (by way of
 [EuchreEndpoint](https://github.com/crashka/EuchreEndpoint)), we should be able to use the
 `ML` module (within euchre-plt) to start developing these models, and seeing where they
