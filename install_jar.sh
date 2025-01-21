@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-scriptdir="$(dirname $(readlink -f $0))"
+scriptdir="$(dirname $(readlink -f -- $0))"
 
 path_to_file="${scriptdir}"/EuchreBeta.jar
 group_id=game
